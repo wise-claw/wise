@@ -1020,7 +1020,7 @@ const SKILL_PROTECTION_MAP = {
 function getSkillProtectionLevel(skillName, rawSkillName) {
   // When rawSkillName is provided, only apply protection to WISE-prefixed skills.
   // Non-prefixed skills are project custom skills or other plugins — no protection.
-  // See: https://github.com/Yeachan-Heo/wise/issues/1581
+  // See: https://github.com/wise-claw/wise/issues/1581
   if (rawSkillName != null && typeof rawSkillName === 'string' &&
       !rawSkillName.toLowerCase().startsWith('wise:')) {
     return 'none';

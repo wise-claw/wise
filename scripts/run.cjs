@@ -39,7 +39,7 @@ if (!target) {
  *      same script name and use that instead.
  *   4. If all else fails, return null (caller exits cleanly).
  *
- * See: https://github.com/Yeachan-Heo/wise/issues/1007
+ * See: https://github.com/wise-claw/wise/issues/1007
  */
 function resolveTarget(targetPath) {
   // Fast path: target exists (common case)

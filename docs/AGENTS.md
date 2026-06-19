@@ -72,7 +72,7 @@ This directory contains documentation for end-users and developers:
 
 Use raw GitHub URLs for external accessibility:
 
-[Migration Guide](https://raw.githubusercontent.com/Yeachan-Heo/wise/main/docs/MIGRATION.md)
+[Migration Guide](https://raw.githubusercontent.com/wise-claw/wise/main/docs/MIGRATION.md)
 
 #### Version References
 

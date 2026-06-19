@@ -85,7 +85,7 @@ Reference formats:
 
 Examples:
   psm review wise#123
-  psm fix Yeachan-Heo/wise#42
+  psm fix wise-claw/wise#42
   psm feature wise add-webhooks
   psm list
   psm attach wise:pr-123

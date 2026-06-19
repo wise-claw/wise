@@ -34,7 +34,7 @@ Complete reference for wise. For quick start, see the main [README.md](../README
 
 ```bash
 # Step 1: Add the marketplace
-/plugin marketplace add https://github.com/Yeachan-Heo/wise
+/plugin marketplace add https://github.com/wise-claw/wise
 
 # Step 2: Install the plugin
 /plugin install wise

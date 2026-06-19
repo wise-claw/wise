@@ -2,7 +2,7 @@
 
 **Step 1: Install**
 ```bash
-/plugin marketplace add https://github.com/Yeachan-Heo/wise
+/plugin marketplace add https://github.com/wise-claw/wise
 /plugin install wise
 ```
 

@@ -8,7 +8,7 @@
  * via PipelineConfig. The orchestrator manages state transitions, signal
  * detection, and prompt generation.
  *
- * @see https://github.com/Yeachan-Heo/wise/issues/1130
+ * @see https://github.com/wise-claw/wise/issues/1130
  */
 
 import type {

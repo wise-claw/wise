@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-const DEFAULT_REPO_URL = 'https://github.com/Yeachan-Heo/wise';
+const DEFAULT_REPO_URL = 'https://github.com/wise-claw/wise';
 
 export interface ReleasePullRequest {
   number: string;

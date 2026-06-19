@@ -201,7 +201,7 @@ node -e "const p=require('path'),f=require('fs'),h=require('os').homedir(),d=pro
 ### Fix: Missing/Outdated CLAUDE.md
 Fetch latest from GitHub and write to `${CLAUDE_CONFIG_DIR:-~/.claude}/CLAUDE.md`:
 ```
-WebFetch(url: "https://raw.githubusercontent.com/Yeachan-Heo/wise/main/docs/CLAUDE.md", prompt: "Return the complete raw markdown content exactly as-is")
+WebFetch(url: "https://raw.githubusercontent.com/wise-claw/wise/main/docs/CLAUDE.md", prompt: "Return the complete raw markdown content exactly as-is")
 ```
 
 ### Fix: Legacy Curl-Installed Content

@@ -17,7 +17,7 @@ psm_init() {
 {
   "aliases": {
     "wise": {
-      "repo": "Yeachan-Heo/wise",
+      "repo": "wise-claw/wise",
       "local": "~/Workspace/wise",
       "default_base": "main"
     }

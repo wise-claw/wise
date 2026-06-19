@@ -83,8 +83,8 @@ describe('Tier-0 contract docs consistency', () => {
       .map((file) => readProjectFile(file));
 
     for (const content of readmes) {
-      expect(content).not.toContain('https://yeachan-heo.github.io/wise-website/docs.html');
-      expect(content).toContain('https://yeachan-heo.github.io/wise-website/docs/#');
+      expect(content).not.toContain('https://wise-claw.github.io/wise-website/docs.html');
+      expect(content).toContain('https://wise-claw.github.io/wise-website/docs/#');
     }
   });
 

@@ -1,7 +1,7 @@
 /**
  * Shared stdin utilities for WISE hook scripts
  * Provides timeout-protected stdin reading to prevent hangs on Linux and Windows
- * See: https://github.com/Yeachan-Heo/wise/issues/240
+ * See: https://github.com/wise-claw/wise/issues/240
  *
  * Mirrors templates/hooks/lib/stdin.mjs for use by plugin hook scripts.
  */

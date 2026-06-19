@@ -2744,7 +2744,7 @@ function getInvokedSkillName(toolInput: unknown): string | null {
  * Extract the raw (un-normalized) skill name from Skill tool input.
  * Used to distinguish WISE built-in skills (prefixed with 'wise:')
  * from project custom skills or other plugin skills with the same bare name.
- * See: https://github.com/Yeachan-Heo/wise/issues/1581
+ * See: https://github.com/wise-claw/wise/issues/1581
  */
 function getRawSkillName(toolInput: unknown): string | undefined {
   if (!toolInput || typeof toolInput !== "object") return undefined;

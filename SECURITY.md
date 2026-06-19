@@ -129,4 +129,4 @@ These are structural characteristics that cannot be fully resolved by configurat
 
 ## Reporting Security Issues
 
-If you discover a security vulnerability, please report it via [GitHub Issues](https://github.com/Yeachan-Heo/wise/issues) with the `security` label.
+If you discover a security vulnerability, please report it via [GitHub Issues](https://github.com/wise-claw/wise/issues) with the `security` label.

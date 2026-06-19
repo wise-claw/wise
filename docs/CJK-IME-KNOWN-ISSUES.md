@@ -138,7 +138,7 @@ Use Claude Code through IDE integrations (VS Code extension) which may handle IM
 ## Related Issues
 
 ### wise
-- [#344](https://github.com/Yeachan-Heo/wise/issues/344) - Korean IME input invisible in input field
+- [#344](https://github.com/wise-claw/wise/issues/344) - Korean IME input invisible in input field
 
 ### anthropics/claude-code
 - [#22732](https://github.com/anthropics/claude-code/issues/22732) - Korean IME: Characters completely invisible during composition

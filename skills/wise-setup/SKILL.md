@@ -79,7 +79,7 @@ EXAMPLES:
   /wise:wise-setup --global  # Update all projects
   /wise:wise-setup --force   # Re-run full setup wizard
 
-For more info: https://github.com/Yeachan-Heo/wise
+For more info: https://github.com/wise-claw/wise
 ```
 
 

@@ -50,7 +50,7 @@ Supported formats:
 {
   "aliases": {
     "wise": {
-      "repo": "Yeachan-Heo/wise",
+      "repo": "wise-claw/wise",
       "local": "~/Workspace/wise",
       "default_base": "main"
     }
@@ -564,7 +564,7 @@ if [[ ! -f ~/.psm/projects.json ]]; then
 {
   "aliases": {
     "wise": {
-      "repo": "Yeachan-Heo/wise",
+      "repo": "wise-claw/wise",
       "local": "~/Workspace/wise",
       "default_base": "main"
     }

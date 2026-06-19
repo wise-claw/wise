@@ -364,7 +364,7 @@ npm uninstall -g wise
 
 ```bash
 # In Claude Code:
-/plugin marketplace add https://github.com/Yeachan-Heo/wise
+/plugin marketplace add https://github.com/wise-claw/wise
 /plugin install wise
 ```
 
@@ -851,7 +851,7 @@ Expected timeline: Q1 2026
 
 ### Stay Updated
 
-- Watch the [GitHub repository](https://github.com/Yeachan-Heo/wise) for announcements
+- Watch the [GitHub repository](https://github.com/wise-claw/wise) for announcements
 - Check [CHANGELOG.md](../CHANGELOG.md) for detailed release notes
 - Join discussions in GitHub Issues
 
@@ -987,7 +987,7 @@ A: Keywords are explicit shortcuts. Natural language triggers auto-detection. Bo
 - **See all commands**: Run `/wise:wise-help`
 - **View real-time status**: Run `/wise:hud setup`
 - **Review detailed changelog**: See [CHANGELOG.md](../CHANGELOG.md)
-- **Report bugs**: [GitHub Issues](https://github.com/Yeachan-Heo/wise/issues)
+- **Report bugs**: [GitHub Issues](https://github.com/wise-claw/wise/issues)
 
 ---
 

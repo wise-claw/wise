@@ -794,7 +794,7 @@ function getLiveUltraworkObjective(state) {
  * Blocking these stops causes a deadlock: can't compact because can't stop,
  * can't continue because context is full.
  *
- * See: https://github.com/Yeachan-Heo/wise/issues/213
+ * See: https://github.com/wise-claw/wise/issues/213
  */
 function isContextLimitStop(data) {
   const reasons = [
@@ -964,7 +964,7 @@ async function main() {
 
     // CRITICAL: Never block context-limit stops.
     // Blocking these causes a deadlock where Claude Code cannot compact.
-    // See: https://github.com/Yeachan-Heo/wise/issues/213
+    // See: https://github.com/wise-claw/wise/issues/213
     if (isContextLimitStop(data)) {
       console.log(JSON.stringify({ continue: true, suppressOutput: true }));
       return;

@@ -201,7 +201,7 @@ export interface AutopilotConfig {
    * hard-coded phase sequence. This is the path forward for unifying
    * autopilot/ultrawork/ultrapilot.
    *
-   * @see https://github.com/Yeachan-Heo/wise/issues/1130
+   * @see https://github.com/wise-claw/wise/issues/1130
    */
   pipeline?: {
     /** Planning stage: 'ralplan' for consensus, 'direct' for simple, false to skip */
