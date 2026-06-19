@@ -1,37 +1,488 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1781836245623,
+  "lastScanned": 1781861714856,
   "projectRoot": "/Users/sjl/Documents/github/wise",
   "techStack": {
-    "languages": [],
-    "frameworks": [],
-    "packageManager": null,
-    "runtime": null
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": ">=20.0.0",
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "esbuild",
+        "version": "0.27.2",
+        "category": "build"
+      },
+      {
+        "name": "vitest",
+        "version": "4.0.17",
+        "category": "testing"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": "Node.js 20.0.0"
   },
   "build": {
-    "buildCommand": null,
-    "testCommand": null,
-    "lintCommand": null,
-    "devCommand": null,
-    "scripts": {}
+    "buildCommand": "cd /Users/sjl/Documents/github/wise\nnpm run build > /tmp/wise_build3.log 2>&1\necho \"BUILD_EXIT=$?\"\ntail -2 /tmp/wise_build3.log\necho \"=== 跑两个 installer 测试 ===\"\nnpx vitest run src/installer/__tests__/safe-installer.test.ts src/__tests__/installer-hooks-merge.test.ts 2>&1 | tail -15",
+    "testCommand": "cd /Users/sjl/Documents/github/wise\nsleep 60\nif grep -q \"Test Files\" /tmp/wise_test_v3.log 2>/dev/null; then\n  grep -E \"Test Files|^      Tests\" /tmp/wise_test_v3.log | tail -2\n  echo \"=== 失败文件 ===\"\n  grep -E \"FAIL \" /tmp/wise_test_v3.log | grep -oE \"src/[A-Za-z0-9_/.-]+\\.test\\.(ts|mjs)\" | sort -u\nelse\n  echo \"PENDING: $(pgrep -f 'vitest run' >/dev/null && echo ALIVE || echo DONE), 行数 $(wc -l < /tmp/wise_test_v3.log)\"\nfi",
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "build": "tsc && node scripts/build-skill-bridge.mjs && node scripts/build-mcp-server.mjs && node scripts/build-bridge-entry.mjs && npm run compose-docs && npm run build:runtime-cli && npm run build:team-server && npm run build:cli",
+      "build:bridge": "node scripts/build-skill-bridge.mjs",
+      "build:bridge-entry": "node scripts/build-bridge-entry.mjs",
+      "build:cli": "node scripts/build-cli.mjs",
+      "build:runtime-cli": "node scripts/build-runtime-cli.mjs",
+      "build:team-server": "node scripts/build-team-server.mjs",
+      "compose-docs": "node scripts/compose-docs.mjs",
+      "dev": "tsc --watch",
+      "dev:full": "concurrently --names \"tsc,cli,mcp,bridge-entry,skill-bridge,runtime,team\" \"tsc --watch\" \"node scripts/build-cli.mjs --watch\" \"node scripts/build-mcp-server.mjs --watch\" \"node scripts/build-bridge-entry.mjs --watch\" \"node scripts/build-skill-bridge.mjs --watch\" \"node scripts/build-runtime-cli.mjs --watch\" \"node scripts/build-team-server.mjs --watch\"",
+      "start": "node dist/index.js",
+      "test": "vitest",
+      "bench:prompts": "tsx benchmarks/run-all.ts",
+      "bench:prompts:save": "tsx benchmarks/run-all.ts --save-baseline",
+      "bench:prompts:compare": "tsx benchmarks/run-all.ts --compare",
+      "test:ui": "vitest --ui",
+      "test:run": "vitest run",
+      "test:coverage": "vitest run --coverage",
+      "lint": "eslint src",
+      "format": "prettier --write src/**/*.ts",
+      "sync-featured-contributors": "tsx scripts/generate-featured-contributors.ts",
+      "sync-featured-contributors:verify": "tsx scripts/generate-featured-contributors.ts --verify",
+      "sync-featured-contributors:dry-run": "tsx scripts/generate-featured-contributors.ts --dry-run",
+      "sync-metadata": "tsx scripts/sync-metadata.ts",
+      "sync-metadata:verify": "tsx scripts/sync-metadata.ts --verify",
+      "sync-metadata:dry-run": "tsx scripts/sync-metadata.ts --dry-run",
+      "release": "tsx scripts/release.ts",
+      "prepublishOnly": "npm run build && npm run compose-docs",
+      "version": "bash scripts/sync-version.sh"
+    }
   },
   "conventions": {
     "namingStyle": null,
     "importStyle": null,
     "testPattern": null,
-    "fileOrganization": null
+    "fileOrganization": "feature-based"
   },
   "structure": {
     "isMonorepo": false,
     "workspaces": [],
-    "mainDirectories": [],
+    "mainDirectories": [
+      "assets",
+      "bin",
+      "docs",
+      "examples",
+      "scripts",
+      "src",
+      "tests"
+    ],
     "gitBranches": {
       "defaultBranch": "main",
       "branchingStrategy": null
     }
   },
-  "customNotes": [],
-  "directoryMap": {},
-  "hotPaths": [],
+  "customNotes": [
+    {
+      "timestamp": 1781863031888,
+      "source": "manual",
+      "category": "architecture",
+      "content": "wise 是基于 oh-my-claudecode (OMC) v4.14.7 的品牌重塑 fork。包名 wise-claw，CLI=wise/wise-cli，插件名=wise，状态目录 .wise，环境变量 WISE_*，状态目录 .omc→.wise。OMX/omx/.omx 命名空间保留不变（Codex interop = oh-my-codex），OpenClaw 子系统保留。魔法关键字 cancelomc/stopomc → cancelwise/stopwise。"
+    },
+    {
+      "timestamp": 1781863032152,
+      "source": "manual",
+      "category": "debugging",
+      "content": "品牌批量替换的隐藏陷阱（重构时已全部修复）：\n1. om[cx] 字符类：原 OMC 用 `om[cx]` 同时匹配 omc(自家)+omx(命名空间)。品牌重塑后自家变 wise，需改为 `(?:wise|omx)`。3 处：src/planning/artifacts.ts(launchHintPattern)、src/hooks/bridge.ts(WORKER_BLOCKED_TEAM_CLI_PATTERN)、templates/hooks/pre-tool-use.mjs(同)。\n2. looksLikeWiseGuidance 正则：原 /oh-my-(claudecode|codex)/ 批量替换后失效，改为 /^# wise\\b/im。2 处：src/config/loader.ts、templates/hooks/session-start.mjs。\n3. isWiseHook fullNamePattern：原 /oh-my-claudecode/ 批量替换成 /wise/ 裸子串匹配过宽（误匹配 nwise），改为 /wise-claw/。在 src/installer/index.ts。\n4. 路径坍缩：测试 mock 中 omc(marketplace)+oh-my-claudecode(plugin) 两层都变 wise 后 endsWith('wise') 条件坍缩，需用 endsWith('wise/wise') 区分 plugin 层。在 src/__tests__/purge-stale-cache.test.ts。\n5. 长度副作用：omc-team-(9)→wise-team-(10)，magic number 110→111。在 src/team/__tests__/edge-cases.test.ts。\n6. 排序前缀干扰：原 .omc<.omx 巧合让 localeCompare 排序正确，.omc→.wise 后 .wise>.omx 破坏排序，comparePlanningArtifactPaths fallback 改用 basename 比较。在 src/planning/artifact-names.ts。"
+    }
+  ],
+  "directoryMap": {
+    "agents": {
+      "path": "agents",
+      "purpose": null,
+      "fileCount": 19,
+      "lastAccessed": 1781861714845,
+      "keyFiles": [
+        "analyst.md",
+        "architect.md",
+        "code-reviewer.md",
+        "code-simplifier.md",
+        "critic.md"
+      ]
+    },
+    "assets": {
+      "path": "assets",
+      "purpose": "Static assets",
+      "fileCount": 2,
+      "lastAccessed": 1781861714846,
+      "keyFiles": [
+        "wise-character.jpg",
+        "wise-social-preview.jpg"
+      ]
+    },
+    "benchmark": {
+      "path": "benchmark",
+      "purpose": null,
+      "fileCount": 16,
+      "lastAccessed": 1781861714847,
+      "keyFiles": [
+        "Dockerfile",
+        "README.md",
+        "analyze_failures.py",
+        "compare_results.py",
+        "docker-compose.yml"
+      ]
+    },
+    "benchmarks": {
+      "path": "benchmarks",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1781861714847,
+      "keyFiles": [
+        "run-all.ts"
+      ]
+    },
+    "bin": {
+      "path": "bin",
+      "purpose": "Executable scripts",
+      "fileCount": 1,
+      "lastAccessed": 1781861714848,
+      "keyFiles": [
+        "wise.js"
+      ]
+    },
+    "bridge": {
+      "path": "bridge",
+      "purpose": null,
+      "fileCount": 6,
+      "lastAccessed": 1781861714848,
+      "keyFiles": [
+        "cli.cjs",
+        "mcp-server.cjs",
+        "runtime-cli.cjs",
+        "team-bridge.cjs",
+        "team-mcp.cjs"
+      ]
+    },
+    "commands": {
+      "path": "commands",
+      "purpose": null,
+      "fileCount": 28,
+      "lastAccessed": 1781861714848,
+      "keyFiles": [
+        "ask.md",
+        "autoresearch.md",
+        "ccg.md",
+        "compact.md",
+        "configure-notifications.md"
+      ]
+    },
+    "dist": {
+      "path": "dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 4,
+      "lastAccessed": 1781861714848,
+      "keyFiles": [
+        "index.d.ts",
+        "index.d.ts.map",
+        "index.js",
+        "index.js.map"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 23,
+      "lastAccessed": 1781861714848,
+      "keyFiles": [
+        "AGENTS.md",
+        "ARCHITECTURE.md",
+        "CJK-IME-KNOWN-ISSUES.md",
+        "CLAUDE.md",
+        "COMPATIBILITY.md"
+      ]
+    },
+    "examples": {
+      "path": "examples",
+      "purpose": "Example code",
+      "fileCount": 4,
+      "lastAccessed": 1781861714848,
+      "keyFiles": [
+        "advanced-usage.ts",
+        "basic-usage.ts",
+        "delegation-enforcer-demo.ts",
+        "hooks.json"
+      ]
+    },
+    "geobench": {
+      "path": "geobench",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1781861714848,
+      "keyFiles": [
+        "oh-my-claudecode.yaml"
+      ]
+    },
+    "hooks": {
+      "path": "hooks",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1781861714849,
+      "keyFiles": [
+        "hooks.json"
+      ]
+    },
+    "missions": {
+      "path": "missions",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1781861714849,
+      "keyFiles": []
+    },
+    "research": {
+      "path": "research",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1781861714849,
+      "keyFiles": [
+        "hephaestus-vs-deep-executor-comparison.md"
+      ]
+    },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 61,
+      "lastAccessed": 1781861714849,
+      "keyFiles": [
+        "audit-multirepo-e2e.mjs",
+        "build-bridge-entry.mjs",
+        "build-cli.mjs",
+        "build-mcp-server.mjs",
+        "build-runtime-cli.mjs"
+      ]
+    },
+    "seminar": {
+      "path": "seminar",
+      "purpose": null,
+      "fileCount": 4,
+      "lastAccessed": 1781861714849,
+      "keyFiles": [
+        "notes.md",
+        "quickref.md",
+        "slides.md",
+        "slides.pdf"
+      ]
+    },
+    "shellmark": {
+      "path": "shellmark",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1781861714849,
+      "keyFiles": []
+    },
+    "skills": {
+      "path": "skills",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1781861714849,
+      "keyFiles": [
+        "AGENTS.md"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 2,
+      "lastAccessed": 1781861714849,
+      "keyFiles": [
+        "AGENTS.md",
+        "index.ts"
+      ]
+    },
+    "templates": {
+      "path": "templates",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1781861714849,
+      "keyFiles": [
+        "deliverables.json"
+      ]
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 0,
+      "lastAccessed": 1781861714849,
+      "keyFiles": []
+    },
+    "dist/__tests__": {
+      "path": "dist/__tests__",
+      "purpose": "Test files",
+      "fileCount": 644,
+      "lastAccessed": 1781861714851,
+      "keyFiles": [
+        "advisory-agent-final-output-contract.test.d.ts",
+        "advisory-agent-final-output-contract.test.d.ts.map",
+        "advisory-agent-final-output-contract.test.js"
+      ]
+    },
+    "dist/config": {
+      "path": "dist/config",
+      "purpose": "Configuration files",
+      "fileCount": 16,
+      "lastAccessed": 1781861714851,
+      "keyFiles": [
+        "index.d.ts",
+        "index.d.ts.map",
+        "index.js"
+      ]
+    },
+    "src/__tests__": {
+      "path": "src/__tests__",
+      "purpose": "Test files",
+      "fileCount": 164,
+      "lastAccessed": 1781861714852,
+      "keyFiles": [
+        "advisory-agent-final-output-contract.test.ts",
+        "agent-boundary-guidance.test.ts",
+        "agent-registry.test.ts"
+      ]
+    },
+    "src/config": {
+      "path": "src/config",
+      "purpose": "Configuration files",
+      "fileCount": 4,
+      "lastAccessed": 1781861714852,
+      "keyFiles": [
+        "index.ts",
+        "loader.ts",
+        "models.ts"
+      ]
+    },
+    "tests/fixtures": {
+      "path": "tests/fixtures",
+      "purpose": "Test fixtures",
+      "fileCount": 0,
+      "lastAccessed": 1781861714852,
+      "keyFiles": []
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "src/__tests__/purge-stale-cache.test.ts",
+      "accessCount": 6,
+      "lastAccessed": 1781862781780,
+      "type": "file"
+    },
+    {
+      "path": "src/planning/artifacts.ts",
+      "accessCount": 4,
+      "lastAccessed": 1781862579683,
+      "type": "file"
+    },
+    {
+      "path": "templates/hooks/session-start.mjs",
+      "accessCount": 4,
+      "lastAccessed": 1781862907040,
+      "type": "file"
+    },
+    {
+      "path": "src/installer/index.ts",
+      "accessCount": 4,
+      "lastAccessed": 1781863194849,
+      "type": "file"
+    },
+    {
+      "path": "src/config/loader.ts",
+      "accessCount": 2,
+      "lastAccessed": 1781862320691,
+      "type": "file"
+    },
+    {
+      "path": "src/team/__tests__/followup-planner.test.ts",
+      "accessCount": 2,
+      "lastAccessed": 1781862529238,
+      "type": "file"
+    },
+    {
+      "path": "src/hooks/bridge.ts",
+      "accessCount": 2,
+      "lastAccessed": 1781862598347,
+      "type": "file"
+    },
+    {
+      "path": "templates/hooks/pre-tool-use.mjs",
+      "accessCount": 2,
+      "lastAccessed": 1781862598583,
+      "type": "file"
+    },
+    {
+      "path": "src/team/__tests__/edge-cases.test.ts",
+      "accessCount": 2,
+      "lastAccessed": 1781862607516,
+      "type": "file"
+    },
+    {
+      "path": "src/planning/artifact-names.ts",
+      "accessCount": 2,
+      "lastAccessed": 1781862843273,
+      "type": "file"
+    },
+    {
+      "path": "src/cli/team.ts",
+      "accessCount": 2,
+      "lastAccessed": 1781862941243,
+      "type": "file"
+    },
+    {
+      "path": "src/team/tmux-session.ts",
+      "accessCount": 1,
+      "lastAccessed": 1781862520511,
+      "type": "file"
+    },
+    {
+      "path": "src/team/followup-planner.ts",
+      "accessCount": 1,
+      "lastAccessed": 1781862520563,
+      "type": "file"
+    },
+    {
+      "path": "src/__tests__/installer-hooks-merge.test.ts",
+      "accessCount": 1,
+      "lastAccessed": 1781862650959,
+      "type": "file"
+    },
+    {
+      "path": "src/utils/paths.ts",
+      "accessCount": 1,
+      "lastAccessed": 1781862683302,
+      "type": "file"
+    },
+    {
+      "path": "src/planning/__tests__/artifacts.test.ts",
+      "accessCount": 1,
+      "lastAccessed": 1781862800585,
+      "type": "file"
+    },
+    {
+      "path": "src/cli/__tests__/team.test.ts",
+      "accessCount": 1,
+      "lastAccessed": 1781862935327,
+      "type": "file"
+    }
+  ],
   "userDirectives": []
 }

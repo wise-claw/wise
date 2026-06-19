@@ -1,0 +1,7 @@
+{
+  "tool_name": "mcp__codegraph__codegraph_explore",
+  "tool_input_preview": "{\"query\":\"sessionName sanitizeName team tmux truncation MAX_NAME_LEN wise-team- prefix readPlanningArtifacts .omx .wise plans roots resolveApprovedTeamFollowupContext launch hint parser\"}",
+  "error": "Error: Tool execution failed: No CodeGraph project is loaded for this session.\nSearched for a .codegraph/ directory starting from: /Users/sjl/Documents/github/wise\nThe index is likely fine — this is a working-directory detection issue: the MCP client launched the server outside your project and didn't report the workspace root. Fix it either way:\n  • Pass projectPath to the tool call, e.g. projectPath: \"/absolute/path/to/your/project\"\n  • Or add --path to the server's MCP config args: [\"serve\", ...",
+  "timestamp": "2026-06-19T09:48:25.398Z",
+  "retry_count": 1
+}

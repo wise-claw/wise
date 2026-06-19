@@ -1,0 +1,58 @@
+# AST-grep rules for detecting raw .wise path constructions that bypass resolveSessionStatePaths.
+# Any match outside the whitelisted files is a contract violation.
+# Whitelist is enforced in check-multirepo-paths.mjs, not here.
+
+rules:
+  - id: join-wise-literal-single
+    language: TypeScript
+    rule:
+      pattern: join($_, '.wise', $$$)
+    message: "Raw join(..., '.wise', ...) detected — use resolveSessionStatePaths() or getWiseRoot() instead"
+
+  - id: join-wise-literal-double
+    language: TypeScript
+    rule:
+      pattern: join($_, ".wise", $$$)
+    message: "Raw join(..., \".wise\", ...) detected — use resolveSessionStatePaths() or getWiseRoot() instead"
+
+  - id: template-wise-forward-slash
+    language: TypeScript
+    rule:
+      pattern: "`${$_}/.wise/$$$`"
+    message: "Raw template `.../.wise/...` detected — use resolveSessionStatePaths() or getWiseRoot() instead"
+
+  - id: template-wise-backslash
+    language: TypeScript
+    rule:
+      pattern: "`${$_}\\.wise\\$$$`"
+    message: "Raw template `...\\.wise\\...` detected — use resolveSessionStatePaths() or getWiseRoot() instead"
+
+  - id: path-join-wise
+    language: TypeScript
+    rule:
+      pattern: path.join($_, '.wise', $$$)
+    message: "Raw path.join(..., '.wise', ...) detected — use resolveSessionStatePaths() or getWiseRoot() instead"
+
+  - id: join-wise-literal-single-js
+    language: JavaScript
+    rule:
+      pattern: join($_, '.wise', $$$)
+    message: "Raw join(..., '.wise', ...) detected — use resolveWiseStateRoot() instead"
+
+  - id: join-wise-literal-double-js
+    language: JavaScript
+    rule:
+      pattern: join($_, ".wise", $$$)
+    message: "Raw join(..., \".wise\", ...) detected — use resolveWiseStateRoot() instead"
+
+  - id: template-wise-forward-slash-js
+    language: JavaScript
+    rule:
+      pattern: "`${$_}/.wise/$$$`"
+    message: "Raw template `.../.wise/...` detected — use resolveWiseStateRoot() instead"
+
+  - id: path-join-wise-js
+    language: JavaScript
+    rule:
+      pattern: path.join($_, '.wise', $$$)
+    message: "Raw path.join(..., '.wise', ...) detected — use resolveWiseStateRoot() instead"

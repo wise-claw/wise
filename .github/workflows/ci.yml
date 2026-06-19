@@ -1,0 +1,246 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-typecheck:
+    name: Lint & Type Check
+    runs-on: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest"]' || '["self-hosted","Linux","X64","gajae-layofflabs-2"]') }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint --if-present
+
+  test:
+    name: Test
+    runs-on: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest"]' || '["self-hosted","Linux","X64","gajae-layofflabs-2"]') }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test -- --run
+
+  build:
+    name: Build
+    runs-on: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest"]' || '["self-hosted","Linux","X64","gajae-layofflabs-2"]') }}
+    needs: [lint-and-typecheck, test]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Check dist size
+        run: |
+          DIST_SIZE=$(du -sm dist | cut -f1)
+          echo "📦 Dist size: ${DIST_SIZE}MB"
+          if [ "$DIST_SIZE" -gt 50 ]; then
+            echo "⚠️ Warning: dist folder is larger than 50MB!"
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+  multirepo-paths-gate:
+    name: Multi-repo Path Gate (AST-grep)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for raw .wise path constructions
+        run: node scripts/ci/check-multirepo-paths.mjs
+
+  version-check:
+    name: Version Consistency Check
+    runs-on: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest"]' || '["self-hosted","Linux","X64","gajae-layofflabs-2"]') }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Check version consistency
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          PLUGIN_VERSION=$(node -p "require('./.claude-plugin/plugin.json').version")
+          MARKET_VERSION=$(node -p "require('./.claude-plugin/marketplace.json').version")
+          
+          echo "package.json:              $PKG_VERSION"
+          echo ".claude-plugin/plugin.json: $PLUGIN_VERSION"
+          echo ".claude-plugin/marketplace.json: $MARKET_VERSION"
+          
+          if [ "$PKG_VERSION" != "$PLUGIN_VERSION" ] || [ "$PKG_VERSION" != "$MARKET_VERSION" ]; then
+            echo ""
+            echo "❌ Version mismatch!"
+            echo "  package.json: $PKG_VERSION"
+            echo "  plugin.json:  $PLUGIN_VERSION"
+            echo "  marketplace.json: $MARKET_VERSION"
+            echo ""
+            echo "All three files must have the same version."
+            exit 1
+          fi
+          
+          echo "✅ All versions match: $PKG_VERSION"
+
+  npm-pack-test:
+    name: npm pack + install test
+    runs-on: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest"]' || '["self-hosted","Linux","X64","gajae-layofflabs-2"]') }}
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: npm pack test
+        run: |
+          echo "📦 Creating tarball..."
+          npm pack
+
+          TARBALL=$(ls -t wise-claw-*.tgz | head -1)
+          echo "📦 Tarball: $TARBALL"
+
+          # ENOTEMPTY hardening (mirrors .github/workflows/upgrade-test.yml):
+          # the global node_modules dir is reused across runs on self-hosted
+          # runners and inside the GitHub-hosted tool cache. A previously
+          # interrupted `npm install -g` can leave the resolved package dir
+          # and/or npm's staging temp dirs (`.wise-claw-*`) behind,
+          # so the next install fails with
+          #   npm ERR! ENOTEMPTY: directory not empty, rename
+          #     '.../wise-claw' -> '.../.wise-claw-XXXX'
+          # Remove any stale global package + npm staging dirs before
+          # installing, then retry a few times so a transient rename race does
+          # not fail the run. A persistent install failure still exits non-zero.
+          PKG=wise-claw
+          GLOBAL_ROOT="$(npm root -g)"
+
+          clean_stale_global_pkg() {
+            # `:?` guards against an empty GLOBAL_ROOT so we never rm -rf "/".
+            rm -rf "${GLOBAL_ROOT:?}/$PKG" 2>/dev/null || true
+            find "$GLOBAL_ROOT" -maxdepth 1 -name ".$PKG-*" -exec rm -rf {} + 2>/dev/null || true
+          }
+
+          echo "📦 Testing global install from tarball..."
+          clean_stale_global_pkg
+
+          ATTEMPTS=3
+          INSTALLED=false
+          for attempt in $(seq 1 "$ATTEMPTS"); do
+            echo "Installing $TARBALL globally (attempt $attempt/$ATTEMPTS)"
+            if npm install -g "./$TARBALL" --no-audit --no-fund; then
+              INSTALLED=true
+              break
+            fi
+            echo "Install attempt $attempt failed; cleaning stale global state and retrying."
+            clean_stale_global_pkg
+            sleep 2
+          done
+
+          if [ "$INSTALLED" != "true" ]; then
+            echo "❌ npm install -g ./$TARBALL failed after $ATTEMPTS attempts"
+            exit 1
+          fi
+
+          echo "🔍 Checking wise command..."
+          which wise
+          
+          echo "🔍 Testing wise --version..."
+          wise --version
+          
+          VERSION_OUTPUT=$(wise --version 2>&1)
+          if [ $? -ne 0 ]; then
+            echo "❌ wise --version failed!"
+            echo "$VERSION_OUTPUT"
+            exit 1
+          fi
+          
+          echo "✅ wise --version: $VERSION_OUTPUT"
+          
+          echo "🔍 Testing wise --help..."
+          wise --help
+          
+          HELP_OUTPUT=$(wise --help 2>&1)
+          if [ $? -ne 0 ]; then
+            echo "❌ wise --help failed!"
+            echo "$HELP_OUTPUT"
+            exit 1
+          fi
+          
+          echo "✅ npm pack + install test passed!"
