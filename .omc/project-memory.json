@@ -37,8 +37,8 @@
     "runtime": "Node.js 20.0.0"
   },
   "build": {
-    "buildCommand": "cd /Users/sjl/Documents/github/wise\nnpm run build > /tmp/wise_build3.log 2>&1\necho \"BUILD_EXIT=$?\"\ntail -2 /tmp/wise_build3.log\necho \"=== 跑两个 installer 测试 ===\"\nnpx vitest run src/installer/__tests__/safe-installer.test.ts src/__tests__/installer-hooks-merge.test.ts 2>&1 | tail -15",
-    "testCommand": "cd /Users/sjl/Documents/github/wise\nsleep 60\nif grep -q \"Test Files\" /tmp/wise_test_v3.log 2>/dev/null; then\n  grep -E \"Test Files|^      Tests\" /tmp/wise_test_v3.log | tail -2\n  echo \"=== 失败文件 ===\"\n  grep -E \"FAIL \" /tmp/wise_test_v3.log | grep -oE \"src/[A-Za-z0-9_/.-]+\\.test\\.(ts|mjs)\" | sort -u\nelse\n  echo \"PENDING: $(pgrep -f 'vitest run' >/dev/null && echo ALIVE || echo DONE), 行数 $(wc -l < /tmp/wise_test_v3.log)\"\nfi",
+    "buildCommand": "cd /Users/sjl/Documents/github/wise\necho \"=== README.md 当前内容头部（看是哪个版本）===\"\nhead -3 README.md 2>/dev/null\necho \"=== 大小 ===\" && wc -c README.md 2>/dev/null\necho \"\"\necho \"=== 是否与历史版本一致 ===\"\nfor c in bce98d5 HEAD; do\n  if diff -q <(git show \"$c:README.md\" 2>/dev/null) README.md >/dev/null 2>&1; then echo \"✓ 与 $c 一致\"; fi\ndone\necho \"\"\necho \"=== 后台进程排查：vitest/watch/esbuild ===\"\nps aux | grep -iE \"vitest|esbuild|tsc|concurrently|node.*watch\" | grep -v grep | grep -v \"PostToolUse\" | head -8",
+    "testCommand": "cd /Users/sjl/Documents/github/wise\necho \"=== 后台测试是否已结束 ===\"\nps aux | grep \"vitest run\" | grep -v grep | head -1 || echo \"(vitest 已结束)\"\necho \"=== README.md 最终状态 ===\" && ls README.md 2>&1\necho \"=== 后台测试日志汇总（若完成）===\"\nf=/tmp/wise_test_readme_hunt.log\ngrep -E \"Test Files|^      Tests\" \"$f\" 2>/dev/null | tail -2 || echo \"(未完成汇总)\"",
     "lintCommand": "npm run lint",
     "devCommand": "npm run dev",
     "scripts": {
@@ -382,9 +382,21 @@
   },
   "hotPaths": [
     {
+      "path": "src/installer/index.ts",
+      "accessCount": 7,
+      "lastAccessed": 1781866048553,
+      "type": "file"
+    },
+    {
       "path": "src/__tests__/purge-stale-cache.test.ts",
       "accessCount": 6,
       "lastAccessed": 1781862781780,
+      "type": "file"
+    },
+    {
+      "path": "src/__tests__/tier0-docs-consistency.test.ts",
+      "accessCount": 6,
+      "lastAccessed": 1781866251927,
       "type": "file"
     },
     {
@@ -400,9 +412,9 @@
       "type": "file"
     },
     {
-      "path": "src/installer/index.ts",
-      "accessCount": 4,
-      "lastAccessed": 1781863194849,
+      "path": "src/team/merge-coordinator.ts",
+      "accessCount": 3,
+      "lastAccessed": 1781866280041,
       "type": "file"
     },
     {
@@ -448,6 +460,24 @@
       "type": "file"
     },
     {
+      "path": "src/__tests__/hud-marketplace-resolution.test.ts",
+      "accessCount": 2,
+      "lastAccessed": 1781866151647,
+      "type": "file"
+    },
+    {
+      "path": "scripts/lib/hud-wrapper-template.txt",
+      "accessCount": 2,
+      "lastAccessed": 1781866160160,
+      "type": "file"
+    },
+    {
+      "path": "src/skills/__tests__/wise-doctor-skill.test.ts",
+      "accessCount": 2,
+      "lastAccessed": 1781866267401,
+      "type": "file"
+    },
+    {
       "path": "src/team/tmux-session.ts",
       "accessCount": 1,
       "lastAccessed": 1781862520511,
@@ -487,6 +517,24 @@
       "path": "package.json",
       "accessCount": 1,
       "lastAccessed": 1781865623212,
+      "type": "file"
+    },
+    {
+      "path": "scripts/sync-version.sh",
+      "accessCount": 1,
+      "lastAccessed": 1781865757303,
+      "type": "file"
+    },
+    {
+      "path": "README.zh.md",
+      "accessCount": 1,
+      "lastAccessed": 1781866954677,
+      "type": "file"
+    },
+    {
+      "path": "README.md",
+      "accessCount": 1,
+      "lastAccessed": 1781866973617,
       "type": "file"
     }
   ],

@@ -255,11 +255,10 @@ describe('HUD marketplace resolution', () => {
     expect(existsSync(hudScriptPath)).toBe(true);
 
     const content = readFileSync(hudScriptPath, 'utf-8');
+    // After the omc→wise rebrand the published npm package name and the
+    // branded fallback both resolve to "wise" (package.json name === "wise"),
+    // so the npm resolution list contains the single canonical package path.
     expect(content).toContain('"wise/dist/hud/index.js"');
-    expect(content).toContain('"wise/dist/hud/index.js"');
-    expect(content.indexOf('"wise/dist/hud/index.js"')).toBeLessThan(
-      content.indexOf('"wise/dist/hud/index.js"')
-    );
 
     execFileSync(process.execPath, [hudScriptPath], {
       cwd: root,

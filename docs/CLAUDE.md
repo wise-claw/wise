@@ -1,5 +1,5 @@
 <!-- WISE:START -->
-<!-- WISE:VERSION:4.14.7 -->
+<!-- WISE:VERSION:1.0.0 -->
 
 # wise - Intelligent Multi-Agent Orchestration
 

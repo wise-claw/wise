@@ -1,0 +1,7 @@
+{
+  "tool_name": "Read",
+  "tool_input_preview": "{\"file_path\":\"/private/tmp/claude-501/-Users-sjl-Documents-github-wise/f3b608ba-9bef-40c7-8f9e-452c013d10e4/tasks/bc70n8aw8.output\"}",
+  "error": "File does not exist. Note: your current working directory is /Users/sjl/Documents/github/wise.",
+  "timestamp": "2026-06-19T10:57:40.231Z",
+  "retry_count": 1
+}

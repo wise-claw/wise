@@ -41,6 +41,5 @@ describe('wise-doctor skill package version diagnostic (issue #2981)', () => {
     const content = readFileSync(skillPath, 'utf8');
 
     expect(content).toContain('npm view wise version');
-    expect(content).not.toContain('npm view wise version');
   });
 });

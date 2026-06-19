@@ -105,11 +105,20 @@ export function checkMergeConflicts(
   validateBranchName(workerBranch);
   validateBranchName(baseBranch);
 
-  // Try git merge-tree --write-tree (Git 2.38+) for accurate conflict detection
+  // Try git merge-tree --write-tree (Git 2.38+) for accurate conflict detection.
+  // Force LC_ALL=C so git emits stable English conflict markers — under a
+  // non-English locale (e.g. zh_CN) git localizes "CONFLICT (content): Merge
+  // conflict in <path>" to e.g. "冲突（内容）：合并冲突于 <path>", which the
+  // regex below cannot parse and would silently degrade to a placeholder.
   try {
     execFileSync(
       'git', ['merge-tree', '--write-tree', baseBranch, workerBranch],
-      { cwd: repoRoot, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+      {
+        cwd: repoRoot,
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env: { ...process.env, LC_ALL: 'C', LANG: 'C' },
+      }
     );
     // Exit code 0 means no conflicts
     return [];

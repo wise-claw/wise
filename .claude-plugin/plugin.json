@@ -1,6 +1,6 @@
 {
   "name": "wise",
-  "version": "4.14.7",
+  "version": "1.0.0",
   "description": "Wise - multi-agent orchestration system for Claude Code",
   "author": {
     "name": "wise contributors"

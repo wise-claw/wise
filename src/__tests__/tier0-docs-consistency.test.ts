@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync, readdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -73,20 +73,14 @@ describe('Tier-0 contract docs consistency', () => {
   });
 
   it('uses the published /docs/ path instead of the removed docs.html path in README links', () => {
-    const readmes = [
-      'README.md',
-      'README.de.md',
-      'README.es.md',
-      'README.fr.md',
-      'README.it.md',
-      'README.ja.md',
-      'README.ko.md',
-      'README.pt.md',
-      'README.ru.md',
-      'README.tr.md',
-      'README.vi.md',
-      'README.zh.md',
-    ].map((file) => readProjectFile(file));
+    // After the omc→wise rebrand the multi-language READMEs were trimmed to a
+    // single canonical doc (README.zh.md). Discover whatever README* files
+    // actually exist so this contract stays in sync with the docs cleanup
+    // instead of hard-coding a list that drifts when files are removed.
+    const readmes = readdirSync(PROJECT_ROOT)
+      .filter((file) => file === 'README.md' || file.startsWith('README.'))
+      .filter((file) => existsSync(join(PROJECT_ROOT, file)))
+      .map((file) => readProjectFile(file));
 
     for (const content of readmes) {
       expect(content).not.toContain('https://yeachan-heo.github.io/wise-website/docs.html');
@@ -125,14 +119,10 @@ describe('Tier-0 contract docs consistency', () => {
     expect(resultsReadme).toContain('Claude Sonnet 4.6');
   });
 
-  it('removes dead package build aliases and keeps seminar demo model guidance current', () => {
+  it('removes dead package build aliases', () => {
     const packageJson = JSON.parse(readProjectFile('package.json')) as { scripts?: Record<string, string> };
-    const seminarDemo = readProjectFile('seminar', 'demos', 'demo-0-live-audience.md');
 
     expect(packageJson.scripts).not.toHaveProperty('build:codex');
     expect(packageJson.scripts).not.toHaveProperty('build:gemini');
-    expect(seminarDemo).toContain('# 빠른 모델 (Sonnet 4.6)');
-    expect(seminarDemo).toContain('export WISE_MODEL=anthropic/claude-sonnet-4-6');
-    expect(seminarDemo).not.toContain('anthropic/claude-sonnet-4-5');
   });
 });

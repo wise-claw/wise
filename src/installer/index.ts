@@ -367,9 +367,11 @@ export function isWiseHook(command: string): boolean {
   const lowerCommand = command.toLowerCase();
   // Match "wise" as a path segment or word boundary
   // Matches: /wise/, /wise-, wise/, -wise, _wise, wise_, wise. (file ext boundary)
+  // Note: must NOT match "wise" as a bare substring inside unrelated words
+  // (e.g. "nwise-thing"), so no anchorless /wise/ fallback — wisePattern alone
+  // covers every legitimate case (path segment, package name, filename).
   const wisePattern = /(?:^|[\/\\_.-])wise(?:$|[\/\\_.-])/;
-  const fullNamePattern = /wise/;
-  if (wisePattern.test(lowerCommand) || fullNamePattern.test(lowerCommand)) {
+  if (wisePattern.test(lowerCommand)) {
     return true;
   }
   // Check for known WISE hook filenames in .claude/hooks/ path.
