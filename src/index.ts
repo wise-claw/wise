@@ -1,14 +1,14 @@
 /**
  * Wise
  *
- * A multi-agent orchestration system for the Claude Agent SDK.
- * Inspired by oh-my-opencode, reimagined for Claude Code.
+ * A self-evolving multi-agent orchestration system for the Claude Agent SDK.
  *
  * Main features:
- * - WISE: Primary orchestrator that delegates to specialized subagents
+ * - Self-evolving: Agents evolve based on feedback and context
+ * - Multi-agent orchestration: Delegates to specialized subagents
  * - Parallel execution: Background agents run concurrently
  * - LSP/AST tools: IDE-like capabilities for agents
- * - Context management: Auto-injection from AGENTS.md/CLAUDE.md
+ * - Context management: Auto-injection from context files
  * - Continuation enforcement: Ensures tasks complete before stopping
  * - Magic keywords: Special triggers for enhanced behaviors
  */

@@ -482,6 +482,12 @@
       "accessCount": 1,
       "lastAccessed": 1781862935327,
       "type": "file"
+    },
+    {
+      "path": "package.json",
+      "accessCount": 1,
+      "lastAccessed": 1781865623212,
+      "type": "file"
     }
   ],
   "userDirectives": []
