@@ -100,13 +100,13 @@
       "timestamp": 1781863031888,
       "source": "manual",
       "category": "architecture",
-      "content": "wise 是基于 oh-my-claudecode (OMC) v4.14.7 的品牌重塑 fork。包名 wise-claw，CLI=wise/wise-cli，插件名=wise，状态目录 .wise，环境变量 WISE_*，状态目录 .omc→.wise。OMX/omx/.omx 命名空间保留不变（Codex interop = oh-my-codex），OpenClaw 子系统保留。魔法关键字 cancelomc/stopomc → cancelwise/stopwise。"
+      "content": "wise 是基于 oh-my-claudecode (OMC) v4.14.7 的品牌重塑 fork。包名 wise，CLI=wise/wise-cli，插件名=wise，状态目录 .wise，环境变量 WISE_*，状态目录 .omc→.wise。OMX/omx/.omx 命名空间保留不变（Codex interop = oh-my-codex），OpenClaw 子系统保留。魔法关键字 cancelomc/stopomc → cancelwise/stopwise。"
     },
     {
       "timestamp": 1781863032152,
       "source": "manual",
       "category": "debugging",
-      "content": "品牌批量替换的隐藏陷阱（重构时已全部修复）：\n1. om[cx] 字符类：原 OMC 用 `om[cx]` 同时匹配 omc(自家)+omx(命名空间)。品牌重塑后自家变 wise，需改为 `(?:wise|omx)`。3 处：src/planning/artifacts.ts(launchHintPattern)、src/hooks/bridge.ts(WORKER_BLOCKED_TEAM_CLI_PATTERN)、templates/hooks/pre-tool-use.mjs(同)。\n2. looksLikeWiseGuidance 正则：原 /oh-my-(claudecode|codex)/ 批量替换后失效，改为 /^# wise\\b/im。2 处：src/config/loader.ts、templates/hooks/session-start.mjs。\n3. isWiseHook fullNamePattern：原 /oh-my-claudecode/ 批量替换成 /wise/ 裸子串匹配过宽（误匹配 nwise），改为 /wise-claw/。在 src/installer/index.ts。\n4. 路径坍缩：测试 mock 中 omc(marketplace)+oh-my-claudecode(plugin) 两层都变 wise 后 endsWith('wise') 条件坍缩，需用 endsWith('wise/wise') 区分 plugin 层。在 src/__tests__/purge-stale-cache.test.ts。\n5. 长度副作用：omc-team-(9)→wise-team-(10)，magic number 110→111。在 src/team/__tests__/edge-cases.test.ts。\n6. 排序前缀干扰：原 .omc<.omx 巧合让 localeCompare 排序正确，.omc→.wise 后 .wise>.omx 破坏排序，comparePlanningArtifactPaths fallback 改用 basename 比较。在 src/planning/artifact-names.ts。"
+      "content": "品牌批量替换的隐藏陷阱（重构时已全部修复）：\n1. om[cx] 字符类：原 OMC 用 `om[cx]` 同时匹配 omc(自家)+omx(命名空间)。品牌重塑后自家变 wise，需改为 `(?:wise|omx)`。3 处：src/planning/artifacts.ts(launchHintPattern)、src/hooks/bridge.ts(WORKER_BLOCKED_TEAM_CLI_PATTERN)、templates/hooks/pre-tool-use.mjs(同)。\n2. looksLikeWiseGuidance 正则：原 /oh-my-(claudecode|codex)/ 批量替换后失效，改为 /^# wise\\b/im。2 处：src/config/loader.ts、templates/hooks/session-start.mjs。\n3. isWiseHook fullNamePattern：原 /oh-my-claudecode/ 批量替换成 /wise/ 裸子串匹配过宽（误匹配 nwise），改为 /wise/。在 src/installer/index.ts。\n4. 路径坍缩：测试 mock 中 omc(marketplace)+oh-my-claudecode(plugin) 两层都变 wise 后 endsWith('wise') 条件坍缩，需用 endsWith('wise/wise') 区分 plugin 层。在 src/__tests__/purge-stale-cache.test.ts。\n5. 长度副作用：omc-team-(9)→wise-team-(10)，magic number 110→111。在 src/team/__tests__/edge-cases.test.ts。\n6. 排序前缀干扰：原 .omc<.omx 巧合让 localeCompare 排序正确，.omc→.wise 后 .wise>.omx 破坏排序，comparePlanningArtifactPaths fallback 改用 basename 比较。在 src/planning/artifact-names.ts。"
     }
   ],
   "directoryMap": {

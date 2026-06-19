@@ -3,8 +3,8 @@
   "name": "wise",
   "description": "Wise - Claude Code native multi-agent orchestration - intelligent model routing, 28 agents, 32 skills",
   "owner": {
-    "name": "wise-claw",
-    "email": "wise-claw@users.noreply.github.com"
+    "name": "wise",
+    "email": "wise@users.noreply.github.com"
   },
   "plugins": [
     {
@@ -12,12 +12,12 @@
       "description": "Wise - Claude Code native multi-agent orchestration with intelligent model routing, 28 agent variants, and 32 powerful skills. Zero learning curve. Maximum power.",
       "version": "4.14.7",
       "author": {
-        "name": "wise-claw",
-        "email": "wise-claw@users.noreply.github.com"
+        "name": "wise",
+        "email": "wise@users.noreply.github.com"
       },
       "source": "./",
       "category": "productivity",
-      "homepage": "https://github.com/wise-claw/wise",
+      "homepage": "https://github.com/wise/wise",
       "tags": [
         "multi-agent",
         "orchestration",

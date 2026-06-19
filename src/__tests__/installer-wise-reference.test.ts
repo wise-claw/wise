@@ -90,7 +90,7 @@ function writeMinimallyCompletePluginPayload(pluginRoot: string): void {
       skills: ['./skills/ralph/'],
     }, null, 2)
   );
-  writeFileSync(join(pluginRoot, 'package.json'), JSON.stringify({ name: 'wise-claw', version: '4.10.2' }, null, 2));
+  writeFileSync(join(pluginRoot, 'package.json'), JSON.stringify({ name: 'wise', version: '4.10.2' }, null, 2));
 }
 
 function getBundledSkillNames(): string[] {

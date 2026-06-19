@@ -357,7 +357,7 @@ const WISE_HOOK_FILENAMES = new Set([
  *
  * Recognition strategy (any match is sufficient):
  * 1. Command path contains "wise" as a path/word segment (e.g. `wise-hook.mjs`, `/wise/`)
- * 2. Command path contains "wise-claw" (the npm package name)
+ * 2. Command path contains "wise" (the npm package name)
  * 3. Command references a known WISE hook filename inside .claude/hooks/
  *
  * @param command - The hook command string
@@ -368,7 +368,7 @@ export function isWiseHook(command: string): boolean {
   // Match "wise" as a path segment or word boundary
   // Matches: /wise/, /wise-, wise/, -wise, _wise, wise_, wise. (file ext boundary)
   const wisePattern = /(?:^|[\/\\_.-])wise(?:$|[\/\\_.-])/;
-  const fullNamePattern = /wise-claw/;
+  const fullNamePattern = /wise/;
   if (wisePattern.test(lowerCommand) || fullNamePattern.test(lowerCommand)) {
     return true;
   }
@@ -1213,7 +1213,7 @@ function getGlobalInstalledPackageRoot(): string | null {
       return null;
     }
 
-    const globalPackageRoot = join(npmRoot, 'wise-claw');
+    const globalPackageRoot = join(npmRoot, 'wise');
     return existsSync(globalPackageRoot) ? globalPackageRoot : null;
   } catch {
     return null;

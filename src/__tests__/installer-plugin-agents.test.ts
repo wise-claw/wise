@@ -66,7 +66,7 @@ function writeCompletePluginPayload(root: string): void {
     commands: './commands/',
     skills: ['./skills/plan/'],
   }, null, 2));
-  writePluginFile(join(root, 'package.json'), JSON.stringify({ name: 'wise-claw', version: '9.9.9' }, null, 2));
+  writePluginFile(join(root, 'package.json'), JSON.stringify({ name: 'wise', version: '9.9.9' }, null, 2));
 }
 
 describe('installer legacy agent sync gating (issue #1502)', () => {

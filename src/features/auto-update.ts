@@ -477,7 +477,7 @@ export function syncPluginCache(verbose: boolean = false): { synced: boolean; sk
       throw new Error('npm root -g returned an empty path');
     }
 
-    const sourceRoot = join(npmRoot, 'wise-claw');
+    const sourceRoot = join(npmRoot, 'wise');
     const packageJsonPath = join(sourceRoot, 'package.json');
     const packageJsonRaw = String(readFileSync(packageJsonPath, 'utf-8') ?? '');
     const packageMetadata = JSON.parse(packageJsonRaw) as { version?: unknown };
@@ -760,15 +760,15 @@ export function getInstalledVersion(): VersionMetadata | null {
     // Try to detect version from package.json if installed via npm
     try {
       // Check if we can find the package in node_modules
-      const result = execSync('npm list -g wise-claw --json', {
+      const result = execSync('npm list -g wise --json', {
         encoding: 'utf-8',
         timeout: 5000,
         stdio: 'pipe'
       });
       const data = JSON.parse(result);
-      if (data.dependencies?.['wise-claw']?.version) {
+      if (data.dependencies?.['wise']?.version) {
         return {
-          version: data.dependencies['wise-claw'].version,
+          version: data.dependencies['wise'].version,
           installedAt: new Date().toISOString(),
           installMethod: 'npm'
         };
@@ -1105,7 +1105,7 @@ export async function performUpdate(options?: {
 
     // Use npm for updates on all platforms (install.sh was removed)
     try {
-      execSync('npm install -g wise-claw@latest', npmExecOptions(options?.verbose ?? false));
+      execSync('npm install -g wise@latest', npmExecOptions(options?.verbose ?? false));
 
       try {
         restoreGlobalClaudeCodeIfNeeded(claudeCodeBeforeUpdate, options?.verbose ?? false);
@@ -1197,7 +1197,7 @@ export async function performUpdate(options?: {
     } catch (npmError) {
       throw new Error(
         'Auto-update via npm failed. Please run manually:\n' +
-        '  npm install -g wise-claw@latest\n' +
+        '  npm install -g wise@latest\n' +
         'Or use: /plugin install wise\n' +
         `Error: ${npmError instanceof Error ? npmError.message : npmError}`
       );

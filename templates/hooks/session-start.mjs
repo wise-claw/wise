@@ -94,7 +94,7 @@ async function checkForUpdates(currentVersion) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 2000);
   try {
-    const response = await fetch('https://registry.npmjs.org/wise-claw/latest', {
+    const response = await fetch('https://registry.npmjs.org/wise/latest', {
       signal: controller.signal
     });
 
@@ -545,7 +545,7 @@ async function main() {
     for (let i = 1; i <= 4; i++) {
       const candidate = join(__dirname, ...Array(i).fill('..'), 'package.json');
       const pkg = readJsonFile(candidate);
-      if ((pkg?.name === 'wise-claw' || pkg?.name === 'wise') && pkg?.version) {
+      if ((pkg?.name === 'wise' || pkg?.name === 'wise') && pkg?.version) {
         currentVersion = pkg.version;
         break;
       }

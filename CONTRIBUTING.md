@@ -92,7 +92,7 @@ Once built, you need to tell Claude Code to use your local checkout. Here are th
 
 ### Bootstrap: make the `wise` command available
 
-All three flows below use the `wise` CLI. If you don't have it installed globally (via `npm i -g wise-claw`), create a symlink from your checkout:
+All three flows below use the `wise` CLI. If you don't have it installed globally (via `npm i -g wise`), create a symlink from your checkout:
 
 ```bash
 # Create ~/.local/bin if it doesn't exist

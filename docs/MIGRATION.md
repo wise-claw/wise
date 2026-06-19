@@ -192,14 +192,14 @@ Your old commands still work! But now you don't need them.
 The project was rebranded to better reflect its purpose and improve discoverability.
 
 - **Project/brand name**: `wise` (GitHub repo, plugin name, commands)
-- **npm package name**: `wise-claw` (unchanged)
+- **npm package name**: `wise` (unchanged)
 
-> **Why the difference?** The npm package name `wise-claw` was kept for backward compatibility with existing installations. The project, GitHub repository, plugin, and all commands use `wise`.
+> **Why the difference?** The npm package name `wise` was kept for backward compatibility with existing installations. The project, GitHub repository, plugin, and all commands use `wise`.
 
 #### NPM Install Command (unchanged)
 
 ```bash
-npm i -g wise-claw@latest
+npm i -g wise@latest
 ```
 
 ### What Changed

@@ -45,7 +45,7 @@ jobs:
       - name: Publish to npm
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          if npm view wise-claw@$VERSION version 2>/dev/null; then
+          if npm view wise@$VERSION version 2>/dev/null; then
             echo "::warning::Version $VERSION already published to npm, skipping publish"
           else
             set -o pipefail
@@ -77,7 +77,7 @@ jobs:
             echo "" >> release-notes.md
             echo "### Install / Update" >> release-notes.md
             echo '```bash' >> release-notes.md
-            echo "npm install -g wise-claw@${VERSION}" >> release-notes.md
+            echo "npm install -g wise@${VERSION}" >> release-notes.md
             echo '```' >> release-notes.md
           fi
 

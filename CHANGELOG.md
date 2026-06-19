@@ -48,7 +48,7 @@ Patch release with **2 new features**, **11 bug fixes**, and **2 CI/test hardeni
 ### Install / Update
 
 ```bash
-npm install -g wise-claw@4.14.7
+npm install -g wise@4.14.7
 ```
 
 Or reinstall the plugin:

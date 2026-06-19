@@ -47,7 +47,7 @@ function makeStubConfigDir(rootDir: string): string {
 /**
  * Minimal env that scrubs PATH/NODE_PATH so the wrapper's
  * `getGlobalNodeModuleRoots()` cannot reach a globally-installed
- * `wise-claw` and silently satisfy the npm fallback step.
+ * `wise` and silently satisfy the npm fallback step.
  */
 function scrubbedEnv(extra: Record<string, string>): Record<string, string> {
   return {

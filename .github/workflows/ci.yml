@@ -174,21 +174,21 @@ jobs:
           echo "📦 Creating tarball..."
           npm pack
 
-          TARBALL=$(ls -t wise-claw-*.tgz | head -1)
+          TARBALL=$(ls -t wise-*.tgz | head -1)
           echo "📦 Tarball: $TARBALL"
 
           # ENOTEMPTY hardening (mirrors .github/workflows/upgrade-test.yml):
           # the global node_modules dir is reused across runs on self-hosted
           # runners and inside the GitHub-hosted tool cache. A previously
           # interrupted `npm install -g` can leave the resolved package dir
-          # and/or npm's staging temp dirs (`.wise-claw-*`) behind,
+          # and/or npm's staging temp dirs (`.wise-*`) behind,
           # so the next install fails with
           #   npm ERR! ENOTEMPTY: directory not empty, rename
-          #     '.../wise-claw' -> '.../.wise-claw-XXXX'
+          #     '.../wise' -> '.../.wise-XXXX'
           # Remove any stale global package + npm staging dirs before
           # installing, then retry a few times so a transient rename race does
           # not fail the run. A persistent install failure still exits non-zero.
-          PKG=wise-claw
+          PKG=wise
           GLOBAL_ROOT="$(npm root -g)"
 
           clean_stale_global_pkg() {

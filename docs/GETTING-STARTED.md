@@ -28,11 +28,11 @@ WISE ships two surfaces and they are designed to coexist:
 | Surface | What you get | Recommended install |
 |---|---|---|
 | **Claude Code plugin** (`wise@wise`) | In-session skills, agents, hooks, statusline, MCP servers — the `/autopilot`, `/ralph`, `/ultrawork`, `/team` slash commands | Marketplace plugin install (Step 1–2 below) |
-| **Terminal CLI** (`wise` binary, package `wise-claw`) | Shell commands: `wise setup`, `wise update`, `wise team`, `wise ask`, and a hard-deprecated `wise autoresearch` shim | `npm i -g wise-claw@latest` |
+| **Terminal CLI** (`wise` binary, package `wise`) | Shell commands: `wise setup`, `wise update`, `wise team`, `wise ask`, and a hard-deprecated `wise autoresearch` shim | `npm i -g wise@latest` |
 
 Most users want **both**: the plugin for the in-session experience, and the npm CLI for shell-side automation and updates. Running them in parallel is fully supported — `wise update` and `wise setup` are idempotent and detect the plugin install to avoid duplicating in-session skills (#2252).
 
-> Older versions of this doc said WISE was "plugin-only". That was incorrect: the `wise` CLI is the canonical entry point for `wise setup`/`wise update` and is published on npm as `wise-claw`. See the [Quick Start in README.md](../README.md#quick-start) for the same two-path layout.
+> Older versions of this doc said WISE was "plugin-only". That was incorrect: the `wise` CLI is the canonical entry point for `wise setup`/`wise update` and is published on npm as `wise`. See the [Quick Start in README.md](../README.md#quick-start) for the same two-path layout.
 
 ### Step 1: Add the marketplace source
 
@@ -55,7 +55,7 @@ After adding the marketplace, install the plugin:
 If you want `wise setup`, `wise update`, `wise team`, `wise ask`, etc. on your shell:
 
 ```bash
-npm i -g wise-claw@latest
+npm i -g wise@latest
 ```
 
 > **Known npm warning:** npm may print `deprecated prebuild-install@7.1.3` during this CLI install.

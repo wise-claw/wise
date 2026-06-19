@@ -188,7 +188,7 @@ describe('HUD marketplace resolution', () => {
     const npmRoot = process.platform === 'win32'
       ? join(npmPrefix, 'node_modules')
       : join(npmPrefix, 'lib', 'node_modules');
-    const npmPackageRoot = join(npmRoot, 'wise-claw');
+    const npmPackageRoot = join(npmRoot, 'wise');
     const npmHudDir = join(npmPackageRoot, 'dist', 'hud');
     mkdirSync(npmHudDir, { recursive: true });
     writeFileSync(join(npmPackageRoot, 'package.json'), '{"type":"module"}\n');
@@ -232,7 +232,7 @@ describe('HUD marketplace resolution', () => {
     mkdirSync(fakeHome, { recursive: true });
 
     const sentinelPath = join(configDir, 'npm-package-loaded.txt');
-    const npmPackageRoot = join(configDir, 'node_modules', 'wise-claw');
+    const npmPackageRoot = join(configDir, 'node_modules', 'wise');
     const npmHudDir = join(npmPackageRoot, 'dist', 'hud');
     mkdirSync(npmHudDir, { recursive: true });
     writeFileSync(join(npmPackageRoot, 'package.json'), '{"type":"module"}\n');
@@ -255,9 +255,9 @@ describe('HUD marketplace resolution', () => {
     expect(existsSync(hudScriptPath)).toBe(true);
 
     const content = readFileSync(hudScriptPath, 'utf-8');
-    expect(content).toContain('"wise-claw/dist/hud/index.js"');
     expect(content).toContain('"wise/dist/hud/index.js"');
-    expect(content.indexOf('"wise-claw/dist/hud/index.js"')).toBeLessThan(
+    expect(content).toContain('"wise/dist/hud/index.js"');
+    expect(content.indexOf('"wise/dist/hud/index.js"')).toBeLessThan(
       content.indexOf('"wise/dist/hud/index.js"')
     );
 

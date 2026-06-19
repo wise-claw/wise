@@ -684,7 +684,7 @@ async function checkNpmUpdate(currentVersion) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 2000);
   try {
-    const response = await fetch('https://registry.npmjs.org/wise-claw/latest', {
+    const response = await fetch('https://registry.npmjs.org/wise/latest', {
       signal: controller.signal
     });
     if (!response.ok) return null;

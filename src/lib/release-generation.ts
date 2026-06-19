@@ -248,7 +248,7 @@ export function generateReleaseBody(
 
   body += `\n### Install / Update\n\n`;
   body += '```bash\n';
-  body += `npm install -g wise-claw@${version}\n`;
+  body += `npm install -g wise@${version}\n`;
   body += '```\n\n';
   body += 'Or reinstall the plugin:\n```bash\nclaude /install-plugin wise\n```\n';
 

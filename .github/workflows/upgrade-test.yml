@@ -103,10 +103,10 @@ jobs:
       # ENOTEMPTY hardening: the global node_modules dir is reused across runs on
       # self-hosted runners (and within the GitHub-hosted tool cache). A
       # previously interrupted `npm install -g` can leave behind the resolved
-      # package dir and/or npm's staging temp dirs (`.wise-claw-*`),
+      # package dir and/or npm's staging temp dirs (`.wise-*`),
       # which makes the next install fail with
-      #   npm ERR! ENOTEMPTY: directory not empty, rename '.../wise-claw'
-      #     -> '.../.wise-claw-XXXXXXXX'
+      #   npm ERR! ENOTEMPTY: directory not empty, rename '.../wise'
+      #     -> '.../.wise-XXXXXXXX'
       # and, on rerun, appear to hang. Remove any stale global package + npm
       # staging dirs before installing, then retry the install a few times so a
       # transient rename race does not fail the run. Persistent install failures
@@ -116,7 +116,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          PKG=wise-claw
+          PKG=wise
           GLOBAL_ROOT="$(npm root -g)"
 
           clean_stale_global_pkg() {
@@ -196,7 +196,7 @@ jobs:
             echo "WISE_UPGRADE_TEST_TARBALL=$RUNNER_TEMP/$TARBALL_NAME"
           } >> "$GITHUB_ENV"
 
-          if npm view "wise-claw@$CURRENT_PACKAGE_VERSION" version >/dev/null 2>&1; then
+          if npm view "wise@$CURRENT_PACKAGE_VERSION" version >/dev/null 2>&1; then
             set +e
             GITHUB_LATEST_VERSION="$(node -e '
               const headers = { "User-Agent": "wise-upgrade-test" };

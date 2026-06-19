@@ -67,7 +67,7 @@ console.log('Installed:',v||'(not found)');
 "
 
 # Check npm for latest version
-LATEST_VERSION=$(npm view wise-claw version 2>/dev/null)
+LATEST_VERSION=$(npm view wise version 2>/dev/null)
 
 if [ -n "$INSTALLED_VERSION" ] && [ -n "$LATEST_VERSION" ]; then
   if [ "$INSTALLED_VERSION" != "$LATEST_VERSION" ]; then
@@ -150,17 +150,17 @@ If `WISE_CLI_INSTALLED` is `"false"`, use AskUserQuestion:
 **Question:** "Would you like to install the WISE CLI globally for standalone helper commands? (`wise`, `wise hud`, `wise teleport`)"
 
 **Options:**
-1. **Yes (Recommended)** - Install `wise-claw` via `npm install -g`
-2. **No - Skip** - Skip installation (can install manually later with `npm install -g wise-claw`)
+1. **Yes (Recommended)** - Install `wise` via `npm install -g`
+2. **No - Skip** - Skip installation (can install manually later with `npm install -g wise`)
 
 If user chooses **Yes**:
 
 ```bash
 if ! command -v npm &>/dev/null; then
   echo "WARNING: npm not found. Cannot install WISE CLI automatically."
-  echo "Install Node.js/npm first, then run: npm install -g wise-claw"
+  echo "Install Node.js/npm first, then run: npm install -g wise"
 else
-  if npm install -g wise-claw 2>&1; then
+  if npm install -g wise 2>&1; then
     echo "WISE CLI installed successfully."
     if command -v wise &>/dev/null; then
       WISE_CLI_VERSION=$(wise --version 2>/dev/null | head -1 || echo "installed")
@@ -170,8 +170,8 @@ else
     fi
   else
     echo "WARNING: Failed to install WISE CLI (permission issue or network error)."
-    echo "You can install manually later: npm install -g wise-claw"
-    echo "Or with sudo: sudo npm install -g wise-claw"
+    echo "You can install manually later: npm install -g wise"
+    echo "Or with sudo: sudo npm install -g wise"
   fi
 fi
 ```

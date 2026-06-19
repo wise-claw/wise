@@ -1,7 +1,7 @@
 {
-  "name": "wise-claw",
-  "version": "4.14.7",
-  "description": "Wise - multi-agent orchestration system for Claude Code (based on wise)",
+  "name": "wise",
+  "version": "1.0.0",
+  "description": "Wise - self-evolving multi-agent orchestration system for Claude Code",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -108,7 +108,7 @@
   "bugs": {
     "url": "https://github.com/wise-claw/wise/issues"
   },
-  "author": "wise-claw",
+  "author": "shenjiaolong",
   "license": "Apache-2.0",
   "keywords": [
     "claude",
