@@ -1,24 +1,13 @@
 # wise ultragoal
 
-`wise ultragoal` is a durable, repo-native multi-goal workflow that pairs with
-the Claude Code `/goal` slash command. It stores plan/ledger artifacts under
-`.wise/ultragoal/` and prints model-facing handoff text that tells the active
-Claude agent when to invoke `/goal <condition>`, when to clear it, and what
-snapshot JSON to share back for ledger reconciliation.
+`wise ultragoal` 是一个持久的、仓库原生的多目标工作流，与 Claude Code `/goal` 斜杠命令配合。它在 `.wise/ultragoal/` 下存储计划/账本制品，并打印面向模型的交接文本，告知活跃 Claude 智能体何时调用 `/goal <condition>`、何时清除它，以及为账本核对回传什么快照 JSON。
 
-## What it is (and isn't)
+## 它是什么（以及不是什么）
 
-- **It is**: a small filesystem state machine for breaking a brief into
-  ordered stories, recording attempts/checkpoints, and gating final
-  completion behind `ai-slop-cleaner` + verification + `$code-review`
-  evidence.
-- **It isn't**: a way for a shell command to mutate Claude Code `/goal`
-  state. Claude `/goal` is a session-scoped, model-facing directive (it
-  registers a stop hook until a condition holds, and auto-clears on
-  success). WISE cannot invoke `/goal` for the model — the handoff text is
-  instructions the active Claude agent reads and acts on itself.
+- **它是**：一个轻量文件系统状态机，用于将 brief 拆解为有序 story、记录尝试/检查点，并将最终完成门控在 `ai-slop-cleaner` + 验证 + `$code-review` 证据之后。
+- **它不是**：一种让 shell 命令变更 Claude Code `/goal` 状态的方式。Claude `/goal` 是会话级、面向模型的指令（它注册一个 stop hook 直至某条件成立，成功时自动清除）。WISE 无法替模型调用 `/goal` —— 交接文本是活跃 Claude 智能体自行读取并执行的指令。
 
-## Artifacts
+## 制品
 
 ```
 .wise/ultragoal/
@@ -27,15 +16,12 @@ snapshot JSON to share back for ledger reconciliation.
   ledger.jsonl   Append-only audit trail of plan/goal events
 ```
 
-The plan stores a `claudeGoalMode`:
+计划存储一个 `claudeGoalMode`：
 
-- `aggregate` (default): one Claude `/goal` covers the whole ultragoal run;
-  WISE stories `G001`/`G002`/… are bookkeeping in the ledger.
-- `per_story`: each ultragoal story corresponds to its own Claude `/goal`
-  directive. Use this when stories are large and you want each one cleared
-  individually.
+- `aggregate`（默认）：一个 Claude `/goal` 覆盖整个 ultragoal 运行；WISE story `G001`/`G002`/… 仅是账本中的簿记。
+- `per_story`：每个 ultragoal story 对应其自身的 Claude `/goal` 指令。当 story 较大且希望各自单独清除时使用。
 
-## Commands
+## 命令
 
 ```
 wise ultragoal create-goals  [--brief <text> | --brief-file <path> | --from-stdin]
@@ -54,14 +40,11 @@ wise ultragoal checkpoint    --goal-id <id> --status <complete|failed|blocked>
 wise ultragoal status        [--claude-goal-json <json-or-path>] [--json]
 ```
 
-Aliases: `create` → `create-goals`, `complete|next|start-next` →
-`complete-goals`.
+别名：`create` → `create-goals`，`complete|next|start-next` → `complete-goals`。
 
-## Claude `/goal` snapshots
+## Claude `/goal` 快照
 
-`--claude-goal-json` accepts either inline JSON or a path to a JSON file
-containing the snapshot the model shares from the active Claude session.
-Accepted shapes:
+`--claude-goal-json` 接受内联 JSON 或包含模型从活跃 Claude 会话回传快照的 JSON 文件路径。接受的形状：
 
 ```json
 { "goal": { "objective": "...", "status": "active|complete|cancelled" } }
@@ -69,15 +52,11 @@ Accepted shapes:
 { "goal": { "condition": "...", "status": "cleared" } }
 ```
 
-`condition` is accepted as a synonym for `objective` (Claude `/goal` calls
-the directive a "condition"). `cleared` is treated as `cancelled`.
+`condition` 被接受为 `objective` 的同义词（Claude `/goal` 将该指令称为 "condition"）。`cleared` 被视作 `cancelled`。
 
-## Final quality gate
+## 最终质量门
 
-The final completion of an ultragoal run is mandatory-gated. The model
-must run `ai-slop-cleaner` on changed files (even when it is a no-op),
-rerun verification, then run `$code-review`, and finally pass
-`--quality-gate-json` with this shape:
+ultragoal 运行的最终完成是强制门控的。模型必须对变更文件运行 `ai-slop-cleaner`（即便为 no-op）、重跑验证，然后运行 `$code-review`，最后通过 `--quality-gate-json` 传入如下形状：
 
 ```json
 {
@@ -87,20 +66,9 @@ rerun verification, then run `$code-review`, and finally pass
 }
 ```
 
-If the final review is not clean, the model should call
-`wise ultragoal record-review-blockers` instead of trying to mark the goal
-complete. That records the unresolved review findings, appends a blocker
-story, and keeps the Claude `/goal` active.
+若最终审查不干净，模型应调用 `wise ultragoal record-review-blockers`，而非试图标记目标完成。这会记录未解决的审查发现、追加一个 blocker story，并保持 Claude `/goal` 活跃。
 
-## Limitations
+## 局限
 
-- The Claude `/goal` slash command is a session-scoped, in-session
-  directive. Shell tools cannot directly invoke it, set its condition, or
-  clear it. The handoff text instructs the active Claude agent to do so
-  itself in-session. The snapshot the model shares is treated as the
-  authoritative proof; WISE only verifies textual consistency between the
-  snapshot, the plan's expected objective, and the ledger event being
-  recorded.
-- If a future Claude tool name changes (`/goal` → something else), the
-  handoff text and snapshot field names will need to be updated; the
-  reconciliation logic itself is name-agnostic.
+- Claude `/goal` 斜杠命令是会话级、会话内的指令。Shell 工具无法直接调用它、设置其条件或清除它。交接文本指示活跃 Claude 智能体在会话内自行完成。模型回传的快照被视作权威证明；WISE 仅验证快照、计划预期目标与所记录账本事件之间的文本一致性。
+- 若未来 Claude 工具名变更（`/goal` → 其他），交接文本与快照字段名将需更新；核对逻辑本身与名称无关。

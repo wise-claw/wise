@@ -1,47 +1,47 @@
-# Agent Prompt Templates
+# 智能体提示词模板
 
-This directory contains reusable templates for creating agent prompts, reducing duplication across tiers.
+本目录包含用于创建智能体提示词的可复用模板，减少跨层级的重复。
 
-## Files
+## 文件
 
-- **base-agent.md**: Core template structure with injection points
-- **tier-instructions.md**: Tier-specific behavioral instructions (LOW/MEDIUM/HIGH)
-- **README.md**: This file - usage guide
+- **base-agent.md**：带注入点的核心模板结构
+- **tier-instructions.md**：层级特定行为指令（LOW/MEDIUM/HIGH）
+- **README.md**：本文件 — 使用指南
 
-## Template System
+## 模板系统
 
-### Injection Points
+### 注入点
 
-The template uses the following placeholders:
+模板使用以下占位符：
 
-| Placeholder | Description | Example |
+| 占位符 | 说明 | 示例 |
 |-------------|-------------|---------|
-| `{{AGENT_NAME}}` | Agent identifier | `executor-low`, `architect-medium` |
-| `{{ROLE_DESCRIPTION}}` | What this agent does | "You execute simple code changes..." |
-| `{{TIER_INSTRUCTIONS}}` | Tier-specific behavior | LOW/MEDIUM/HIGH instructions |
-| `{{TASK_SPECIFIC_INSTRUCTIONS}}` | Agent-specific protocols | "When fixing bugs, always add tests" |
-| `{{EXPECTED_DELIVERABLES}}` | What to output | "Modified files + test results" |
+| `{{AGENT_NAME}}` | 智能体标识符 | `executor-low`, `architect-medium` |
+| `{{ROLE_DESCRIPTION}}` | 此智能体的职责 | "You execute simple code changes..." |
+| `{{TIER_INSTRUCTIONS}}` | 层级特定行为 | LOW/MEDIUM/HIGH 指令 |
+| `{{TASK_SPECIFIC_INSTRUCTIONS}}` | 智能体特定协议 | "When fixing bugs, always add tests" |
+| `{{EXPECTED_DELIVERABLES}}` | 输出内容 | "Modified files + test results" |
 
-### Usage
+### 用法
 
-1. **Copy the base template**:
+1. **复制基础模板**：
    ```bash
    cp agents/templates/base-agent.md agents/my-new-agent.md
    ```
 
-2. **Replace placeholders**:
-   - Set `{{AGENT_NAME}}` to your agent name
-   - Write `{{ROLE_DESCRIPTION}}` specific to your agent
-   - Copy appropriate tier instructions from `tier-instructions.md`
-   - Add any `{{TASK_SPECIFIC_INSTRUCTIONS}}` unique to this agent
-   - Define `{{EXPECTED_DELIVERABLES}}`
+2. **替换占位符**：
+   - 将 `{{AGENT_NAME}}` 设为你的智能体名
+   - 编写特定于你智能体的 `{{ROLE_DESCRIPTION}}`
+   - 从 `tier-instructions.md` 复制合适的层级指令
+   - 添加此智能体独有的 `{{TASK_SPECIFIC_INSTRUCTIONS}}`
+   - 定义 `{{EXPECTED_DELIVERABLES}}`
 
-3. **Review common protocol**:
-   - The base template includes shared verification and tool usage protocols
-   - These apply to ALL agents and don't need modification
-   - Only extend if your agent needs additional protocols
+3. **审查通用协议**：
+   - 基础模板包含共享的验证与工具使用协议
+   - 这些适用于所有智能体，无需修改
+   - 仅当你的智能体需要额外协议时才扩展
 
-### Example: Creating executor-low
+### 示例：创建 executor-low
 
 ```markdown
 # executor-low
@@ -77,34 +77,34 @@ You execute simple, well-defined code changes quickly and efficiently. Handle si
 - Brief summary of changes made
 ```
 
-## Benefits
+## 收益
 
-1. **Consistency**: All agents follow the same verification protocol
-2. **Maintainability**: Update common protocols in one place
-3. **Clarity**: Clear separation of tier vs. role-specific instructions
-4. **Scalability**: Easy to add new agents or tiers
+1. **一致性**：所有智能体遵循相同的验证协议
+2. **可维护性**：在一处更新通用协议
+3. **清晰性**：层级与角色特定指令明确分离
+4. **可扩展性**：易于新增智能体或层级
 
-## Best Practices
+## 最佳实践
 
-- **Don't override common protocol** unless absolutely necessary
-- **Be specific in role descriptions** - avoid vague terms like "handle tasks"
-- **Document escalation paths** - when should this agent call another?
-- **Include examples** in task-specific instructions when helpful
-- **Keep tier instructions pure** - only capability/scope guidance, not role-specific behavior
+- **除非绝对必要，不要覆盖通用协议**
+- **角色描述要具体** — 避免使用「处理任务」等模糊措辞
+- **记录上报路径** — 此智能体何时应调用另一个？
+- **有帮助时在任务特定指令中包含示例**
+- **保持层级指令纯粹** — 仅能力/范围指引，不含角色特定行为
 
-## Tier Selection Guide
+## 层级选择指南
 
-| Tier | Model | Token Cost | Use When |
+| 层级 | 模型 | Token 成本 | 何时使用 |
 |------|-------|------------|----------|
-| LOW | Haiku | $ | Task is simple, well-defined, <5 files |
-| MEDIUM | Sonnet | $$ | Task needs investigation, <20 files |
-| HIGH | Opus | $$$ | Task is complex, architectural, unlimited files |
+| LOW | Haiku | $ | 任务简单、定义明确、<5 文件 |
+| MEDIUM | Sonnet | $$ | 任务需要调研、<20 文件 |
+| HIGH | Opus | $$$ | 任务复杂、架构性、不限文件数 |
 
-## Future Enhancements
+## 未来增强
 
-Potential additions to the template system:
+模板系统的潜在补充：
 
-- Domain-specific templates (frontend, backend, data, etc.)
-- Composition templates for specialized agents
-- Automated template validation
-- Template generation CLI tool
+- 领域特定模板（前端、后端、数据等）
+- 专用智能体的组合模板
+- 自动化模板校验
+- 模板生成 CLI 工具

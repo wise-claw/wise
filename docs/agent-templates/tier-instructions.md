@@ -1,10 +1,10 @@
-# Tier-Specific Instructions
+# 层级特定指令
 
-This document defines the behavioral differences between agent tiers (LOW/MEDIUM/HIGH).
+本文档定义智能体层级（LOW/MEDIUM/HIGH）之间的行为差异。
 
-## LOW Tier (Haiku)
-**Model**: claude-haiku-4-5
-**Focus**: Speed and efficiency for simple, well-defined tasks
+## LOW 层级（Haiku）
+**模型**：claude-haiku-4-5
+**重点**：针对简单、定义明确任务的速度与效率
 
 ```markdown
 **Tier: LOW (Haiku) - Speed-Focused Execution**
@@ -20,9 +20,9 @@ This document defines the behavioral differences between agent tiers (LOW/MEDIUM
 - Skip deep investigation - implement what's asked
 ```
 
-## MEDIUM Tier (Sonnet)
-**Model**: claude-sonnet-4-5
-**Focus**: Balance between thoroughness and efficiency
+## MEDIUM 层级（Sonnet）
+**模型**：claude-sonnet-4-5
+**重点**：彻底性与效率之间的平衡
 
 ```markdown
 **Tier: MEDIUM (Sonnet) - Balanced Execution**
@@ -39,9 +39,9 @@ This document defines the behavioral differences between agent tiers (LOW/MEDIUM
 - Document non-obvious decisions
 ```
 
-## HIGH Tier (Opus)
-**Model**: claude-opus-4-8
-**Focus**: Correctness and quality for complex tasks
+## HIGH 层级（Opus）
+**模型**：claude-opus-4-8
+**重点**：复杂任务的正确性与质量
 
 ```markdown
 **Tier: HIGH (Opus) - Excellence-Focused Execution**
@@ -59,24 +59,24 @@ This document defines the behavioral differences between agent tiers (LOW/MEDIUM
 - No escalation needed - you are the top tier
 ```
 
-## Selection Guide
+## 选择指南
 
-| Task Type | Tier | Rationale |
+| 任务类型 | 层级 | 理由 |
 |-----------|------|-----------|
-| Simple bug fix in known file | LOW | Well-defined, single file |
-| Add validation to existing function | LOW | Straightforward addition |
-| Implement feature across 3-5 files | MEDIUM | Moderate scope |
-| Debug integration issue | MEDIUM | Requires investigation |
-| Refactor module architecture | HIGH | Architectural decision |
-| Design new system component | HIGH | Complex design needed |
-| Fix subtle race condition | HIGH | Deep debugging required |
-| Optimize performance bottleneck | HIGH | Requires deep analysis |
+| 已知文件中的简单 bug 修复 | LOW | 定义明确，单文件 |
+| 为现有函数添加校验 | LOW | 直接新增 |
+| 跨 3-5 文件实现功能 | MEDIUM | 适中范围 |
+| 调试集成问题 | MEDIUM | 需要调研 |
+| 重构模块架构 | HIGH | 架构决策 |
+| 设计新系统组件 | HIGH | 需要复杂设计 |
+| 修复细微竞态条件 | HIGH | 需要深度调试 |
+| 优化性能瓶颈 | HIGH | 需要深度分析 |
 
-## Template Usage
+## 模板用法
 
-When creating an agent prompt, replace `{{TIER_INSTRUCTIONS}}` with the appropriate tier block above.
+创建智能体提示词时，将 `{{TIER_INSTRUCTIONS}}` 替换为上方合适的层级块。
 
-Example for executor-low:
+executor-low 示例：
 ```markdown
 # executor-low
 

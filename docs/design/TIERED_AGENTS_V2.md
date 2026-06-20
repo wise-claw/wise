@@ -1,46 +1,46 @@
-# Tiered Agents v2 Architecture Design
+# 层级智能体 v2 架构设计
 
-## Overview
+## 概览
 
-This document describes an improved tiered agent architecture that addresses current gaps and implements sophisticated patterns for model routing, capability inheritance, and dynamic escalation.
+本文档描述一种改进的层级智能体架构，用于解决当前缺口并实现模型路由、能力继承与动态升级的精细模式。
 
-## Current Issues Identified
+## 已识别的当前问题
 
-1. **Incomplete Inheritance**: Tiered agents don't inherit core behavioral patterns from base agents
-2. **Inconsistent Tool Restrictions**: Tool restrictions vary without clear rationale
-3. **Missing Escalation Signals**: No mechanism for agents to request escalation when overloaded
-4. **Minimal Behavioral Instructions**: Tiered variants have too few instructions
-5. **No Dynamic Routing in Markdown**: TypeScript router exists but markdown agents don't leverage it
+1. **继承不完整**：层级智能体未从基础智能体继承核心行为模式
+2. **工具限制不一致**：工具限制缺乏清晰理由即各不相同
+3. **缺少升级信号**：智能体过载时无请求升级的机制
+4. **行为指令过少**：层级变体的指令过少
+5. **Markdown 中无动态路由**：TypeScript 路由器已存在，但 markdown 智能体未利用它
 
-## Design Principles
+## 设计原则
 
-### 1. Template-Based Inheritance
+### 1. 基于模板的继承
 
-Each tiered agent should inherit from a base template that provides:
-- Core identity and role
-- Fundamental constraints (read-only, no delegation, etc.)
-- Output format requirements
-- Quality standards
+每个层级智能体应从基础模板继承：
+- 核心身份与角色
+- 基本约束（只读、不委派等）
+- 输出格式要求
+- 质量标准
 
-Tier-specific overrides then customize:
-- Task complexity boundaries
-- Tool restrictions
-- Response depth/breadth
-- Escalation thresholds
+层级特定覆盖随后定制：
+- 任务复杂度边界
+- 工具限制
+- 响应深度/广度
+- 升级阈值
 
-### 2. Explicit Capability Boundaries
+### 2. 显式能力边界
 
-Each tier has clear boundaries:
+每个层级有清晰边界：
 
-| Tier | Complexity | Response Depth | Self-Assessment |
+| 层级 | 复杂度 | 响应深度 | 自我评估 |
 |------|------------|----------------|-----------------|
-| LOW (Haiku) | Simple, single-focus | Concise, direct | "Is this within my scope?" |
-| MEDIUM (Sonnet) | Moderate, multi-step | Thorough, structured | "Can I handle this fully?" |
-| HIGH (Opus) | Complex, system-wide | Comprehensive, nuanced | "What are the trade-offs?" |
+| LOW (Haiku) | 简单、单一焦点 | 简洁、直接 | "这是否在我的范围内？" |
+| MEDIUM (Sonnet) | 中等、多步 | 详尽、结构化 | "我能完全处理吗？" |
+| HIGH (Opus) | 复杂、系统级 | 全面、细致 | "权衡有哪些？" |
 
-### 3. Escalation Signals
+### 3. 升级信号
 
-Agents should recognize when to recommend escalation:
+智能体应识别何时建议升级：
 
 ```markdown
 <Escalation_Signals>
@@ -58,40 +58,40 @@ Output escalation recommendation:
 </Escalation_Signals>
 ```
 
-### 4. Tool Capability Tiers
+### 4. 工具能力层级
 
-| Tool | LOW | MEDIUM | HIGH |
+| 工具 | LOW | MEDIUM | HIGH |
 |------|-----|--------|------|
 | Read | ✅ | ✅ | ✅ |
 | Glob | ✅ | ✅ | ✅ |
 | Grep | ✅ | ✅ | ✅ |
-| Edit | ✅ (simple) | ✅ | ✅ |
-| Write | ✅ (simple) | ✅ | ✅ |
-| Bash | Limited | ✅ | ✅ |
+| Edit | ✅ (简单) | ✅ | ✅ |
+| Write | ✅ (简单) | ✅ | ✅ |
+| Bash | 受限 | ✅ | ✅ |
 | WebSearch | ❌ | ✅ | ✅ |
 | WebFetch | ❌ | ✅ | ✅ |
-| Task | ❌ | ❌ | Varies |
+| Task | ❌ | ❌ | 视情况 |
 | TodoWrite | ✅ | ✅ | ✅ |
 
-## Agent Family Templates
+## 智能体家族模板
 
-### Architect Family (Analysis)
+### Architect 家族（分析）
 
-**Base Identity**: Strategic advisor, READ-ONLY consultant, diagnoses not implements
+**基础身份**：战略顾问，只读咨询师，诊断而非实现
 
-| Variant | Model | Tools | Focus |
+| 变体 | 模型 | 工具 | 焦点 |
 |---------|-------|-------|-------|
-| architect-low | Haiku | Read, Glob, Grep | Quick lookups, single-file analysis |
-| architect-medium | Sonnet | + WebSearch, WebFetch | Standard analysis, dependency tracing |
-| architect | Opus | Full read access | Deep architecture analysis, system-wide patterns |
+| architect-low | Haiku | Read, Glob, Grep | 快速查找、单文件分析 |
+| architect-medium | Sonnet | + WebSearch, WebFetch | 标准分析、依赖追踪 |
+| architect | Opus | 完整读访问 | 深度架构分析、系统级模式 |
 
-**Shared Constraints**:
-- NO Write/Edit tools
-- NO implementation
-- MUST cite file:line references
-- MUST provide actionable recommendations
+**共享约束**：
+- 无 Write/Edit 工具
+- 不实现
+- 必须引用 file:line 引用
+- 必须提供可操作建议
 
-**Tier-Specific Behaviors**:
+**层级特定行为**：
 
 ```markdown
 ## architect-low
@@ -113,23 +113,23 @@ Output escalation recommendation:
 - No escalation needed (highest tier)
 ```
 
-### Executor Family (Execution)
+### Executor 家族（执行）
 
-**Base Identity**: Focused executor, works ALONE, no delegation, TODO obsessed
+**基础身份**：专注执行者，独立工作，不委派，执着于 TODO
 
-| Variant | Model | Tools | Focus |
+| 变体 | 模型 | 工具 | 焦点 |
 |---------|-------|-------|-------|
-| executor-low | Haiku | Read, Glob, Grep, Edit, Write, Bash, TodoWrite | Single-file, trivial changes |
-| executor | Sonnet | Same | Multi-step, moderate complexity |
-| executor-high | Opus | Same | Multi-file, complex refactoring |
+| executor-low | Haiku | Read, Glob, Grep, Edit, Write, Bash, TodoWrite | 单文件、琐碎变更 |
+| executor | Sonnet | 同上 | 多步、中等复杂度 |
+| executor-high | Opus | 同上 | 多文件、复杂重构 |
 
-**Shared Constraints**:
-- Task tool BLOCKED (no delegation)
-- MUST use TodoWrite for 2+ step tasks
-- MUST verify after changes
-- Works ALONE
+**共享约束**：
+- Task 工具被阻塞（不委派）
+- 2+ 步任务必须使用 TodoWrite
+- 变更后必须验证
+- 独立工作
 
-**Tier-Specific Behaviors**:
+**层级特定行为**：
 
 ```markdown
 ## executor-low
@@ -151,23 +151,23 @@ Output escalation recommendation:
 - No escalation needed (use architect for consultation)
 ```
 
-### Designer Family (UI/UX)
+### Designer 家族（UI/UX）
 
-**Base Identity**: Designer-developer hybrid, sees what pure devs miss, creates memorable interfaces
+**基础身份**：设计师-开发者混合体，看见纯开发者遗漏之处，创造令人难忘的界面
 
-| Variant | Model | Tools | Focus |
+| 变体 | 模型 | 工具 | 焦点 |
 |---------|-------|-------|-------|
-| designer-low | Haiku | Read, Glob, Grep, Edit, Write, Bash | Simple styling, minor tweaks |
-| designer | Sonnet | Same | Standard UI work, components |
-| designer-high | Opus | Same | Design systems, complex architecture |
+| designer-low | Haiku | Read, Glob, Grep, Edit, Write, Bash | 简单样式、微调 |
+| designer | Sonnet | 同上 | 标准 UI 工作、组件 |
+| designer-high | Opus | 同上 | 设计系统、复杂架构 |
 
-**Shared Constraints**:
-- NEVER use generic fonts (Inter, Roboto, Arial)
-- NEVER use cliched patterns (purple gradients)
-- Match existing code patterns
-- Production-quality output
+**共享约束**：
+- 永不使用通用字体 (Inter, Roboto, Arial)
+- 永不使用俗套模式 (紫色渐变)
+- 匹配既有代码模式
+- 生产级质量输出
 
-**Tier-Specific Behaviors**:
+**层级特定行为**：
 
 ```markdown
 ## designer-low
@@ -189,23 +189,23 @@ Output escalation recommendation:
 - Full creative latitude
 ```
 
-### Document-Specialist Family (Research)
+### Document-Specialist 家族（研究）
 
-**Base Identity**: External documentation document-specialist, searches EXTERNAL resources
+**基础身份**：外部文档 document-specialist，搜索外部资源
 
-| Variant | Model | Tools | Focus |
+| 变体 | 模型 | 工具 | 焦点 |
 |---------|-------|-------|-------|
-| document-specialist-low | Haiku | Read, Glob, Grep, WebSearch, WebFetch | Quick lookups |
-| document-specialist | Sonnet | Same | Comprehensive research |
+| document-specialist-low | Haiku | Read, Glob, Grep, WebSearch, WebFetch | 快速查找 |
+| document-specialist | Sonnet | 同上 | 全面研究 |
 
-**Shared Constraints**:
-- Check repo docs first when the question is project-specific
-- ALWAYS cite sources with URLs (or stable curated-doc IDs when a URL is unavailable)
-- Prefer Context Hub / `chub` (or another curated docs backend already configured) for external API/framework correctness when available, then official docs
-- Note version compatibility
-- Flag outdated information
+**共享约束**：
+- 问题为项目特定时优先检查仓库文档
+- 始终用 URL（或 URL 不可用时用稳定的 curated-doc ID）引用来源
+- 外部 API/框架正确性优先使用 Context Hub / `chub`（或已配置的其他 curated docs 后端），其次官方文档
+- 注明版本兼容性
+- 标记过时信息
 
-**Tier-Specific Behaviors**:
+**层级特定行为**：
 
 ```markdown
 ## document-specialist-low
@@ -221,22 +221,22 @@ Output escalation recommendation:
 - No escalation needed for research tasks
 ```
 
-### Explore Family (Search)
+### Explore 家族（搜索）
 
-**Base Identity**: Codebase search specialist, finds files and code patterns
+**基础身份**：代码库搜索专家，查找文件与代码模式
 
-| Variant | Model | Tools | Focus |
+| 变体 | 模型 | 工具 | 焦点 |
 |---------|-------|-------|-------|
-| explore | Haiku | Read, Glob, Grep | Quick searches |
-| explore (model=sonnet) | Sonnet | Same | Thorough analysis |
+| explore | Haiku | Read, Glob, Grep | 快速搜索 |
+| explore (model=sonnet) | Sonnet | 同上 | 详尽分析 |
 
-**Shared Constraints**:
-- READ-ONLY
-- Always use absolute paths
-- Return structured results
-- Address underlying need, not just literal request
+**共享约束**：
+- 只读
+- 始终使用绝对路径
+- 返回结构化结果
+- 针对潜在需求，而非仅字面请求
 
-**Tier-Specific Behaviors**:
+**层级特定行为**：
 
 ```markdown
 ## explore (low)
@@ -252,11 +252,11 @@ Output escalation recommendation:
 - No escalation needed
 ```
 
-## Implementation Changes Required
+## 所需实现变更
 
-### 1. Update Markdown Agent Files
+### 1. 更新 Markdown 智能体文件
 
-Each tiered agent file should include:
+每个层级智能体文件应包含：
 
 ```markdown
 ---
@@ -287,37 +287,37 @@ When you detect tasks beyond your scope, output:
 </Escalation_Protocol>
 ```
 
-### 2. Update TypeScript Router
+### 2. 更新 TypeScript 路由器
 
-The router should:
-- Parse agent capabilities from markdown
-- Match task signals to tier boundaries
-- Provide escalation recommendations in output
+路由器应：
+- 从 markdown 解析智能体能力
+- 将任务信号匹配到层级边界
+- 在输出中提供升级建议
 
-### 3. Add Escalation Detection
+### 3. 增加升级检测
 
-The orchestrator should:
-- Detect "ESCALATION RECOMMENDED" in agent output
-- Automatically retry with recommended higher tier
-- Log escalation patterns for optimization
+编排器应：
+- 检测智能体输出中的 "ESCALATION RECOMMENDED"
+- 自动用推荐的更高层级重试
+- 记录升级模式以供优化
 
-## Cost Impact Analysis
+## 成本影响分析
 
-Based on current pricing (Haiku $1/$5, Sonnet $3/$15, Opus $5/$25 per million tokens):
+基于当前定价（Haiku $1/$5，Sonnet $3/$15，Opus $5/$25 每百万 token）：
 
-| Scenario | Before (all Sonnet) | After (Tiered) | Savings |
+| 场景 | 之前（全 Sonnet） | 之后（层级化） | 节省 |
 |----------|---------------------|----------------|---------|
-| Simple lookups (70%) | $3/$15 | $1/$5 (Haiku) | ~67% |
-| Standard work (25%) | $3/$15 | $3/$15 (Sonnet) | 0% |
-| Complex work (5%) | $3/$15 | $5/$25 (Opus) | -67% |
-| **Weighted Average** | $3/$15 | ~$1.60/$8 | **~47%** |
+| 简单查找 (70%) | $3/$15 | $1/$5 (Haiku) | ~67% |
+| 标准工作 (25%) | $3/$15 | $3/$15 (Sonnet) | 0% |
+| 复杂工作 (5%) | $3/$15 | $5/$25 (Opus) | -67% |
+| **加权平均** | $3/$15 | ~$1.60/$8 | **~47%** |
 
-Intelligent routing can reduce costs by ~47% while improving quality for complex tasks.
+智能路由可在提升复杂任务质量的同时降低约 47% 成本。
 
-## Next Steps
+## 后续步骤
 
-1. Create updated markdown files for all tiered agents
-2. Add escalation detection to hooks
-3. Update router to use agent capability parsing
-4. Add telemetry for tier usage optimization
-5. Create tests for escalation scenarios
+1. 为所有层级智能体创建更新后的 markdown 文件
+2. 向 hooks 增加升级检测
+3. 更新路由器以使用智能体能力解析
+4. 增加层级使用优化的遥测
+5. 为升级场景创建测试

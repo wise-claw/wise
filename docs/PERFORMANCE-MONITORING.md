@@ -1,49 +1,49 @@
-# Performance Monitoring Guide
+# 性能监控指南
 
-Comprehensive guide to monitoring, debugging, and optimizing Claude Code and wise performance.
-
----
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Built-in Monitoring](#built-in-monitoring)
-  - [Agent Observatory](#agent-observatory)
-  - [Session-End Summaries](#session-end-summaries)
-  - [Session Replay](#session-replay)
-- [HUD Integration](#hud-integration)
-- [Debugging Techniques](#debugging-techniques)
-- [External Resources](#external-resources)
-- [Best Practices](#best-practices)
-- [Troubleshooting](#troubleshooting)
+全面指南，用于监控、调试和优化 Claude Code 与 wise 的性能。
 
 ---
 
-## Overview
+## 目录
 
-wise provides comprehensive monitoring capabilities for tracking agent performance, token usage, costs, and identifying bottlenecks in multi-agent workflows. This guide covers both built-in tools and external resources for monitoring Claude's performance.
+- [概述](#overview)
+- [内置监控](#built-in-monitoring)
+  - [智能体观测台](#agent-observatory)
+  - [会话结束摘要](#session-end-summaries)
+  - [会话回放](#session-replay)
+- [HUD 集成](#hud-integration)
+- [调试技巧](#debugging-techniques)
+- [外部资源](#external-resources)
+- [最佳实践](#best-practices)
+- [故障排查](#troubleshooting)
 
-### What You Can Monitor
+---
 
-| Metric | Tool | Granularity |
+## 概述
+
+wise 提供全面的监控能力，用于追踪智能体性能、token 用量、成本，并识别多智能体工作流中的瓶颈。本指南涵盖用于监控 Claude 性能的内置工具与外部资源。
+
+### 可监控的内容
+
+| 指标 | 工具 | 粒度 |
 |--------|------|-------------|
-| Agent lifecycle | Agent Observatory | Per-agent |
-| Tool timing | Session Replay | Per-tool call |
-| Session-end summary | Session-end hook | Per-session |
-| File ownership | Subagent Tracker | Per-file |
-| Parallel efficiency | Observatory | Real-time |
+| 智能体生命周期 | 智能体观测台 | 每智能体 |
+| 工具计时 | 会话回放 | 每次工具调用 |
+| 会话结束摘要 | Session-end hook | 每会话 |
+| 文件归属 | Subagent Tracker | 每文件 |
+| 并行效率 | 观测台 | 实时 |
 
 ---
 
-## Built-in Monitoring
+## 内置监控
 
-### Agent Observatory
+### 智能体观测台
 
-The Agent Observatory provides real-time visibility into all running agents, their performance metrics, and potential issues.
+智能体观测台提供对所有运行中智能体、其性能指标和潜在问题的实时可见性。
 
-#### Accessing the Observatory
+#### 访问观测台
 
-The observatory is automatically displayed in the HUD when agents are running. You can also query it programmatically:
+当智能体运行时，观测台会自动显示在 HUD 中。也可以通过编程方式查询：
 
 ```typescript
 import { getAgentObservatory } from 'wise/hooks/subagent-tracker';
@@ -53,7 +53,7 @@ console.log(obs.header);  // "Agent Observatory (3 active, 85% efficiency)"
 obs.lines.forEach(line => console.log(line));
 ```
 
-#### Observatory Output
+#### 观测台输出
 
 ```
 Agent Observatory (3 active, 85% efficiency)
@@ -64,36 +64,36 @@ Agent Observatory (3 active, 85% efficiency)
 ⚠ architect: Cost $0.42 exceeds threshold
 ```
 
-#### Status Indicators
+#### 状态指示器
 
-| Icon | Meaning |
+| 图标 | 含义 |
 |------|---------|
-| 🟢 | Healthy - agent running normally |
-| 🟡 | Warning - intervention suggested |
-| 🔴 | Critical - stale agent (>5 min) |
+| 🟢 | 健康 - 智能体正常运行 |
+| 🟡 | 警告 - 建议干预 |
+| 🔴 | 严重 - 智能体停滞（>5 分钟）|
 
-#### Key Metrics
+#### 关键指标
 
-| Metric | Description |
+| 指标 | 描述 |
 |--------|-------------|
-| `tools:N` | Number of tool calls made |
-| `tokens:Nk` | Approximate token usage (thousands) |
-| `$X.XX` | Estimated cost in USD |
-| `files:N` | Files being modified |
-| `bottleneck` | Slowest repeated tool operation |
+| `tools:N` | 工具调用次数 |
+| `tokens:Nk` | 近似 token 用量（千）|
+| `$X.XX` | 预估成本（美元）|
+| `files:N` | 正在修改的文件 |
+| `bottleneck` | 最慢的重复工具操作 |
 
-### Session-End Summaries
+### 会话结束摘要
 
-The legacy analytics workflow described in older docs (`wise-analytics`, `wise cost`, `wise backfill`, and the `analytics` HUD preset) is no longer part of current `dev`.
+旧文档中描述的遗留分析工作流（`wise-analytics`、`wise cost`、`wise backfill` 以及 `analytics` HUD 预设）已不再是当前 `dev` 的一部分。
 
-The supported monitoring surfaces on current builds are:
+当前构建支持的监控面包括：
 
-- **Agent Observatory** in the HUD / API
-- **Session Replay** logs in `.wise/state/agent-replay-*.jsonl`
-- **Session-end summaries** in `.wise/sessions/<sessionId>.json`
-- **Session-end notifications** emitted through configured callbacks
+- HUD / API 中的**智能体观测台**
+- `.wise/state/agent-replay-*.jsonl` 中的**会话回放**日志
+- `.wise/sessions/<sessionId>.json` 中的**会话结束摘要**
+- 通过已配置回调发出的**会话结束通知**
 
-#### Supported Inspection Commands
+#### 支持的检查命令
 
 ```bash
 wise hud
@@ -101,9 +101,9 @@ tail -20 .wise/state/agent-replay-*.jsonl
 ls .wise/sessions/*.json
 ```
 
-#### HUD Display
+#### HUD 显示
 
-Use a supported preset such as `focused` or `full` for agent and context visibility:
+使用受支持的预设（如 `focused` 或 `full`）以获得智能体和上下文可见性：
 
 ```json
 {
@@ -113,39 +113,39 @@ Use a supported preset such as `focused` or `full` for agent and context visibil
 }
 ```
 
-This shows:
-- Active agents and their status
-- Todos / PRD progress
-- Context and rate-limit state
-- Background tasks
+将显示：
+- 活跃智能体及其状态
+- Todos / PRD 进度
+- 上下文与速率限制状态
+- 后台任务
 
-### Session Replay
+### 会话回放
 
-Session replay records agent lifecycle events as JSONL for post-session analysis and timeline visualization.
+会话回放将智能体生命周期事件记录为 JSONL，用于会话后分析和时间线可视化。
 
-#### Event Types
+#### 事件类型
 
-| Event | Description |
+| 事件 | 描述 |
 |-------|-------------|
-| `agent_start` | Agent spawned with task info |
-| `agent_stop` | Agent completed/failed with duration |
-| `tool_start` | Tool invocation begins |
-| `tool_end` | Tool completes with timing |
-| `file_touch` | File modified by agent |
-| `intervention` | System intervention triggered |
+| `agent_start` | 智能体启动并携带任务信息 |
+| `agent_stop` | 智能体完成/失败并记录耗时 |
+| `tool_start` | 工具调用开始 |
+| `tool_end` | 工具完成并记录计时 |
+| `file_touch` | 文件被智能体修改 |
+| `intervention` | 触发系统干预 |
 
-#### Replay Files
+#### 回放文件
 
-Replay data is stored at: `.wise/state/agent-replay-{sessionId}.jsonl`
+回放数据存储于：`.wise/state/agent-replay-{sessionId}.jsonl`
 
-Each line is a JSON event:
+每行是一个 JSON 事件：
 ```json
 {"t":0.0,"agent":"a1b2c3d","agent_type":"executor","event":"agent_start","task":"Implement feature","parent_mode":"ultrawork"}
 {"t":5.2,"agent":"a1b2c3d","event":"tool_start","tool":"Read"}
 {"t":5.4,"agent":"a1b2c3d","event":"tool_end","tool":"Read","duration_ms":200,"success":true}
 ```
 
-#### Analyzing Replay Data
+#### 分析回放数据
 
 ```typescript
 import { getReplaySummary } from 'wise/hooks/subagent-tracker/session-replay';
@@ -158,30 +158,30 @@ console.log(`Bottlenecks:`, summary.bottlenecks);
 console.log(`Files touched:`, summary.files_touched);
 ```
 
-#### Bottleneck Detection
+#### 瓶颈检测
 
-The replay system automatically identifies bottlenecks:
-- Tools averaging >1s with 2+ calls
-- Per-agent tool timing analysis
-- Sorted by impact (highest avg time first)
+回放系统自动识别瓶颈：
+- 平均 >1s 且调用 2 次以上的工具
+- 每智能体的工具计时分析
+- 按影响排序（平均耗时最高优先）
 
 ---
 
-## HUD Integration
+## HUD 集成
 
-### Presets
+### 预设
 
-| Preset | Focus | Elements |
+| 预设 | 侧重点 | 元素 |
 |--------|-------|----------|
-| `minimal` | Clean status | Context bar only |
-| `focused` | Task progress | Todos, agents, modes |
-| `full` | Everything | All elements enabled |
-| `analytics` | Cost tracking | Tokens, costs, efficiency |
-| `dense` | Compact all | Compressed format |
+| `minimal` | 简洁状态 | 仅上下文栏 |
+| `focused` | 任务进度 | Todos、智能体、模式 |
+| `full` | 全部 | 启用所有元素 |
+| `analytics` | 成本追踪 | Token、成本、效率 |
+| `dense` | 紧凑全部 | 压缩格式 |
 
-### Configuration
+### 配置
 
-Edit `~/.claude/settings.json`:
+编辑 `~/.claude/settings.json`：
 
 ```json
 {
@@ -197,26 +197,26 @@ Edit `~/.claude/settings.json`:
 }
 ```
 
-### Custom Elements
+### 自定义元素
 
-| Element | Description |
+| 元素 | 描述 |
 |---------|-------------|
-| `agents` | Active agent count and status |
-| `todos` | Todo progress (completed/total) |
-| `ralph` | Ralph loop iteration count |
-| `autopilot` | Autopilot phase indicator |
-| `contextBar` | Context window usage % |
-| `analytics` | Token/cost summary |
+| `agents` | 活跃智能体数量与状态 |
+| `todos` | Todo 进度（已完成/总数）|
+| `ralph` | Ralph 循环迭代次数 |
+| `autopilot` | Autopilot 阶段指示器 |
+| `contextBar` | 上下文窗口使用率 % |
+| `analytics` | Token/成本摘要 |
 
 ---
 
-## Debugging Techniques
+## 调试技巧
 
-### Identifying Slow Agents
+### 识别慢速智能体
 
-1. **Check the Observatory** for agents running >2 minutes
-2. **Look for bottleneck indicators** (tool averaging >1s)
-3. **Review tool_usage** in agent state
+1. **检查观测台**中运行超过 2 分钟的智能体
+2. **查找瓶颈指示器**（工具平均 >1s）
+3. **查看智能体状态中的** tool_usage
 
 ```typescript
 import { getAgentPerformance } from 'wise/hooks/subagent-tracker';
@@ -226,9 +226,9 @@ console.log('Tool timings:', perf.tool_timings);
 console.log('Bottleneck:', perf.bottleneck);
 ```
 
-### Detecting File Conflicts
+### 检测文件冲突
 
-When multiple agents modify the same file:
+当多个智能体修改同一文件时：
 
 ```typescript
 import { detectFileConflicts } from 'wise/hooks/subagent-tracker';
@@ -239,15 +239,15 @@ conflicts.forEach(c => {
 });
 ```
 
-### Intervention System
+### 干预系统
 
-WISE automatically detects problematic agents:
+WISE 自动检测有问题的智能体：
 
-| Intervention | Trigger | Action |
+| 干预 | 触发条件 | 动作 |
 |--------------|---------|--------|
-| `timeout` | Agent running >5 min | Kill suggested |
-| `excessive_cost` | Cost >$1.00 | Warning |
-| `file_conflict` | Multiple agents on file | Warning |
+| `timeout` | 智能体运行 >5 分钟 | 建议终止 |
+| `excessive_cost` | 成本 >$1.00 | 警告 |
+| `file_conflict` | 多个智能体操作同一文件 | 警告 |
 
 ```typescript
 import { suggestInterventions } from 'wise/hooks/subagent-tracker';
@@ -258,9 +258,9 @@ interventions.forEach(i => {
 });
 ```
 
-### Parallel Efficiency Score
+### 并行效率评分
 
-Track how well your parallel agents are performing:
+追踪并行智能体的执行表现：
 
 ```typescript
 import { calculateParallelEfficiency } from 'wise/hooks/subagent-tracker';
@@ -270,13 +270,13 @@ console.log(`Efficiency: ${eff.score}%`);
 console.log(`Active: ${eff.active}, Stale: ${eff.stale}, Total: ${eff.total}`);
 ```
 
-- **100%**: All agents actively working
-- **<80%**: Some agents stale or waiting
-- **<50%**: Significant parallelization issues
+- **100%**：所有智能体都在积极工作
+- **<80%**：部分智能体停滞或等待
+- **<50%**：存在严重的并行化问题
 
-### Stale Agent Cleanup
+### 清理停滞智能体
 
-Clean up agents that exceed the timeout threshold:
+清理超过超时阈值的智能体：
 
 ```typescript
 import { cleanupStaleAgents } from 'wise/hooks/subagent-tracker';
@@ -287,50 +287,50 @@ console.log(`Cleaned ${cleaned} stale agents`);
 
 ---
 
-## External Resources
+## 外部资源
 
-### Claude Performance Tracking Platforms
+### Claude 性能追踪平台
 
 #### MarginLab.ai
 
-[MarginLab.ai](https://marginlab.ai) provides external performance tracking for Claude models:
+[MarginLab.ai](https://marginlab.ai) 提供 Claude 模型的外部性能追踪：
 
-- **SWE-Bench-Pro daily tracking**: Monitor Claude's performance on software engineering benchmarks
-- **Statistical significance testing**: Detect performance degradation with confidence intervals
-- **Historical trends**: Track Claude's capabilities over time
-- **Model comparison**: Compare performance across Claude model versions
+- **SWE-Bench-Pro 每日追踪**：监控 Claude 在软件工程基准测试上的表现
+- **统计显著性检验**：通过置信区间检测性能退化
+- **历史趋势**：追踪 Claude 能力随时间的变化
+- **模型对比**：跨 Claude 模型版本比较性能
 
-#### Usage
+#### 用法
 
-Visit the platform to:
-1. View current Claude model benchmark scores
-2. Check historical performance trends
-3. Set up alerts for significant performance changes
-4. Compare across model versions (Opus, Sonnet, Haiku)
+访问该平台以：
+1. 查看当前 Claude 模型基准测试得分
+2. 查看历史性能趋势
+3. 为重大性能变化设置告警
+4. 跨模型版本比较（Opus、Sonnet、Haiku）
 
-### Community Resources
+### 社区资源
 
-| Resource | Description | Link |
+| 资源 | 描述 | 链接 |
 |----------|-------------|------|
-| Claude Code Discord | Community support and tips | [discord.gg/anthropic](https://discord.gg/anthropic) |
-| WISE GitHub Issues | Bug reports and feature requests | [GitHub Issues](https://github.com/wise-claw/wise/issues) |
-| Anthropic Documentation | Official Claude documentation | [docs.anthropic.com](https://docs.anthropic.com) |
+| Claude Code Discord | 社区支持与技巧 | [discord.gg/anthropic](https://discord.gg/anthropic) |
+| WISE GitHub Issues | 缺陷报告与功能请求 | [GitHub Issues](https://github.com/wise-claw/wise/issues) |
+| Anthropic 文档 | 官方 Claude 文档 | [docs.anthropic.com](https://docs.anthropic.com) |
 
-### Model Performance Benchmarks
+### 模型性能基准测试
 
-Track Claude's performance across standard benchmarks:
+跨标准基准测试追踪 Claude 的性能：
 
-| Benchmark | What It Measures | Where to Track |
+| 基准测试 | 测量内容 | 追踪位置 |
 |-----------|-----------------|----------------|
-| SWE-Bench | Software engineering tasks | MarginLab.ai |
-| HumanEval | Code generation accuracy | Public leaderboards |
-| MMLU | General knowledge | Anthropic blog |
+| SWE-Bench | 软件工程任务 | MarginLab.ai |
+| HumanEval | 代码生成准确率 | 公开排行榜 |
+| MMLU | 通用知识 | Anthropic 博客 |
 
 ---
 
-## Best Practices
+## 最佳实践
 
-### 1. Monitor Session Health Proactively
+### 1. 主动监控会话健康度
 
 ```bash
 # Set up budget warnings in HUD
@@ -338,17 +338,17 @@ Track Claude's performance across standard benchmarks:
 # Select "focused" or "full"
 ```
 
-### 2. Use Appropriate Model Tiers
+### 2. 使用合适的模型层级
 
-| Task Type | Recommended Model | Cost Impact |
+| 任务类型 | 推荐模型 | 成本影响 |
 |-----------|------------------|-------------|
-| File lookup | Haiku | Lowest |
-| Feature implementation | Sonnet | Medium |
-| Architecture decisions | Opus | Highest |
+| 文件查找 | Haiku | 最低 |
+| 功能实现 | Sonnet | 中等 |
+| 架构决策 | Opus | 最高 |
 
-### 3. Enable Session Replay for Complex Tasks
+### 3. 为复杂任务启用会话回放
 
-Session replay is automatically enabled. Review replays after complex workflows:
+会话回放已自动启用。复杂工作流后查看回放：
 
 ```bash
 # Find replay files
@@ -358,13 +358,13 @@ ls .wise/state/agent-replay-*.jsonl
 tail -20 .wise/state/agent-replay-*.jsonl
 ```
 
-### 4. Set Cost Limits
+### 4. 设置成本限制
 
-The default cost limit per agent is $1.00 USD. Agents exceeding this trigger warnings.
+每个智能体的默认成本限制为 $1.00 美元。超过此限制的智能体会触发警告。
 
-### 5. Review Bottlenecks Regularly
+### 5. 定期审查瓶颈
 
-After completing complex tasks, check the replay summary:
+完成复杂任务后，检查回放摘要：
 
 ```typescript
 const summary = getReplaySummary(cwd, sessionId);
@@ -373,9 +373,9 @@ if (summary.bottlenecks.length > 0) {
 }
 ```
 
-### 6. Clean Up Stale State
+### 6. 清理陈旧状态
 
-Periodically clean up old replay files and stale agent state:
+定期清理旧回放文件和陈旧的智能体状态：
 
 ```typescript
 import { cleanupReplayFiles } from 'wise/hooks/subagent-tracker/session-replay';
@@ -385,72 +385,72 @@ cleanupReplayFiles(process.cwd()); // Keeps last 10 sessions
 
 ---
 
-## Troubleshooting
+## 故障排查
 
-### High Token Usage
+### Token 用量过高
 
-**Symptoms**: Costs higher than expected, context window filling quickly
+**症状**：成本高于预期，上下文窗口快速填满
 
-**Solutions**:
-1. Use `eco` mode for token-efficient execution: `eco fix all errors`
-2. Check for unnecessary file reads in agent prompts
-3. Review the Agent Observatory in HUD (or replay logs) for agent-level breakdown
-4. Enable cache - check cache efficiency in analytics
+**解决方案**：
+1. 使用 `eco` 模式进行 token 高效执行：`eco fix all errors`
+2. 检查智能体提示词中不必要的文件读取
+3. 在 HUD 中查看智能体观测台（或回放日志）以获取智能体级别的明细
+4. 启用缓存 - 在 analytics 中检查缓存效率
 
-### Slow Agent Execution
+### 智能体执行缓慢
 
-**Symptoms**: Agents running >5 minutes, low parallel efficiency
+**症状**：智能体运行超过 5 分钟，并行效率低
 
-**Solutions**:
-1. Check Observatory for bottleneck indicators
-2. Review tool_usage for slow operations
-3. Consider splitting large tasks into smaller agents
-4. Use `architect-low` instead of `architect` for simple verifications
+**解决方案**：
+1. 检查观测台中的瓶颈指示器
+2. 查看 tool_usage 中的慢操作
+3. 考虑将大型任务拆分为更小的智能体
+4. 对于简单验证，使用 `architect-low` 替代 `architect`
 
-### File Conflicts
+### 文件冲突
 
-**Symptoms**: Merge conflicts, unexpected file changes
+**症状**：合并冲突、意外的文件变更
 
-**Solutions**:
-1. Use `team N:executor` mode for automatic file ownership
-2. Check `detectFileConflicts()` before parallel execution
-3. Review file_ownership in agent state
-4. Use `team N:executor` mode with explicit task isolation
+**解决方案**：
+1. 使用 `team N:executor` 模式实现自动文件归属
+2. 并行执行前检查 `detectFileConflicts()`
+3. 查看智能体状态中的 file_ownership
+4. 使用 `team N:executor` 模式并显式隔离任务
 
-### Missing Session-End Summaries
+### 缺失会话结束摘要
 
-**Symptoms**: No `.wise/sessions/*.json` files after a session finishes
+**症状**：会话结束后没有 `.wise/sessions/*.json` 文件
 
-**Solutions**:
-1. End the session normally so the `session-end` hook runs
-2. Verify HUD / hooks are installed: `/wise:hud setup`
-3. Check the current workspace `.wise/sessions/` directory
-4. Review `.wise/state/agent-replay-*.jsonl` if you need timing/activity evidence instead
+**解决方案**：
+1. 正常结束会话以使 `session-end` hook 运行
+2. 验证 HUD / hooks 已安装：`/wise:hud setup`
+3. 检查当前工作区的 `.wise/sessions/` 目录
+4. 若需要计时/活动证据，则查看 `.wise/state/agent-replay-*.jsonl`
 
-### Stale Agent State
+### 陈旧的智能体状态
 
-**Symptoms**: Observatory showing agents that aren't running
+**症状**：观测台显示未在运行的智能体
 
-**Solutions**:
-1. Run `cleanupStaleAgents(cwd)` programmatically
-2. Delete `.wise/state/subagent-tracking.json` to reset
-3. Check for orphaned lock files: `.wise/state/subagent-tracker.lock`
+**解决方案**：
+1. 以编程方式运行 `cleanupStaleAgents(cwd)`
+2. 删除 `.wise/state/subagent-tracking.json` 以重置
+3. 检查孤立的锁文件：`.wise/state/subagent-tracker.lock`
 
 ---
 
-## State Files Reference
+## 状态文件参考
 
-| File | Purpose | Format |
+| 文件 | 用途 | 格式 |
 |------|---------|--------|
-| `.wise/state/subagent-tracking.json` | Current agent states | JSON |
-| `.wise/state/agent-replay-{id}.jsonl` | Session event timeline | JSONL |
-| `.wise/state/token-tracking.jsonl` | Token usage log | JSONL |
-| `.wise/state/analytics-summary-{id}.json` | Cached session summaries | JSON |
-| `.wise/state/subagent-tracker.lock` | Concurrent access lock | Text |
+| `.wise/state/subagent-tracking.json` | 当前智能体状态 | JSON |
+| `.wise/state/agent-replay-{id}.jsonl` | 会话事件时间线 | JSONL |
+| `.wise/state/token-tracking.jsonl` | Token 用量日志 | JSONL |
+| `.wise/state/analytics-summary-{id}.json` | 缓存的会话摘要 | JSON |
+| `.wise/state/subagent-tracker.lock` | 并发访问锁 | 文本 |
 
 ---
 
-## API Reference
+## API 参考
 
 ### Subagent Tracker
 
@@ -479,7 +479,7 @@ getAgentDashboard(directory: string): string
 getAgentObservatory(directory: string): { header, lines, summary }
 ```
 
-### Session Replay
+### 会话回放
 
 ```typescript
 // Recording
@@ -498,8 +498,8 @@ cleanupReplayFiles(directory: string): number
 
 ---
 
-## See Also
+## 另请参见
 
-- [Analytics System](./ANALYTICS-SYSTEM.md) - Historical note on the removed analytics subsystem and current replacements
-- [参考](./参考.md) - Complete feature reference
-- [架构](./架构.md) - System architecture overview
+- [Analytics System](./ANALYTICS-SYSTEM.md) - 关于已移除的分析子系统及当前替代方案的历史说明
+- [参考](./参考.md) - 完整功能参考
+- [架构](./架构.md) - 系统架构概览

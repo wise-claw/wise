@@ -1,8 +1,8 @@
-# Consolidation Phase 3+ Roadmap
+# 整合 Phase 3+ 路线图
 
-## Context
+## 背景
 
-Phase 2 landed alias-based consolidation and Tier-0 contract protection for:
+Phase 2 已落地基于别名的整合与 Tier-0 契约保护，覆盖：
 
 - `ralplan`
 - `team`
@@ -10,88 +10,88 @@ Phase 2 landed alias-based consolidation and Tier-0 contract protection for:
 - `ultrawork`
 - `autopilot`
 
-This roadmap defines the next wave: agent utilization cleanup, routing simplification, and migration governance.
+本路线图定义下一波工作：智能体利用率清理、路由简化与迁移治理。
 
-## Goals
+## 目标
 
-1. Reduce agent surface area without breaking compatibility.
-2. Improve routing quality (right agent, right tier, less idle/duplicate delegation).
-3. Formalize deprecation policy and rollout safety gates.
+1. 在不破坏兼容性的前提下缩减智能体面。
+2. 改善路由质量（合适的智能体、合适的层级、更少的空闲/重复委派）。
+3. 将已弃用策略与发布安全门正式化。
 
-## Scope
+## 范围
 
-### 1) Agent Catalog Consolidation
+### 1) 智能体目录整合
 
-- Build canonical lanes:
-  - discovery
-  - planning/analysis
-  - implementation
-  - verification/review
-- Mark legacy/overlapping roles as compatibility aliases.
-- Keep stable compatibility map for old names.
+- 建立规范泳道：
+  - 发现
+  - 规划/分析
+  - 实现
+  - 验证/审查
+- 将 legacy/重叠角色标记为兼容别名。
+- 为旧名保留稳定的兼容映射。
 
-### 2) Routing and Utilization
+### 2) 路由与利用率
 
-- Add explicit routing matrix from skill families -> canonical agent lanes.
-- Add telemetry signals for:
-  - invocation count
-  - completion rate
-  - retry rate
-  - escalation rate
-- Define thresholds for “keep / merge / deprecate”.
+- 增加从技能家族到规范智能体泳道的显式路由矩阵。
+- 增加遥测信号：
+  - 调用次数
+  - 完成率
+  - 重试率
+  - 升级率
+- 定义 "保留 / 合并 / 弃用" 的阈值。
 
-### 3) Migration Governance
+### 3) 迁移治理
 
-- Tier classes:
-  - Tier-0: immutable public contracts (already enforced)
-  - Tier-1: stable core
-  - Tier-2: consolidation candidates
-- Two-release minimum deprecation window for non-Tier-0 names.
-- Rollback guardrails via routing manifest toggles.
+- 层级分类：
+  - Tier-0：不可变公开契约（已强制）
+  - Tier-1：稳定核心
+  - Tier-2：整合候选
+- 非 Tier-0 名称最少两个发布版本的弃用窗口。
+- 经路由清单开关提供回滚护栏。
 
-## Acceptance Criteria
+## 验收标准
 
-- Canonical agent matrix documented and linked from `docs/参考.md`.
-- Compatibility aliases remain functional for existing names.
-- Regression tests cover:
-  - alias fidelity
-  - protected mode invariants
-  - docs/runtime parity checks
-- No regression to Tier-0 behavior.
+- 规范智能体矩阵已文档化并从 `docs/参考.md` 链接。
+- 兼容别名为既有名称保持可用。
+- 回归测试覆盖：
+  - 别名保真
+  - 受保护模式不变量
+  - 文档/运行时一致性检查
+- 无 Tier-0 行为回归。
 
-## Proposed Delivery Plan
+## 拟定交付计划
 
-### Milestone A — Discovery + Metrics
+### 里程碑 A — 发现 + 指标
 
-- Inventory current agent usage and overlap.
-- Propose keep/merge/deprecate candidates with evidence.
+- 盘点当前智能体使用情况与重叠。
+- 基于证据提出保留/合并/弃用候选。
 
-### Milestone B — Runtime Routing Cleanup
+### 里程碑 B — 运行时路由清理
 
-- Implement routing table changes + compatibility aliases.
-- Add targeted tests for agent resolution behavior.
+- 实现路由表变更 + 兼容别名。
+- 增加针对智能体解析行为的定向测试。
 
-### Milestone C — Docs + Migration Policy
+### 里程碑 C — 文档 + 迁移策略
 
-- Publish deprecation schedule and migration notes.
-- Update AGENTS/docs consistency checks.
+- 发布弃用时间表与迁移说明。
+- 更新 AGENTS/文档一致性检查。
 
-### Milestone D — Validation Gate
+### 里程碑 D — 验证门
 
-- Run full verification:
+- 运行完整验证：
   - `npm test`
   - `npm run build`
   - `npm run lint`
-- Validate no Tier-0 regressions.
+- 验证无 Tier-0 回归。
 
-## Risks
+## 风险
 
-- Over-pruning specialized agents can reduce quality on edge tasks.
-- Hidden coupling between hooks and specific agent names.
-- Docs drift if naming changes are not synchronized.
+- 过度裁剪专业化智能体会降低边缘任务质量。
+- hooks 与特定智能体名之间存在隐藏耦合。
+- 命名变更未同步时文档漂移。
 
-## Risk Controls
+## 风险控制
 
-- Alias-first migration (never hard-remove first).
-- Protected-mode regression suite required on every consolidation PR.
-- Incremental rollout with clear rollback path.
+- 别名优先迁移（绝不先硬删除）。
+- 每个整合 PR 都要求受保护模式回归套件。
+- 渐进式发布，并有清晰回滚路径。

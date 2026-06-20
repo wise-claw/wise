@@ -1,26 +1,27 @@
-# Migration Guide
+# 迁移指南
 
-This guide covers all migration paths for wise. Find your current version below.
-
----
-
-## Table of Contents
-
-- [Unreleased: Team MCP Runtime Deprecation (CLI-Only)](#unreleased-team-mcp-runtime-deprecation-cli-only)
-- [Unreleased: Native Team Worktree Mode (Opt-In)](#unreleased-native-team-worktree-mode-opt-in)
-- [v3.5.3 → v3.5.5: Test Fixes & Cleanup](#v353--v355-test-fixes--cleanup)
-- [v3.5.2 → v3.5.3: Skill Consolidation](#v352--v353-skill-consolidation)
-- [v2.x → v3.0: Package Rename & Auto-Activation](#v2x--v30-package-rename--auto-activation)
-- [v3.0 → v3.1: Notepad Wisdom & Enhanced Features](#v30--v31-notepad-wisdom--enhanced-features)
-- [v3.x → v4.0: Major Architecture Overhaul](#v3x--v40-major-architecture-overhaul)
+本指南涵盖 wise 的所有迁移路径。请在下方找到你当前对应的版本。
 
 ---
 
-## Unreleased: Team MCP Runtime Deprecation (CLI-Only)
+## 目录
+
+- [未发布：Team MCP 运行时弃用（仅 CLI）](#unreleased-team-mcp-runtime-deprecation-cli-only)
+- [未发布：原生 Team Worktree 模式（可选启用）](#unreleased-native-team-worktree-mode-opt-in)
+- [v3.5.3 → v3.5.5：测试修复与清理](#v353--v355-test-fixes--cleanup)
+- [v3.5.2 → v3.5.3：技能整合](#v352--v353-skill-consolidation)
+- [v2.x → v3.0：包重命名与自动激活](#v2x--v30-package-rename--auto-activation)
+- [v3.0 → v3.1：Notepad Wisdom 与增强功能](#v30--v31-notepad-wisdom--enhanced-features)
+- [v3.x → v4.0：重大架构重构](#v3x--v40-major-architecture-overhaul)
+
+---
+
+<a id="unreleased-team-mcp-runtime-deprecation-cli-only"></a>
+## 未发布：Team MCP 运行时弃用（仅 CLI）
 
 ### TL;DR
 
-`wise_run_team_start/status/wait/cleanup` are now hard-deprecated at runtime. Calls return:
+`wise_run_team_start/status/wait/cleanup` 现已在运行时被硬性弃用。调用返回：
 
 ```json
 {
@@ -29,24 +30,24 @@ This guide covers all migration paths for wise. Find your current version below.
 }
 ```
 
-Use CLI commands instead:
+请改用 CLI 命令：
 
 - `wise team [N:agent-type] "<task>"`
 - `wise team status <team-name>`
 - `wise team shutdown <team-name> [--force]`
 - `wise team api <operation> --input '<json>' --json`
 
-### `wise ask` env alias sunset (Phase-1 compatibility)
+### `wise ask` 环境变量别名日落（Phase-1 兼容）
 
-`WISE_ASK_*` is now canonical for advisor execution. Phase-1 accepts `OMX_ASK_ADVISOR_SCRIPT` and `OMX_ASK_ORIGINAL_TASK` with deprecation warnings. Planned hard sunset for alias removal: **2026-06-30**.
+`WISE_ASK_*` 现为 advisor 执行的规范变量。Phase-1 接受 `OMX_ASK_ADVISOR_SCRIPT` 与 `OMX_ASK_ORIGINAL_TASK`，但会发出弃用警告。别名移除的硬性日落计划时间：**2026-06-30**。
 
-### How to Migrate
+### 如何迁移
 
-1. Replace MCP runtime tool calls with CLI equivalents.
-2. Update skills/prompts from `/wise-teams ...` to `wise team ...` syntax.
-3. Legacy Team MCP runtime is now opt-in only (not enabled by default). If you enable it manually, treat responses as deprecation-only compatibility output.
+1. 将 MCP 运行时工具调用替换为等价的 CLI 命令。
+2. 将技能/prompt 中的 `/wise-teams ...` 更新为 `wise team ...` 语法。
+3. 旧版 Team MCP 运行时现为可选启用（默认不启用）。若手动启用，请将其响应视为仅弃用兼容输出。
 
-### Example mapping
+### 示例映射
 
 ```bash
 # Old (deprecated runtime path)
@@ -64,64 +65,67 @@ wise team api list-tasks --input '{"team_name":"review-auth-flow"}' --json
 
 ---
 
-## Unreleased: Native Team Worktree Mode (Opt-In)
+<a id="unreleased-native-team-worktree-mode-opt-in"></a>
+## 未发布：原生 Team Worktree 模式（可选启用）
 
 ### TL;DR
 
-`wise team` runtime-v2 is gaining an opt-in worker worktree mode. Worktree-backed workers run from dedicated git worktrees while task lifecycle, mailbox, status, and manifest files stay under the leader workspace's team-specific coordination root (`<repo>/.wise/state/team/<team-name>`).
+`wise team` runtime-v2 正在引入可选启用的 worker worktree 模式。基于 worktree 的 worker 从专用 git worktree 运行，而任务生命周期、mailbox、status 与 manifest 文件仍保留在 leader 工作区的 team 专属协调根（`<repo>/.wise/state/team/<team-name>`）下。
 
-### Contract
+### 契约
 
-- Worktree paths use `<repo>/.wise/team/<team-name>/worktrees/<worker-name>`.
-- `WISE_TEAM_STATE_ROOT` points workers back to `<repo>/.wise/state/team/<team-name>`.
-- Status/config/manifest/identity surfaces should expose `workspace_mode`, `worktree_mode`, `team_state_root`, and worker worktree metadata.
-- Dirty worker worktrees are preserved and reported; they are not force-cleaned by shutdown/cleanup.
+- Worktree 路径使用 `<repo>/.wise/team/<team-name>/worktrees/<worker-name>`。
+- `WISE_TEAM_STATE_ROOT` 将 worker 指回 `<repo>/.wise/state/team/<team-name>`。
+- status/config/manifest/identity 面应暴露 `workspace_mode`、`worktree_mode`、`team_state_root` 与 worker worktree 元数据。
+- 脏的 worker worktree 会被保留并上报；shutdown/cleanup 不会强制清理它们。
 
-See [Native Team Worktree Mode](TEAM-WORKTREE-MODE.md) for the full rollout contract and verification checklist.
+完整 rollout 契约与验证清单见 [原生 Team Worktree 模式](TEAM-WORKTREE-MODE.md)。
 
-## v3.5.3 → v3.5.5: Test Fixes & Cleanup
+<a id="v353--v355-test-fixes--cleanup"></a>
+## v3.5.3 → v3.5.5：测试修复与清理
 
 ### TL;DR
 
-Maintenance release fixing test suite issues and continuing skill consolidation from v3.5.3.
+维护版本，修复测试套件问题并延续 v3.5.3 起的技能整合。
 
-### What Changed
+### 变更内容
 
-**Test Fixes:**
+**测试修复：**
 
-- Delegation-enforcer tests marked as skipped (implementation pending)
-- Analytics expectations corrected for agent attribution
-- All remaining tests now pass cleanly
+- delegation-enforcer 测试标记为跳过（实现待定）
+- 修正 analytics 对 agent 归因的期望
+- 所有剩余测试现均干净通过
 
-**Skill Consolidation:**
+**技能整合：**
 
-- Continued cleanup from v3.5.3
-- Removed deprecated `cancel-*` skills (use `/cancel` instead)
-- Final skill count: 37 core skills
+- 延续 v3.5.3 的清理
+- 移除已弃用的 `cancel-*` 技能（改用 `/cancel`）
+- 最终技能数：37 个核心技能
 
-### Migration Steps
+### 迁移步骤
 
-1. **No breaking changes** - All functionality preserved
-2. **Test suite** now runs cleanly with `npm run test:run`
-3. **Deprecated skills** removed (already replaced in v3.5.3)
+1. **无破坏性变更** — 全部功能保留
+2. **测试套件** 现可经 `npm run test:run` 干净运行
+3. **已弃用技能** 已移除（在 v3.5.3 中已被替换）
 
-### For Developers
+### 面向开发者
 
-If you were depending on deprecated `cancel-*` skills, update to use the unified `/cancel` command which auto-detects the active mode.
+若曾依赖已弃用的 `cancel-*` 技能，请改用统一的 `/cancel` 命令，该命令会自动检测当前活跃模式。
 
 ---
 
-## v3.5.2 → v3.5.3: Skill Consolidation
+<a id="v352--v353-skill-consolidation"></a>
+## v3.5.2 → v3.5.3：技能整合
 
 ### TL;DR
 
-8 deprecated skills have been removed. The unified `/cancel` and `/wise-setup` commands replace them.
+8 个已弃用技能已被移除。统一的 `/cancel` 与 `/wise-setup` 命令替代了它们。
 
-### Removed Skills
+### 移除的技能
 
-The following skills have been **completely removed** in v3.5.3:
+以下技能在 v3.5.3 中已被**完全移除**：
 
-| Removed Skill        | Replacement                            |
+| 移除的技能            | 替代                            |
 | -------------------- | -------------------------------------- |
 | `cancel-autopilot`   | `/wise:cancel`             |
 | `cancel-ralph`       | `/wise:cancel`             |
@@ -131,9 +135,9 @@ The following skills have been **completely removed** in v3.5.3:
 | `wise-default-global` | `/wise:wise-setup --global` |
 | `planner`            | `/wise:plan`               |
 
-### What Changed
+### 变更内容
 
-**Before v3.5.3:**
+**v3.5.3 之前：**
 
 ```bash
 /wise:cancel-ralph      # Cancel ralph specifically
@@ -141,7 +145,7 @@ The following skills have been **completely removed** in v3.5.3:
 /wise:planner "task"    # Start planning
 ```
 
-**After v3.5.3:**
+**v3.5.3 之后：**
 
 ```bash
 /wise:cancel            # Auto-detects and cancels any active mode
@@ -149,64 +153,65 @@ The following skills have been **completely removed** in v3.5.3:
 /wise:plan "task"       # Start planning (includes interview mode)
 ```
 
-### New Features
+### 新功能
 
-**New skill: `/learn-about-wise`**
+**新技能：`/learn-about-wise`**
 
-- Analyzes your WISE usage patterns
-- Provides personalized recommendations
-- Identifies underutilized features
+- 分析你的 WISE 使用模式
+- 提供个性化建议
+- 识别未被充分利用的功能
 
-**Plan skill now supports consensus mode:**
+**plan 技能现支持共识模式：**
 
 ```bash
 /wise:plan --consensus "task"  # Iterative planning with Critic review
 /wise:ralplan "task"           # Alias for plan --consensus
 ```
 
-### Migration Steps
+### 迁移步骤
 
-1. **No action required** - The unified `/cancel` command already worked in v3.5
-2. **Update any scripts** that reference removed commands
-3. **Re-run `/wise-setup`** if you want to update your CLAUDE.md configuration
+1. **无需操作** — 统一的 `/cancel` 命令在 v3.5 中已可用
+2. **更新所有脚本** 中引用已移除命令之处
+3. **重新运行 `/wise-setup`** 以更新你的 CLAUDE.md 配置（如需）
 
-### Skill Count
+### 技能计数
 
-- v3.5: 42 skills
-- v3.5.3: 37 skills (8 removed, 3 added)
+- v3.5：42 个技能
+- v3.5.3：37 个技能（移除 8 个，新增 3 个）
 
 ---
 
-## v2.x → v3.0: Package Rename & Auto-Activation
+<a id="v2x--v30-package-rename--auto-activation"></a>
+## v2.x → v3.0：包重命名与自动激活
 
 ### TL;DR
 
-Your old commands still work! But now you don't need them.
+你的旧命令仍然可用！但现在你不再需要它们。
 
-**Before 3.0:** Explicitly invoke 25+ commands like `/wise:ralph "task"`, `/wise:ultrawork "task"`
+**3.0 之前：** 显式调用 25+ 个命令，如 `/wise:ralph "task"`、`/wise:ultrawork "task"`
 
-**After 3.0:** Just work naturally - Claude auto-activates the right behaviors. One-time setup: just say "setup wise"
+**3.0 之后：** 自然工作即可 — Claude 自动激活正确的行为。一次性配置：只需说 "setup wise"
 
-### Project Rebrand
+### 项目重命名
 
-The project was rebranded to better reflect its purpose and improve discoverability.
+项目已重命名以更好地反映其用途并提升可发现性。
 
-- **Project/brand name**: `wise` (GitHub repo, plugin name, commands)
-- **npm package name**: `wise` (unchanged)
+- **项目/品牌名**：`wise`（GitHub 仓库、插件名、命令）
+- **npm 包名**：`wise`（不变）
 
-> **Why the difference?** The npm package name `wise` was kept for backward compatibility with existing installations. The project, GitHub repository, plugin, and all commands use `wise`.
+> **为何不同？** npm 包名 `wise` 为与既有安装的向后兼容而保留。项目、GitHub 仓库、插件与所有命令均使用 `wise`。
 
-#### NPM Install Command (unchanged)
+#### npm 安装命令（不变）
 
 ```bash
 npm i -g wise@latest
 ```
 
-### What Changed
+### 变更内容
 
-#### Before (2.x): Explicit Commands
+#### 之前（2.x）：显式命令
 
-You had to remember and explicitly invoke specific commands for each mode:
+你必须记住并显式调用每个模式的特定命令：
 
 ```bash
 # 2.x workflow: Multiple commands, lots to remember
@@ -219,9 +224,9 @@ You had to remember and explicitly invoke specific commands for each mode:
 /wise:analyze "why is this test failing?"         # Deep analysis
 ```
 
-#### After (3.0): Auto-Activation + Keywords
+#### 之后（3.0）：自动激活 + 关键词
 
-Work naturally. Claude detects intent and activates behaviors automatically:
+自然工作。Claude 检测意图并自动激活行为：
 
 ```bash
 # 3.0 workflow: Just talk naturally OR use optional keywords
@@ -233,41 +238,41 @@ Work naturally. Claude detects intent and activates behaviors automatically:
 "commit these changes properly"                     # Auto-activates git expertise
 ```
 
-### Agent Naming Standard
+### Agent 命名标准
 
-Agent naming is now strictly descriptive and role-based (for example: `architect`, `planner`, `analyst`, `critic`, `document-specialist`, `designer`, `writer`, `vision`, `executor`).
+Agent 命名现已严格为描述性且基于角色（例如：`architect`、`planner`、`analyst`、`critic`、`document-specialist`、`designer`、`writer`、`vision`、`executor`）。
 
-Use canonical role names across prompts, commands, docs, and scripts. Avoid introducing alternate myth-style or legacy aliases in new content.
+在 prompt、命令、文档与脚本中使用规范角色名。避免在新内容中引入神话风格或旧版别名的替代命名。
 
-### Directory Migration
+### 目录迁移
 
-Directory structures have been renamed for consistency with the new package name:
+目录结构已重命名以与新包名保持一致：
 
-#### Local Project Directories
+#### 本地项目目录
 
-- **Old**: `.wise/`
-- **New**: `.wise/`
+- **旧**：`.wise/`
+- **新**：`.wise/`
 
-#### Global Directories
+#### 全局目录
 
-- **Old**: `~/.wise/`
-- **New**: `~/.wise/`
+- **旧**：`~/.wise/`
+- **新**：`~/.wise/`
 
-#### Skills Directory
+#### 技能目录
 
-- **Old**: `~/.claude/skills/wise-learned/`
-- **New**: `~/.claude/skills/wise-learned/`
+- **旧**：`~/.claude/skills/wise-learned/`
+- **新**：`~/.claude/skills/wise-learned/`
 
-#### Config Files
+#### 配置文件
 
-- **Old**: `~/.claude/wise/mnemosyne.json`
-- **New**: `~/.claude/wise/learner.json`
+- **旧**：`~/.claude/wise/mnemosyne.json`
+- **新**：`~/.claude/wise/learner.json`
 
-### Environment Variables
+### 环境变量
 
-All environment variables have been renamed from `WISE_*` to `WISE_*`:
+所有环境变量已从 `WISE_*` 重命名为 `WISE_*`：
 
-| Old                      | New                      |
+| 旧                      | 新                      |
 | ------------------------ | ------------------------ |
 | WISE_USE_NODE_HOOKS       | WISE_USE_NODE_HOOKS       |
 | WISE_USE_BASH_HOOKS       | WISE_USE_BASH_HOOKS       |
@@ -279,40 +284,40 @@ All environment variables have been renamed from `WISE_*` to `WISE_*`:
 | WISE_ESCALATION_ENABLED   | WISE_ESCALATION_ENABLED   |
 | WISE_DEBUG                | WISE_DEBUG                |
 
-### Command Mapping
+### 命令映射
 
-All 2.x commands continue to work. Here's what changed:
+所有 2.x 命令继续可用。以下是变更内容：
 
-| 2.x Command                            | 3.0 Equivalent                                     | Works?                 |
+| 2.x 命令                              | 3.0 等价                                          | 可用？                 |
 | -------------------------------------- | -------------------------------------------------- | ---------------------- |
-| `/wise:ralph "task"`       | Say "don't stop until done" OR use `ralph` keyword | ✅ YES (both ways)     |
-| `/wise:ultrawork "task"`   | Say "fast" or "parallel" OR use `ulw` keyword      | ✅ YES (both ways)     |
-| `/wise:ultrawork-ralph`    | Say "ralph ulw:" prefix                            | ✅ YES (keyword combo) |
-| `/wise:planner "task"`     | Say "plan this" OR use `plan` keyword              | ✅ YES (both ways)     |
-| `/wise:plan "description"` | Start planning naturally                           | ✅ YES                 |
-| `/wise:review [path]`      | Invoke normally                                    | ✅ YES (unchanged)     |
-| `/wise:deepsearch "query"` | Say "find" or "search"                             | ✅ YES (auto-detect)   |
-| `/wise:analyze "target"`   | Say "analyze" — routes to debugger/architect agent | ✅ YES (keyword route) |
-| `/wise:deepinit [path]`    | Invoke normally                                    | ✅ YES (unchanged)     |
-| `/wise:git-master`         | Say "git", "commit", "atomic commit"               | ✅ YES (auto-detect)   |
-| `/wise:frontend-ui-ux`     | Say "UI", "styling", "component", "design"         | ✅ YES (auto-detect)   |
-| `/wise:note "content"`     | Say "remember this" or "save this"                 | ✅ YES (auto-detect)   |
-| `/wise:cancel-ralph`       | Say "stop", "cancel", or "abort"                   | ✅ YES (auto-detect)   |
-| `/wise:wise-doctor`         | Invoke normally                                    | ✅ YES (unchanged)     |
-| All other commands                     | Work exactly as before                             | ✅ YES                 |
+| `/wise:ralph "task"`       | 说 "don't stop until done" 或使用 `ralph` 关键词 | ✅ 是（两种方式）     |
+| `/wise:ultrawork "task"`   | 说 "fast" 或 "parallel" 或使用 `ulw` 关键词      | ✅ 是（两种方式）     |
+| `/wise:ultrawork-ralph`    | 说 "ralph ulw:" 前缀                            | ✅ 是（关键词组合）   |
+| `/wise:planner "task"`     | 说 "plan this" 或使用 `plan` 关键词              | ✅ 是（两种方式）     |
+| `/wise:plan "description"` | 自然开始规划                                      | ✅ 是                  |
+| `/wise:review [path]`      | 正常调用                                          | ✅ 是（不变）          |
+| `/wise:deepsearch "query"` | 说 "find" 或 "search"                             | ✅ 是（自动检测）      |
+| `/wise:analyze "target"`   | 说 "analyze" — 路由到 debugger/architect agent    | ✅ 是（关键词路由）    |
+| `/wise:deepinit [path]`    | 正常调用                                          | ✅ 是（不变）          |
+| `/wise:git-master`         | 说 "git"、"commit"、"atomic commit"               | ✅ 是（自动检测）      |
+| `/wise:frontend-ui-ux`     | 说 "UI"、"styling"、"component"、"design"         | ✅ 是（自动检测）      |
+| `/wise:note "content"`     | 说 "remember this" 或 "save this"                 | ✅ 是（自动检测）      |
+| `/wise:cancel-ralph`       | 说 "stop"、"cancel" 或 "abort"                    | ✅ 是（自动检测）      |
+| `/wise:wise-doctor`         | 正常调用                                          | ✅ 是（不变）          |
+| 所有其他命令                          | 工作方式与之前完全一致                             | ✅ 是                  |
 
-### Magic Keywords
+### 魔法关键词
 
-Include these anywhere in your message to explicitly activate behaviors. Use keywords when you want explicit control (optional):
+在消息任意位置包含以下关键词以显式激活行为。当你需要显式控制时使用关键词（可选）：
 
-| Keyword             | Effect                                   | Example                           |
-| ------------------- | ---------------------------------------- | --------------------------------- |
-| `ralph`             | Persistence mode - won't stop until done | "ralph: refactor the auth system" |
-| `ralplan`           | Iterative planning with consensus        | "ralplan: add OAuth support"      |
-| `ulw` / `ultrawork` | Maximum parallel execution               | "ulw: fix all type errors"        |
-| `plan`              | Planning interview                       | "plan: new API design"            |
+| 关键词             | 效果                              | 示例                           |
+| ------------------- | --------------------------------- | ----------------------------- |
+| `ralph`             | 持久模式 — 不完成不停止            | "ralph: refactor the auth system" |
+| `ralplan`           | 带共识的迭代规划                   | "ralplan: add OAuth support"      |
+| `ulw` / `ultrawork` | 最大并行执行                       | "ulw: fix all type errors"        |
+| `plan`              | 规划访谈                           | "plan: new API design"            |
 
-**ralph includes ultrawork:**
+**ralph 内置 ultrawork：**
 
 ```
 ralph: migrate the entire database
@@ -320,7 +325,7 @@ ralph: migrate the entire database
 Persistence (won't stop) + Ultrawork (maximum parallelism) built-in
 ```
 
-**No keywords?** Claude still auto-detects:
+**不用关键词？** Claude 仍会自动检测：
 
 ```
 "don't stop until this works"      # Triggers ralph
@@ -328,9 +333,9 @@ Persistence (won't stop) + Ultrawork (maximum parallelism) built-in
 "help me design the dashboard"     # Triggers planning
 ```
 
-### Natural Cancellation
+### 自然取消
 
-Say any of these to stop:
+说以下任一以停止：
 
 - "stop"
 - "cancel"
@@ -339,7 +344,7 @@ Say any of these to stop:
 - "enough"
 - "halt"
 
-Claude intelligently determines what to stop:
+Claude 智能判断要停止什么：
 
 ```
 If in ralph-loop     → Exit persistence loop
@@ -348,19 +353,19 @@ If in planning       → End planning interview
 If multiple active   → Stop the most recent
 ```
 
-No more `/wise:cancel-ralph` - just say "cancel"!
+不再需要 `/wise:cancel-ralph` — 只需说 "cancel"！
 
-### Migration Steps
+### 迁移步骤
 
-Follow these steps to migrate your existing setup:
+按以下步骤迁移既有配置：
 
-#### 1. Uninstall Old Package (if installed via npm)
+#### 1. 卸载旧包（若经 npm 安装）
 
 ```bash
 npm uninstall -g wise
 ```
 
-#### 2. Install via Plugin System (Required)
+#### 2. 经插件系统安装（必需）
 
 ```bash
 # In Claude Code:
@@ -368,18 +373,18 @@ npm uninstall -g wise
 /plugin install wise
 ```
 
-> **Note**: npm/bun global installs are no longer supported. Use the plugin system.
+> **注意**：不再支持 npm/bun 全局安装。请使用插件系统。
 
-#### 3. Rename Local Project Directories
+#### 3. 重命名本地项目目录
 
-If you have existing projects using the old directory structure:
+若你有使用旧目录结构的既有项目：
 
 ```bash
 # In each project directory
 mv .wise .wise
 ```
 
-#### 4. Rename Global Directories
+#### 4. 重命名全局目录
 
 ```bash
 # Global configuration directory
@@ -392,9 +397,9 @@ mv ~/.claude/skills/wise-learned ~/.claude/skills/wise-learned
 mv ~/.claude/wise ~/.claude/wise
 ```
 
-#### 5. Update Environment Variables
+#### 5. 更新环境变量
 
-Update your shell configuration files (`.bashrc`, `.zshrc`, etc.):
+更新你的 shell 配置文件（`.bashrc`、`.zshrc` 等）：
 
 ```bash
 # Replace all WISE_* variables with WISE_*
@@ -403,52 +408,52 @@ Update your shell configuration files (`.bashrc`, `.zshrc`, etc.):
 # NEW: export WISE_ROUTING_ENABLED=true
 ```
 
-#### 6. Update Scripts and Configurations
+#### 6. 更新脚本与配置
 
-Search for and update any references to:
+搜索并更新所有对以下内容的引用：
 
-- Package name: `wise` → `wise`
-- Agent names: Use the mapping table above
-- Commands: Use the new slash commands
-- Directory paths: Update `.wise` → `.wise`
+- 包名：`wise` → `wise`
+- Agent 名：使用上方映射表
+- 命令：使用新斜杠命令
+- 目录路径：更新 `.wise` → `.wise`
 
-#### 7. Run One-Time Setup
+#### 7. 运行一次性配置
 
-In Claude Code, just say "setup wise", "wise setup", or any natural language equivalent.
+在 Claude Code 中，只需说 "setup wise"、"wise setup" 或任何自然语言等价表达。
 
-This:
+这将：
 
-- Downloads latest CLAUDE.md
-- Configures 32 agents
-- Enables auto-behavior detection
-- Activates continuation enforcement
-- Sets up skill composition
+- 下载最新 CLAUDE.md
+- 配置 32 个 agent
+- 启用自动行为检测
+- 激活续跑强制
+- 配置技能组合
 
-### Verification
+### 验证
 
-After migration, verify your setup:
+迁移后，验证你的配置：
 
-1. **Check installation**:
+1. **检查安装**：
 
    ```bash
    npm list -g wise
    ```
 
-2. **Verify directories exist**:
+2. **验证目录存在**：
 
    ```bash
    ls -la .wise/  # In project directory
    ls -la ~/.wise/  # Global directory
    ```
 
-3. **Test a simple command**:
-   Run `/wise:wise-help` in Claude Code to ensure the plugin is loaded correctly.
+3. **测试一个简单命令**：
+   在 Claude Code 中运行 `/wise:wise-help` 以确保插件已正确加载。
 
-### New Features in 3.0
+### 3.0 新功能
 
-#### 1. Zero-Learning-Curve Operation
+#### 1. 零学习曲线操作
 
-**No commands to memorize.** Work naturally:
+**无需记忆命令。** 自然工作：
 
 ```
 Before: "OK, I need to use /wise:ultrawork for speed..."
@@ -457,9 +462,9 @@ After:  "I'm in a hurry, go fast!"
         Claude: "I'm activating ultrawork mode..."
 ```
 
-#### 2. Delegate Always (Automatic)
+#### 2. 始终委派（自动）
 
-Complex work auto-routes to specialist agents:
+复杂工作自动路由到专家 agent：
 
 ```
 Your request              Claude's action
@@ -471,11 +476,11 @@ Your request              Claude's action
 "Debug this crash"        → Delegates to architect
 ```
 
-You don't ask for delegation - it happens automatically.
+你无需请求委派 — 它自动发生。
 
-#### 3. Learned Skills (`/wise:skillify`)
+#### 3. 已学技能（`/wise:skillify`）
 
-Extract reusable insights from problem-solving. `/wise:learner` remains as a deprecated compatibility alias:
+从问题解决中提取可复用洞察。`/wise:learner` 保留为已弃用的兼容别名：
 
 ```bash
 # After solving a tricky bug:
@@ -486,24 +491,24 @@ Claude learns the pattern and stores it
 Next time keywords match → Solution auto-injects
 ```
 
-Storage:
+存储：
 
-- **Project-level**: `.wise/skills/` (intended to be committed with the repo; uncommitted worktree-local skills disappear when that worktree is removed)
-- **User-level**: `~/.claude/skills/wise-learned/` (portable)
+- **项目级**：`.wise/skills/`（旨在与仓库一同提交；未提交的 worktree 本地技能在该 worktree 移除时消失）
+- **用户级**：`~/.claude/skills/wise-learned/`（可移植）
 
-#### 4. HUD Statusline (Real-Time Orchestration)
+#### 4. HUD 状态栏（实时编排）
 
-See what Claude is doing in the status bar:
+在状态栏中查看 Claude 正在做什么：
 
 ```
 [WISE] ralph:3/10 | US-002 | ultrawork skill:planner | ctx:67% | agents:2 | todos:2/5
 ```
 
-Run `/wise:hud setup` to install. Presets: minimal, focused, full.
+运行 `/wise:hud setup` 安装。预设：minimal、focused、full。
 
-#### 5. Three-Tier Memory System
+#### 5. 三层记忆系统
 
-Critical knowledge survives context compaction:
+关键知识在上下文压缩后仍保留：
 
 ```
 <remember priority>API client at src/api/client.ts</remember>
@@ -513,15 +518,15 @@ Permanently loaded on session start
 Never lost through compaction
 ```
 
-Or use `/wise:note` to save discoveries manually:
+或使用 `/wise:note` 手动保存发现：
 
 ```bash
 /wise:note Project uses PostgreSQL with Prisma ORM
 ```
 
-#### 6. Structured Task Tracking (PRD Support)
+#### 6. 结构化任务跟踪（PRD 支持）
 
-**Ralph Loop now uses Product Requirements Documents:**
+**Ralph 循环现使用产品需求文档（PRD）：**
 
 ```bash
 /wise:ralph-init "implement OAuth with multiple providers"
@@ -533,9 +538,9 @@ Each story: description + acceptance criteria + pass/fail
 Ralph loops until ALL stories pass
 ```
 
-#### 7. Intelligent Continuation
+#### 7. 智能续跑
 
-**Tasks complete before Claude stops:**
+**任务在 Claude 停止前完成：**
 
 ```
 You: "Implement user dashboard"
@@ -547,111 +552,112 @@ Creates todo list, works through each item
 Only stops when EVERYTHING is verified complete
 ```
 
-### Backward Compatibility Note
+### 兼容性说明
 
-**Note**: v3.0 does not maintain backward compatibility with v2.x naming. You must complete the migration steps above for the new version to work correctly.
+**注意**：v3.0 不与 v2.x 命名保持向后兼容。你必须完成上述迁移步骤，新版本才能正确工作。
 
 ---
 
-## v3.0 → v3.1: Notepad Wisdom & Enhanced Features
+<a id="v30--v31-notepad-wisdom--enhanced-features"></a>
+## v3.0 → v3.1：Notepad Wisdom 与增强功能
 
-### Overview
+### 概览
 
-Version 3.1 is a minor release adding powerful new features while maintaining full backward compatibility with v3.0.
+版本 3.1 是一个次要版本，新增强大功能同时与 v3.0 保持完全兼容。
 
-### What's New
+### 新增内容
 
-#### 1. Notepad Wisdom System
+#### 1. Notepad Wisdom 系统
 
-Plan-scoped wisdom capture for learnings, decisions, issues, and problems.
+针对学习、决策、问题与阻碍的计划级 wisdom 捕获。
 
-**Location:** `.wise/notepads/{plan-name}/`
+**位置：** `.wise/notepads/{plan-name}/`
 
-| File           | Purpose                            |
-| -------------- | ---------------------------------- |
-| `learnings.md` | Technical discoveries and patterns |
-| `decisions.md` | Architectural and design decisions |
-| `issues.md`    | Known issues and workarounds       |
-| `problems.md`  | Blockers and challenges            |
+| 文件             | 用途                       |
+| -------------- | -------------------------- |
+| `learnings.md` | 技术发现与模式              |
+| `decisions.md` | 架构与设计决策              |
+| `issues.md`    | 已知问题与变通方法          |
+| `problems.md`  | 阻碍与挑战                  |
 
-**API:**
+**API：**
 
-- `initPlanNotepad()` - Initialize notepad for a plan
-- `addLearning()` - Record technical discoveries
-- `addDecision()` - Record architectural choices
-- `addIssue()` - Record known issues
-- `addProblem()` - Record blockers
-- `getWisdomSummary()` - Get summary of all wisdom
-- `readPlanWisdom()` - Read full wisdom for context
+- `initPlanNotepad()` - 为计划初始化 notepad
+- `addLearning()` - 记录技术发现
+- `addDecision()` - 记录架构选择
+- `addIssue()` - 记录已知问题
+- `addProblem()` - 记录阻碍
+- `getWisdomSummary()` - 获取所有 wisdom 摘要
+- `readPlanWisdom()` - 读取完整 wisdom 作为上下文
 
-#### 2. Delegation Categories
+#### 2. 委派类别
 
-Semantic task categorization that auto-maps to model tier, temperature, and thinking budget.
+将任务语义分类，并自动映射到模型层级、温度与 thinking 预算。
 
-| Category             | Tier   | Temperature | Thinking | Use For                                         |
-| -------------------- | ------ | ----------- | -------- | ----------------------------------------------- |
-| `visual-engineering` | HIGH   | 0.7         | high     | UI/UX, frontend, design systems                 |
-| `ultrabrain`         | HIGH   | 0.3         | max      | Complex reasoning, architecture, deep debugging |
-| `artistry`           | MEDIUM | 0.9         | medium   | Creative solutions, brainstorming               |
-| `quick`              | LOW    | 0.1         | low      | Simple lookups, basic operations                |
-| `writing`            | MEDIUM | 0.5         | medium   | Documentation, technical writing                |
+| 类别                 | 层级   | 温度 | Thinking | 用途                              |
+| -------------------- | ------ | ----------- | -------- | --------------------------------- |
+| `visual-engineering` | HIGH   | 0.7         | high     | UI/UX、前端、设计系统              |
+| `ultrabrain`         | HIGH   | 0.3         | max      | 复杂推理、架构、深度调试           |
+| `artistry`           | MEDIUM | 0.9         | medium   | 创意方案、头脑风暴                 |
+| `quick`              | LOW    | 0.1         | low      | 简单查找、基础操作                 |
+| `writing`            | MEDIUM | 0.5         | medium   | 文档、技术写作                     |
 
-**Auto-detection:** Categories detect from prompt keywords automatically.
+**自动检测：** 类别从 prompt 关键词自动检测。
 
-#### 3. Directory Diagnostics Tool
+#### 3. 目录诊断工具
 
-Project-level type checking via `lsp_diagnostics_directory` tool.
+经 `lsp_diagnostics_directory` 工具进行项目级类型检查。
 
-**Strategies:**
+**策略：**
 
-- `auto` (default) - Auto-selects best strategy, prefers tsc when tsconfig.json exists
-- `tsc` - Fast, uses TypeScript compiler
-- `lsp` - Fallback, iterates files via Language Server
+- `auto`（默认） - 自动选择最佳策略，存在 tsconfig.json 时优先使用 tsc
+- `tsc` - 快速，使用 TypeScript 编译器
+- `lsp` - 降级方案，经语言服务器逐文件迭代
 
-**Usage:** Check entire project for errors before commits or after refactoring.
+**用法：** 在提交前或重构后检查整个项目的错误。
 
-#### 4. Session Resume
+#### 4. 会话恢复
 
-Background agents can be resumed with full context via `resume-session` tool.
+后台 agent 可经 `resume-session` 工具恢复完整上下文。
 
-### Migration Steps
+### 迁移步骤
 
-Version 3.1 is a drop-in upgrade. No migration required!
+版本 3.1 是直接升级。无需迁移！
 
 ```bash
 npm update -g wise
 ```
 
-All existing configurations, plans, and workflows continue working unchanged.
+所有既有配置、计划与工作流继续不变工作。
 
-### New Tools Available
+### 可用新工具
 
-Once upgraded, agents automatically gain access to:
+升级后，agent 自动获得以下访问权限：
 
-- Notepad wisdom APIs (read/write wisdom during execution)
-- Delegation categories (automatic categorization)
-- Directory diagnostics (project-level type checking)
-- Session resume (recover background agent state)
+- Notepad wisdom API（在执行期间读写 wisdom）
+- 委派类别（自动分类）
+- 目录诊断（项目级类型检查）
+- 会话恢复（恢复后台 agent 状态）
 
 ---
 
-## v3.3.x → v3.4.0: Parallel Execution & Advanced Workflows
+## v3.3.x → v3.4.0：并行执行与高级工作流
 
-### Overview
+### 概览
 
-Version 3.4.0 introduces powerful parallel execution modes and advanced workflow orchestration while maintaining full backward compatibility with v3.3.x.
+版本 3.4.0 引入强大的并行执行模式与高级工作流编排，同时与 v3.3.x 保持完全兼容。
 
-### What's New
+### 新增内容
 
-#### 1. Pipeline: Sequential Agent Chaining
+#### 1. Pipeline：顺序 Agent 链式调用
 
-Chain agents with data passing between stages:
+在阶段间通过数据传递串联 agent：
 
 ```bash
 /wise:pipeline explore:haiku -> architect:opus -> executor:sonnet
 ```
 
-**Built-in Presets:**
+**内置预设：**
 
 - `review` - explore → architect → critic → executor
 - `implement` - planner → executor → tdd-guide
@@ -660,30 +666,30 @@ Chain agents with data passing between stages:
 - `refactor` - explore → architect-medium → executor-high → qa-tester
 - `security` - explore → security-reviewer → executor → security-reviewer-low
 
-#### 4. Unified Cancel Command
+#### 4. 统一取消命令
 
-Smart cancellation that auto-detects active mode:
+智能取消，自动检测活跃模式：
 
 ```bash
 /wise:cancel
 # Or just say: "stop", "cancel", "abort"
 ```
 
-**Auto-detects and cancels:** autopilot, ralph, ultrawork, ultraqa, pipeline
+**自动检测并取消：** autopilot、ralph、ultrawork、ultraqa、pipeline
 
-**Deprecation Notice:**
-Individual cancel commands are deprecated but still work:
+**弃用通知：**
+单独的取消命令已弃用但仍可用：
 
-- `/wise:cancel-ralph` (deprecated)
-- `/wise:cancel-ultraqa` (deprecated)
-- `/wise:cancel-ultrawork` (deprecated)
-- `/wise:cancel-autopilot` (deprecated)
+- `/wise:cancel-ralph`（已弃用）
+- `/wise:cancel-ultraqa`（已弃用）
+- `/wise:cancel-ultrawork`（已弃用）
+- `/wise:cancel-autopilot`（已弃用）
 
-Use `/wise:cancel` instead.
+请改用 `/wise:cancel`。
 
 #### 6. Explore-High Agent
 
-Opus-powered architectural search for complex codebase exploration:
+基于 opus 的架构搜索，用于复杂代码库探索：
 
 ```typescript
 Task(
@@ -693,50 +699,51 @@ Task(
 );
 ```
 
-**Best for:** Architectural analysis, cross-cutting concerns, complex refactoring planning
+**最适合：** 架构分析、横切关注点、复杂重构规划
 
-#### 7. State Management Standardization
+#### 7. State 管理标准化
 
-State files now use standardized paths:
+State 文件现使用标准化路径：
 
-**Standard paths:**
+**标准路径：**
 
-- Local: `.wise/state/{name}.json`
-- Global: `~/.wise/state/{name}.json`
+- 本地：`.wise/state/{name}.json`
+- 全局：`~/.wise/state/{name}.json`
 
-Legacy locations are auto-migrated on read.
+旧版位置在读取时自动迁移。
 
-#### 8. Keyword Conflict Resolution
+#### 8. 关键词冲突解决
 
-When multiple execution mode keywords are present:
+当存在多个执行模式关键词时：
 
-**Conflict Resolution Priority:**
-| Priority | Condition | Result |
-|----------|-----------|--------|
-| 1 (highest) | Single explicit keyword | That mode wins |
-| 2 | Generic "fast"/"parallel" only | Read from config (`defaultExecutionMode`) |
-| 3 (lowest) | No config file | Default to `ultrawork` |
+**冲突解决优先级：**
 
-**Explicit mode keywords:** `ulw`, `ultrawork`
-**Generic keywords:** `fast`, `parallel`
+| 优先级       | 条件                         | 结果                              |
+|------------|------------------------------|-----------------------------------|
+| 1（最高）  | 单个显式关键词               | 该模式胜出                        |
+| 2          | 仅有通用 "fast"/"parallel"   | 从配置（`defaultExecutionMode`）读取 |
+| 3（最低）  | 无配置文件                   | 默认为 `ultrawork`                |
 
-Users set their default mode preference via `/wise:wise-setup`.
+**显式模式关键词：** `ulw`、`ultrawork`
+**通用关键词：** `fast`、`parallel`
 
-### Migration Steps
+用户经 `/wise:wise-setup` 设置默认模式偏好。
 
-Version 3.4.0 is a drop-in upgrade. No migration required!
+### 迁移步骤
+
+版本 3.4.0 是直接升级。无需迁移！
 
 ```bash
 npm update -g wise
 ```
 
-All existing configurations, plans, and workflows continue working unchanged.
+所有既有配置、计划与工作流继续不变工作。
 
-### New Configuration Options
+### 新配置选项
 
-#### Default Execution Mode
+#### 默认执行模式
 
-Set your preferred execution mode in `~/.claude/.wise-config.json`:
+在 `~/.claude/.wise-config.json` 中设置你偏好的执行模式：
 
 ```json
 {
@@ -744,44 +751,44 @@ Set your preferred execution mode in `~/.claude/.wise-config.json`:
 }
 ```
 
-When you use generic keywords like "fast" or "parallel" without explicit mode keywords, this setting determines which mode activates.
+当你使用通用关键词如 "fast" 或 "parallel" 而无显式模式关键词时，该设置决定激活哪个模式。
 
-### Breaking Changes
+### 破坏性变更
 
-None. All v3.3.x features and commands continue to work in v3.4.0.
+无。所有 v3.3.x 功能与命令在 v3.4.0 中继续可用。
 
-### New Tools Available
+### 可用新工具
 
-Once upgraded, you automatically gain access to:
+升级后，你自动获得以下访问权限：
 
-- Ultrapilot (parallel autopilot)
-- Swarm coordination
-- Pipeline workflows
-- Unified cancel command
+- Ultrapilot（并行 autopilot）
+- Swarm 协调
+- Pipeline 工作流
+- 统一取消命令
 - Explore-high agent
 
-### Best Practices for v3.4.0
+### v3.4.0 最佳实践
 
-#### When to Use Each Mode
+#### 何时使用各模式
 
-| Scenario                | Recommended Mode | Why                                            |
-| ----------------------- | ---------------- | ---------------------------------------------- |
-| Multi-component systems | `team N:executor` | Parallel workers handle independent components |
-| Many small fixes        | `team N:executor` | Atomic task claiming prevents duplicate work   |
-| Sequential dependencies | `pipeline`        | Data passes between stages                     |
-| Single complex task     | `autopilot`      | Full autonomous execution                      |
-| Must complete           | `ralph`          | Persistence guarantee                          |
+| 场景           | 推荐模式          | 原因                              |
+| -------------- | ----------------- | --------------------------------- |
+| 多组件系统     | `team N:executor` | 并行 worker 处理独立组件          |
+| 多个小修复     | `team N:executor` | 原子任务认领防止重复工作          |
+| 顺序依赖       | `pipeline`        | 数据在阶段间传递                  |
+| 单个复杂任务   | `autopilot`       | 完全自主执行                      |
+| 必须完成       | `ralph`           | 持久保证                          |
 
-#### Keyword Usage
+#### 关键词使用
 
-**Explicit mode control (v3.4.0):**
+**显式模式控制（v3.4.0）：**
 
 ```bash
 "ulw: fix all errors"           # ultrawork (explicit)
 "fast: implement feature"       # reads defaultExecutionMode config
 ```
 
-**Natural language (still works):**
+**自然语言（仍然可用）：**
 
 ```bash
 "don't stop until done"         # ralph
@@ -789,85 +796,86 @@ Once upgraded, you automatically gain access to:
 "build me a todo app"           # autopilot
 ```
 
-### Verification
+### 验证
 
-After upgrading, verify new features:
+升级后，验证新功能：
 
-1. **Check installation**:
+1. **检查安装**：
 
    ```bash
    npm list -g wise
    ```
 
-2. **Test unified cancel**:
+2. **测试统一取消**：
 
    ```bash
    /wise:cancel
    ```
 
-3. **Check state directory**:
+3. **检查 state 目录**：
    ```bash
    ls -la .wise/state/
    ```
 
 ---
 
-## v3.x → v4.0: Major Architecture Overhaul
+<a id="v3x--v40-major-architecture-overhaul"></a>
+## v3.x → v4.0：重大架构重构
 
-### Overview
+### 概览
 
-Version 4.0 is a complete architectural redesign focusing on scalability, maintainability, and developer experience.
+版本 4.0 是一次完整的架构重新设计，聚焦于可扩展性、可维护性与开发者体验。
 
-### What's Coming
+### 即将到来
 
-⚠️ **This section is under active development as v4.0 is being built.**
+⚠️ **本节在 v4.0 构建期间处于活跃开发中。**
 
-#### Planned Changes
+#### 计划变更
 
-1. **Modular Architecture**
-   - Plugin system for extensibility
-   - Core/extension separation
-   - Better dependency management
+1. **模块化架构**
+   - 用于扩展的插件系统
+   - 核心/扩展分离
+   - 更好的依赖管理
 
-2. **Enhanced Agent System**
-   - Improved agent lifecycle management
-   - Better error recovery
-   - Performance optimizations
+2. **增强的 Agent 系统**
+   - 改进的 agent 生命周期管理
+   - 更好的错误恢复
+   - 性能优化
 
-3. **Improved Configuration**
-   - Unified config schema
-   - Better validation
-   - Migration tooling
+3. **改进的配置**
+   - 统一配置 schema
+   - 更好的校验
+   - 迁移工具
 
-4. **Breaking Changes**
-   - TBD based on development progress
-   - Full migration guide will be provided
+4. **破坏性变更**
+   - 待定，视开发进度
+   - 将提供完整迁移指南
 
-### Migration Path (Coming Soon)
+### 迁移路径（即将推出）
 
-Detailed migration instructions will be provided when v4.0 reaches release candidate status.
+当 v4.0 达到发布候选状态时，将提供详细迁移说明。
 
-Expected timeline: Q1 2026
+预计时间线：2026 年 Q1
 
-### Stay Updated
+### 保持关注
 
-- Watch the [GitHub repository](https://github.com/wise-claw/wise) for announcements
-- Check [CHANGELOG.md](../CHANGELOG.md) for detailed release notes
-- Join discussions in GitHub Issues
+- 关注 [GitHub 仓库](https://github.com/wise-claw/wise) 以获取公告
+- 查看 [CHANGELOG.md](../CHANGELOG.md) 获取详细发布说明
+- 在 GitHub Issues 中参与讨论
 
 ---
 
-## Common Scenarios Across Versions
+## 跨版本常见场景
 
-### Scenario 1: Quick Implementation Task
+### 场景 1：快速实现任务
 
-**2.x Workflow:**
+**2.x 工作流：**
 
 ```
 /wise:ultrawork "implement the todo list feature"
 ```
 
-**3.0+ Workflow:**
+**3.0+ 工作流：**
 
 ```
 "implement the todo list feature quickly"
@@ -875,17 +883,17 @@ Expected timeline: Q1 2026
 Claude: "I'm activating ultrawork for maximum parallelism"
 ```
 
-**Result:** Same outcome, more natural interaction.
+**结果：** 相同结果，更自然的交互。
 
-### Scenario 2: Complex Debugging
+### 场景 2：复杂调试
 
-**2.x Workflow:**
+**2.x 工作流：**
 
 ```
 /wise:ralph "debug the memory leak"
 ```
 
-**3.0+ Workflow:**
+**3.0+ 工作流：**
 
 ```
 "there's a memory leak in the worker process - don't stop until we fix it"
@@ -893,17 +901,17 @@ Claude: "I'm activating ultrawork for maximum parallelism"
 Claude: "I'm activating ralph-loop to ensure completion"
 ```
 
-**Result:** Ralph-loop with more context from your natural language.
+**结果：** Ralph 循环并从你的自然语言获得更多上下文。
 
-### Scenario 3: Strategic Planning
+### 场景 3：战略规划
 
-**2.x Workflow:**
+**2.x 工作流：**
 
 ```
 /wise:planner "design the new authentication system"
 ```
 
-**3.0+ Workflow:**
+**3.0+ 工作流：**
 
 ```
 "plan the new authentication system"
@@ -913,91 +921,91 @@ Claude: "I'm starting a planning session"
 Interview begins automatically
 ```
 
-**Result:** Planning interview triggered by natural language.
+**结果：** 由自然语言触发的规划访谈。
 
-### Scenario 4: Stopping Work
+### 场景 4：停止工作
 
-**2.x Workflow:**
+**2.x 工作流：**
 
 ```
 /wise:cancel-ralph
 ```
 
-**3.0+ Workflow:**
+**3.0+ 工作流：**
 
 ```
 "stop"
 ```
 
-**Result:** Claude intelligently cancels the active operation.
+**结果：** Claude 智能取消当前活跃操作。
 
 ---
 
-## Configuration Options
+## 配置选项
 
-### Project-Scoped Configuration (Recommended)
+### 项目级配置（推荐）
 
-Apply wise to current project only:
+仅将 wise 应用于当前项目：
 
 ```
 /wise:wise-default
 ```
 
-Creates: `./.claude/CLAUDE.md`
+创建：`./.claude/CLAUDE.md`
 
-### Global Configuration
+### 全局配置
 
-Apply to all Claude Code sessions:
+应用于所有 Claude Code 会话：
 
 ```
 /wise:wise-default-global
 ```
 
-Creates: `~/.claude/CLAUDE.md`
+创建：`~/.claude/CLAUDE.md`
 
-**Precedence:** Project config overrides global if both exist.
-
----
-
-## FAQ
-
-**Q: Do I have to use keywords?**
-A: No. Keywords are optional shortcuts. Claude auto-detects intent without them.
-
-**Q: Will my old commands break?**
-A: No. All commands continue to work across minor versions (3.0 → 3.1). Major version changes (3.x → 4.0) will provide migration paths.
-
-**Q: What if I like explicit commands?**
-A: Keep using them! `/wise:ralph`, `/wise:ultrawork`, and `/wise:plan` work. Note: `/wise:planner` now redirects to `/wise:plan`.
-
-**Q: How do I know what Claude is doing?**
-A: Claude announces major behaviors: "I'm activating ralph-loop..." or set up `/wise:hud` for real-time status.
-
-**Q: Where's the full command list?**
-A: See [README.md](../README.md) for full command reference. All commands still work.
-
-**Q: What's the difference between keywords and natural language?**
-A: Keywords are explicit shortcuts. Natural language triggers auto-detection. Both work.
+**优先级：** 若两者同时存在，项目配置覆盖全局配置。
 
 ---
 
-## Need Help?
+## 常见问题
 
-- **Diagnose issues**: Run `/wise:wise-doctor`
-- **See all commands**: Run `/wise:wise-help`
-- **View real-time status**: Run `/wise:hud setup`
-- **Review detailed changelog**: See [CHANGELOG.md](../CHANGELOG.md)
-- **Report bugs**: [GitHub Issues](https://github.com/wise-claw/wise/issues)
+**问：我必须使用关键词吗？**
+答：不必。关键词是可选快捷方式。Claude 无需关键词即可自动检测意图。
+
+**问：我的旧命令会失效吗？**
+答：不会。所有命令在次要版本（3.0 → 3.1）间继续可用。主版本变更（3.x → 4.0）将提供迁移路径。
+
+**问：如果我喜欢显式命令怎么办？**
+答：继续使用！`/wise:ralph`、`/wise:ultrawork` 与 `/wise:plan` 均可用。注意：`/wise:planner` 现重定向到 `/wise:plan`。
+
+**问：我如何知道 Claude 在做什么？**
+答：Claude 会宣告主要行为："I'm activating ralph-loop..."，或配置 `/wise:hud` 获取实时状态。
+
+**问：完整命令列表在哪？**
+答：完整命令参考见 [README.md](../README.md)。所有命令仍然可用。
+
+**问：关键词与自然语言有何区别？**
+答：关键词是显式快捷方式。自然语言触发自动检测。两者均可用。
 
 ---
 
-## What's Next?
+## 需要帮助？
 
-Now that you understand the migration:
+- **诊断问题**：运行 `/wise:wise-doctor`
+- **查看所有命令**：运行 `/wise:wise-help`
+- **查看实时状态**：运行 `/wise:hud setup`
+- **查阅详细更新日志**：见 [CHANGELOG.md](../CHANGELOG.md)
+- **报告 bug**：[GitHub Issues](https://github.com/wise-claw/wise/issues)
 
-1. **For immediate impact**: Start using keywords (`ralph`, `ulw`, `plan`) in your work
-2. **For full power**: Read [docs/CLAUDE.md](CLAUDE.md) to understand orchestration
-3. **For advanced usage**: Check [docs/架构.md](架构.md) for deep dives
-4. **For team onboarding**: Share this guide with teammates
+---
 
-Welcome to wise!
+## 接下来？
+
+既然你已了解迁移：
+
+1. **立即见效**：在工作中开始使用关键词（`ralph`、`ulw`、`plan`）
+2. **全面掌握**：阅读 [docs/CLAUDE.md](CLAUDE.md) 以理解编排
+3. **进阶用法**：查阅 [docs/架构.md](架构.md) 以深入
+4. **团队入职**：将本指南分享给队友
+
+欢迎使用 wise！

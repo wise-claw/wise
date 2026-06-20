@@ -1,3 +1,3 @@
-# Developers
+# 开发者
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for the full developer guide.
+完整开发者指南见 [CONTRIBUTING.md](../CONTRIBUTING.md)。

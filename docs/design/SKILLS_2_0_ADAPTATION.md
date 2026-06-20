@@ -1,115 +1,115 @@
-# Skills 2.0 Adaptation for WISE (MVP)
+# WISE 的 Skills 2.0 适配 (MVP)
 
-## Context
+## 背景
 
-The broader AI coding-agent ecosystem is converging on a more package-oriented skill model:
+更广泛的 AI 编码智能体生态正收敛于更面向包的技能模型：
 
-- reusable workflows live in directory-based skill packages
-- skills ship bundled resources, not just prose
-- orchestration surfaces increasingly expose explicit handoffs, tools, and workflow contracts
+- 可复用工作流存在于基于目录的技能包中
+- 技能随附捆绑资源，而非仅有文字
+- 编排面日益暴露显式的交接、工具与工作流契约
 
-WISE already has strong foundations here:
+WISE 在此已有坚实基础：
 
 - `SKILL.md` frontmatter
-- slash-loaded skills
-- builtin skill loading
-- pipeline / handoff metadata
+- slash 加载技能
+- 内建技能加载
+- 流水线 / 交接元数据
 
-This MVP focuses on the smallest concrete adaptation that improves interoperability without forcing a large schema migration.
+此 MVP 聚焦于最小的具体适配，在不强制大规模 schema 迁移的前提下改善互操作性。
 
-## Research summary
+## 研究摘要
 
 ### Anthropic Claude Code
 
-Claude Code's custom subagent model emphasizes:
+Claude Code 的自定义子智能体模型强调：
 
-- specialized workflow packaging
-- scoped capabilities and tools
-- explicit subagent composition
-- preloaded skills/resources
+- 专业化工作流打包
+- 受限的能力与工具
+- 显式子智能体组合
+- 预加载技能/资源
 
 ### OpenAI Agents SDK
 
-The Agents SDK treats the following as first-class:
+Agents SDK 将以下各项视为一等公民：
 
-- tools
-- handoffs
-- workflows/pipelines
-- guardrails
+- 工具
+- 交接
+- 工作流/流水线
+- 护栏
 
-### Agent Skills ecosystem
+### Agent Skills 生态
 
-The Agent Skills ecosystem centers on project-local skill packaging conventions such as `.agents/skills/`, with bundled artifacts that should be reused by the agent at execution time.
+Agent Skills 生态以项目本地技能打包约定（如 `.agents/skills/`）为中心，随附应在执行时被智能体复用的捆绑制品。
 
-## WISE gaps
+## WISE 的缺口
 
-1. **Project-local compatibility gap**
-   - WISE's canonical project-local skill directory is `.wise/skills/`
-   - emerging conventions also use `.agents/skills/`
-   - WISE should interoperate without abandoning its own canonical layout
+1. **项目本地兼容性缺口**
+   - WISE 规范的项目本地技能目录为 `.wise/skills/`
+   - 新兴约定也使用 `.agents/skills/`
+   - WISE 应在不放弃自身规范布局的前提下互操作
 
-2. **Bundled-resource visibility gap**
-   - WISE renders skill markdown well
-   - but it does not consistently call attention to `lib/`, `templates/`, scripts, or helper files shipped beside the skill
-   - this increases needless reinvention and reduces package leverage
+2. **捆绑资源可见性缺口**
+   - WISE 能很好地渲染技能 markdown
+   - 但未一致地提示随技能一同发布的 `lib/`、`templates/`、脚本或辅助文件
+   - 这增加了不必要的重复发明并降低了包的利用率
 
-## MVP scope implemented in Phase 1
+## Phase 1 实现的 MVP 范围
 
-### 1. Compatibility read support for `.agents/skills/`
+### 1. `.agents/skills/` 的兼容读取支持
 
-- Keep `.wise/skills/` as the canonical WISE project-local skill directory
-- Add `.agents/skills/` as a compatibility read source for:
-  - learned/project skill discovery
-  - slash-loaded skill discovery
-- Preserve deterministic priority order:
-  - project commands
-  - user commands
-  - project `.wise/skills`
-  - project `.agents/skills`
-  - user skill directories
+- 保留 `.wise/skills/` 作为 WISE 规范项目本地技能目录
+- 将 `.agents/skills/` 增加为以下来源的兼容读取源：
+  - learned/project 技能发现
+  - slash 加载技能发现
+- 保留确定性优先级顺序：
+  - 项目命令
+  - 用户命令
+  - 项目 `.wise/skills`
+  - 项目 `.agents/skills`
+  - 用户技能目录
 
-### 2. Standardized `Skill Resources` rendering
+### 2. 标准化 `Skill Resources` 渲染
 
-When a skill directory contains extra bundled assets beyond `SKILL.md`, WISE now appends a standardized block:
+当技能目录除 `SKILL.md` 外还含额外捆绑资产时，WISE 现追加标准化块：
 
-- skill directory path
-- bundled resource entries (for example `lib/`, `templates/`, scripts)
-- a reuse-first reminder
+- 技能目录路径
+- 捆绑资源条目（例如 `lib/`、`templates/`、脚本）
+- 优先复用提醒
 
-This is rendered for:
+此渲染适用于：
 
-- builtin skills
-- slash-loaded skills
+- 内建技能
+- slash 加载技能
 
-## Why this slice
+## 为何选择此切片
 
-This MVP is intentionally narrow:
+此 MVP 有意收窄：
 
-- high practical value
-- low migration risk
-- no new dependency
-- backward compatible with current skill metadata
+- 实用价值高
+- 迁移风险低
+- 无新依赖
+- 与当前技能元数据向后兼容
 
-It gives WISE a real step toward a "skills 2.0" model without prematurely freezing a large frontmatter schema.
+它让 WISE 朝 "skills 2.0" 模型迈出实质一步，而不过早冻结大型 frontmatter schema。
 
-## Deferred follow-ups
+## 延期的后续工作
 
 ### Phase 2
 
-Add optional richer skill contract metadata, potentially including:
+增加可选的更丰富技能契约元数据，可能包括：
 
-- deliverables
-- artifact paths
-- allowed tools
-- model/runtime preferences
-- explicit execution constraints
+- 交付物
+- 制品路径
+- 允许的工具
+- 模型/运行时偏好
+- 显式执行约束
 
 ### Phase 3
 
-Add validation / diagnostics around richer contracts and potentially artifact-first execution helpers.
+围绕更丰富契约增加验证/诊断，以及潜在的制品优先执行辅助。
 
-## Risks
+## 风险
 
-- `.agents/skills/` compatibility may surface overlapping names if users intentionally mirror the same skill in both locations; precedence is now explicit, but duplication may still confuse humans.
-- `Skill Resources` currently summarizes top-level bundled assets only; deeper artifact indexing is out of scope for the MVP.
-- This does not yet introduce a richer validated schema; it improves packaging and discoverability first.
+- `.agents/skills/` 兼容可能在用户有意于两处镜像同一技能时暴露重名问题；优先级现已明确，但重复仍可能困扰人类。
+- `Skill Resources` 当前仅汇总顶层捆绑资产；更深的制品索引不在 MVP 范围内。
+- 此项尚未引入经验证的更丰富 schema；它先改善打包与可发现性。

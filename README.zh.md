@@ -21,3 +21,7 @@ autopilot: build a REST API for managing tasks
 ```
 
 就这么简单。其余都是自动的。
+
+## 文档
+
+完整文档：https://wise-claw.github.io/wise-website/docs/#

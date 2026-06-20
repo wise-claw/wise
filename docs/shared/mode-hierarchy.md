@@ -1,97 +1,97 @@
-# Execution Mode Hierarchy
+# 执行模式层级
 
-This document defines the relationships between execution modes and provides guidance on mode selection.
+本文档定义执行模式之间的关系，并提供模式选择指引。
 
-## Mode Inheritance Tree
+## 模式继承树
 
 ```
-autopilot (autonomous end-to-end)
-├── includes: ralph (persistence)
-│   └── includes: ultrawork (parallelism)
-├── includes: ultraqa (QA cycling)
-└── includes: plan (strategic thinking)
+autopilot（自主端到端）
+├── 包含: ralph（持久化）
+│   └── 包含: ultrawork（并行）
+├── 包含: ultraqa（QA 循环）
+└── 包含: plan（战略思考）
 
- (token efficiency ONLY)
-└── modifies: agent tier selection (prefer haiku/sonnet)
-    (does NOT include persistence - that's ralph's job)
+ （仅 token 效率）
+└── 修改: 智能体层级选择（偏好 haiku/sonnet）
+    （不包含持久化 — 那是 ralph 的职责）
 
-ralph (persistence wrapper)
-└── includes: ultrawork (parallelism engine)
-    (adds: loop until done + architect verification)
+ralph（持久化包装器）
+└── 包含: ultrawork（并行引擎）
+    （新增: 循环直至完成 + architect 验证）
 
-ultrawork (parallelism engine)
-└── COMPONENT only - parallel agent spawning
-    (no persistence, no verification loop)
+ultrawork（并行引擎）
+└── 仅组件 — 并行智能体派生
+    （无持久化，无验证循环）
 ```
 
-## Mode Relationships
+## 模式关系
 
-| Mode | Type | Includes | Mutually Exclusive With |
+| 模式 | 类型 | 包含 | 互斥于 |
 |------|------|----------|------------------------|
-| autopilot | Standalone | ralph, ultraqa, plan | - |
-| ralph | Wrapper | ultrawork | - |
-| ultrawork | Component | - | - |
-|  | Modifier | - | - |
-| ultraqa | Component | - | - |
+| autopilot | 独立 | ralph, ultraqa, plan | - |
+| ralph | 包装器 | ultrawork | - |
+| ultrawork | 组件 | - | - |
+|  | 修饰器 | - | - |
+| ultraqa | 组件 | - | - |
 
-## Decision Tree
+## 决策树
 
 ```
-Want autonomous execution?
-├── YES: Is task parallelizable into 3+ independent components?
-│   ├── YES: team N:executor (parallel autonomous with file ownership)
-│   └── NO: autopilot (sequential with ralph phases)
-└── NO: Want parallel execution with manual oversight?
-    ├── YES: Do you want cost optimization?
-    │   ├── YES:  + ultrawork
-    │   └── NO: ultrawork alone
-    └── NO: Want persistence until verified done?
-        ├── YES: ralph (persistence + ultrawork + verification)
-        └── NO: Standard orchestration (delegate to agents directly)
+需要自主执行?
+├── 是: 任务能否拆分为 3+ 个独立组件?
+│   ├── 是: team N:executor（带文件所有权的并行自主）
+│   └── 否: autopilot（带 ralph 阶段的顺序执行）
+└── 否: 需要带人工监督的并行执行?
+    ├── 是: 需要成本优化吗?
+    │   ├── 是:  + ultrawork
+    │   └── 否: 单独 ultrawork
+    └── 否: 需要持久化直至验证完成?
+        ├── 是: ralph（持久化 + ultrawork + 验证）
+        └── 否: 标准编排（直接委派给智能体）
 
-Have many similar independent tasks (e.g., "fix 47 errors")?
-└── YES: team N:executor (N agents claiming from task pool)
+有许多相似的独立任务（如「修复 47 个错误」）?
+└── 是: team N:executor（N 个智能体从任务池领取）
 ```
 
-## Mode Differentiation Matrix
+## 模式差异矩阵
 
-| Mode | Best For | Parallelism | Persistence | Verification | File Ownership |
+| 模式 | 最适用场景 | 并行性 | 持久化 | 验证 | 文件所有权 |
 |------|----------|-------------|-------------|--------------|----------------|
-| autopilot | "Build me X" | Via ralph | Yes | Yes | N/A |
-| team | Multi-component/homogeneous | N workers | Per-task | Per-task | Per-task |
-| ralph | "Don't stop" | Via ultrawork | Yes | Mandatory | N/A |
-| ultrawork | Parallel only | Yes | No | No | N/A |
-|  | Cost savings | Modifier | No | No | N/A |
+| autopilot | 「帮我构建 X」 | 经由 ralph | 是 | 是 | 不适用 |
+| team | 多组件/同质 | N 个 worker | 按任务 | 按任务 | 按任务 |
+| ralph | 「不要停」 | 经由 ultrawork | 是 | 强制 | 不适用 |
+| ultrawork | 仅并行 | 是 | 否 | 否 | 不适用 |
+|  | 节省成本 | 修饰器 | 否 | 否 | 不适用 |
 
-## Quick Reference
+## 快速参考
 
-**Just want to build something?** → `autopilot`
-**Building multi-component system?** → `team N:executor`
-**Fixing many similar issues?** → `team N:executor`
-**Want control over execution?** → `ultrawork`
-**Need verified completion?** → `ralph`
-**Want to save tokens?** → `` (combine with other modes)
+**只想构建点东西？** → `autopilot`
+**构建多组件系统？** → `team N:executor`
+**修复许多相似问题？** → `team N:executor`
+**想要控制执行？** → `ultrawork`
+**需要验证完成？** → `ralph`
+**想节省 token？** → `` （与其他模式组合）
 
-## Combining Modes
+## 组合模式
 
-Valid combinations:
-- `eco ralph` = Ralph loop with cheaper agents
-- `eco ultrawork` = Parallel execution with cheaper agents
-- `eco autopilot` = Full autonomous with cost optimization
+有效组合：
+- `eco ralph` = 使用更便宜智能体的 Ralph 循环
+- `eco ultrawork` = 使用更便宜智能体的并行执行
+- `eco autopilot` = 带成本优化的全自主
 
-Invalid combinations:
-- `autopilot team` = Mutually exclusive (both are standalone)
-- `` alone = Not useful (needs an execution mode)
+无效组合：
+- `autopilot team` = 互斥（两者都是独立模式）
+- `` 单独 = 无用（需要一个执行模式）
 
-## State Management
+## 状态管理
 
-### Standard Paths
-All mode state files use standardized locations:
-- Primary: `.wise/state/{name}.json` (local, per-project)
-- Global backup: `~/.wise/state/{name}.json` (global, session continuity)
+### 标准路径
+所有模式 state 文件使用标准化位置：
+- 主：`.wise/state/{name}.json`（本地，按项目）
+- 全局备份：`~/.wise/state/{name}.json`（全局，会话连续性）
 
-### Mode State Files
-| Mode | State File |
+### 模式 State 文件
+| 模式 | State 文件 |
 |------|-----------|
 | ralph | `ralph-state.json` |
 | autopilot | `autopilot-state.json` |
@@ -100,6 +100,6 @@ All mode state files use standardized locations:
 | ultraqa | `ultraqa-state.json` |
 | pipeline | `pipeline-state.json` |
 
-**Important:** Never store WISE state in `~/.claude/` - that directory is reserved for Claude Code itself.
+**重要：** 切勿将 WISE state 存于 `~/.claude/` — 该目录保留给 Claude Code 自身。
 
-Legacy locations are auto-migrated on read.
+Legacy 位置在读取时自动迁移。

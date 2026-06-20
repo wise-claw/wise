@@ -1,29 +1,30 @@
-# MCP/Plugin Compatibility Layer
+# MCP/插件兼容层
 
-The Compatibility Layer enables wise to discover, register, and use external plugins, MCP servers, and tools. It provides a unified interface for managing external tools while maintaining security through an integrated permission system.
+兼容层使 wise 能够发现、注册并使用外部插件、MCP 服务器与工具。它提供管理外部工具的统一接口，同时通过集成的权限系统保障安全。
 
-## Table of Contents
+## 目录
 
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Plugin Discovery](#plugin-discovery)
-- [MCP Server Discovery](#mcp-server-discovery)
-- [Plugin Manifest Format](#plugin-manifest-format)
-- [Tool Registration](#tool-registration)
-- [Permission System](#permission-system)
-- [MCP Bridge](#mcp-bridge)
-- [API Reference](#api-reference)
-- [Examples](#examples)
-- [Troubleshooting](#troubleshooting)
+- [概览](#overview)
+- [架构](#architecture)
+- [插件发现](#plugin-discovery)
+- [MCP 服务器发现](#mcp-server-discovery)
+- [插件清单格式](#plugin-manifest-format)
+- [工具注册](#tool-registration)
+- [权限系统](#permission-system)
+- [MCP 桥接](#mcp-bridge)
+- [API 参考](#api-reference)
+- [示例](#examples)
+- [故障排查](#troubleshooting)
 
-## Overview
+<a id="overview"></a>
+## 概览
 
-The Compatibility Layer consists of four integrated systems working together:
+兼容层由四个协同工作的集成系统组成：
 
-1. **Discovery System** - Automatically finds plugins and MCP servers from user directories
-2. **Tool Registry** - Central hub that registers and manages all external tools with conflict resolution
-3. **Permission Adapter** - Integrates with WISE's permission system for safe tool execution
-4. **MCP Bridge** - Connects to MCP servers and exposes their tools for use
+1. **发现系统** - 从用户目录自动发现插件与 MCP 服务器
+2. **工具注册表** - 注册并管理所有外部工具并解决冲突的中心枢纽
+3. **权限适配器** - 集成 WISE 权限系统以安全执行工具
+4. **MCP 桥接** - 连接 MCP 服务器并暴露其工具供使用
 
 ```
 Plugins              MCP Configs          WISE Tools
@@ -37,71 +38,73 @@ Plugins              MCP Configs          WISE Tools
                            MCP Bridge
 ```
 
-## Architecture
+<a id="architecture"></a>
+## 架构
 
-### Discovery System (`discovery.ts`)
+### 发现系统（`discovery.ts`）
 
-Scans for external plugins and MCP servers from:
+从以下位置扫描外部插件与 MCP 服务器：
 
-- `~/.claude/plugins/` - WISE/Claude Code plugins directory
-- `~/.claude/installed-plugins/` - Alternative plugins location
-- `~/.claude/settings.json` - Claude Code MCP server configs
-- `~/.claude/claude_desktop_config.json` - Claude Desktop MCP server configs
-- Plugin manifests (`plugin.json`) for embedded MCP servers
+- `~/.claude/plugins/` - WISE/Claude Code 插件目录
+- `~/.claude/installed-plugins/` - 备选插件位置
+- `~/.claude/settings.json` - Claude Code MCP 服务器配置
+- `~/.claude/claude_desktop_config.json` - Claude Desktop MCP 服务器配置
+- 插件清单（`plugin.json`）用于内嵌 MCP 服务器
 
-**Discovers:**
-- Plugin skills and agents (from SKILL.md and agent .md files)
-- MCP server configurations
-- Tool definitions from plugin manifests
+**发现：**
+- 插件技能与智能体（来自 SKILL.md 与 agent .md 文件）
+- MCP 服务器配置
+- 来自插件清单的工具定义
 
-### Tool Registry (`registry.ts`)
+### 工具注册表（`registry.ts`）
 
-Central hub for tool management:
+工具管理的中心枢纽：
 
-- Registers tools from discovered plugins and MCP servers
-- Handles tool name conflicts using priority-based resolution
-- Routes commands to appropriate handlers
-- Provides search and filtering capabilities
-- Emits events for registration and connection status
+- 注册来自已发现插件与 MCP 服务器的工具
+- 使用基于优先级的解析处理工具名冲突
+- 将命令路由到合适的处理器
+- 提供搜索与过滤能力
+- 发出注册与连接状态事件
 
-**Key features:**
-- Tools are namespaced (e.g., `plugin-name:tool-name`)
-- Priority system for conflict resolution (higher priority wins)
-- Short name lookup (finds `tool-name` even with namespace)
-- Event listeners for monitoring registry state
+**关键特性：**
+- 工具使用命名空间（例如 `plugin-name:tool-name`）
+- 用于冲突解析的优先级系统（高优先级胜出）
+- 短名查找（即使有命名空间也能找到 `tool-name`）
+- 用于监控注册表状态的事件监听器
 
-### Permission Adapter (`permission-adapter.ts`)
+### 权限适配器（`permission-adapter.ts`）
 
-Integrates external tools with WISE's permission system:
+将外部工具集成到 WISE 权限系统：
 
-- Maintains safe patterns for read-only tools
-- Auto-approves known-safe operations
-- Prompts user for dangerous operations (write, execute)
-- Caches permission decisions
-- Determines delegation targets for tool execution
+- 为只读工具维护安全模式
+- 自动批准已知安全操作
+- 对危险操作（写入、执行）提示用户
+- 缓存权限决策
+- 确定工具执行的委派目标
 
-**Safe patterns:**
-- Built-in patterns for common MCP tools (filesystem read, context7 queries)
-- Plugin-contributed patterns from manifests
-- Custom patterns can be registered at runtime
+**安全模式：**
+- 常见 MCP 工具的内置模式（文件系统读取、context7 查询）
+- 来自清单的插件贡献模式
+- 可在运行时注册自定义模式
 
-### MCP Bridge (`mcp-bridge.ts`)
+### MCP 桥接（`mcp-bridge.ts`）
 
-Manages MCP server connections:
+管理 MCP 服务器连接：
 
-- Spawns server processes
-- Sends JSON-RPC requests and handles responses
-- Discovers tools and resources from servers
-- Routes tool invocations to servers
-- Handles connection lifecycle (connect, disconnect, reconnect)
+- 派生服务器进程
+- 发送 JSON-RPC 请求并处理响应
+- 从服务器发现工具与资源
+- 将工具调用路由到服务器
+- 处理连接生命周期（连接、断开、重连）
 
-**Protocol:** JSON-RPC 2.0 over process stdio with newline-delimited messages
+**协议：** 基于进程 stdio 的 JSON-RPC 2.0，使用换行分隔消息
 
-## Plugin Discovery
+<a id="plugin-discovery"></a>
+## 插件发现
 
-### Directory Structure
+### 目录结构
 
-Plugins are discovered from `~/.claude/plugins/` and `~/.claude/installed-plugins/`:
+插件从 `~/.claude/plugins/` 与 `~/.claude/installed-plugins/` 发现：
 
 ```
 ~/.claude/plugins/
@@ -120,9 +123,9 @@ Plugins are discovered from `~/.claude/plugins/` and `~/.claude/installed-plugin
     └── plugin.json
 ```
 
-### Plugin Manifest Structure
+### 插件清单结构
 
-The `plugin.json` defines the plugin's metadata and tools:
+`plugin.json` 定义插件的元数据与工具：
 
 ```json
 {
@@ -166,9 +169,9 @@ The `plugin.json` defines the plugin's metadata and tools:
 }
 ```
 
-### Skill and Agent Discovery
+### 技能与智能体发现
 
-**Skills** are discovered from `SKILL.md` files in supported skills directories. WISE's canonical project-local write target remains `.wise/skills/`, and it also reads Claude Code project skills from `.claude/skills/` plus project-local compatibility skills from `.agents/skills/`. Each skill directory must contain a SKILL.md with frontmatter:
+**技能**从受支持技能目录中的 `SKILL.md` 文件发现。WISE 的规范项目本地写入目标仍是 `.wise/skills/`，同时还从 `.claude/skills/` 读取 Claude Code 项目技能，并从 `.agents/skills/` 读取项目本地兼容技能。每个技能目录必须包含带 frontmatter 的 SKILL.md：
 
 ```markdown
 ---
@@ -180,13 +183,14 @@ tags: tag1, tag2
 Skill documentation here...
 ```
 
-**Agents** are discovered from `.md` files in the agents directory with similar frontmatter structure. Supported runtime fields depend on Claude Code; WISE's bundled agent files currently rely on `name`, `description`, `model`, optional tool restrictions, and prompt body guidance. They do not currently ship an `effort:` frontmatter override, so effort inherits from the parent Claude Code session unless a custom agent explicitly adds one.
+**智能体**从 agents 目录中带类似 frontmatter 结构的 `.md` 文件发现。受支持的运行时字段取决于 Claude Code；WISE 捆绑的 agent 文件当前依赖 `name`、`description`、`model`、可选工具限制与 prompt 正文指引。它们当前不附带 `effort:` frontmatter 覆盖，因此 effort 继承自父 Claude Code 会话，除非自定义 agent 显式添加。
 
-## MCP Server Discovery
+<a id="mcp-server-discovery"></a>
+## MCP 服务器发现
 
-### Claude Desktop Config
+### Claude Desktop 配置
 
-Located at `~/.claude/claude_desktop_config.json`:
+位于 `~/.claude/claude_desktop_config.json`：
 
 ```json
 {
@@ -205,9 +209,9 @@ Located at `~/.claude/claude_desktop_config.json`:
 }
 ```
 
-### Claude Code Settings
+### Claude Code 设置
 
-Located at `~/.claude/settings.json`:
+位于 `~/.claude/settings.json`：
 
 ```json
 {
@@ -223,9 +227,9 @@ Located at `~/.claude/settings.json`:
 }
 ```
 
-### Remote MCP / Remote WISE Shape
+### 远程 MCP / 远程 WISE 形态
 
-WISE can sync and preserve **remote MCP** entries in the unified registry. That is the supported narrow answer to "connect to a remote WISE":
+WISE 可在统一注册表中同步并保留**远程 MCP** 条目。这是「连接远程 WISE」受支持的窄化答案：
 
 ```json
 {
@@ -238,11 +242,11 @@ WISE can sync and preserve **remote MCP** entries in the unified registry. That 
 }
 ```
 
-This supports remote MCP endpoints. It does **not** create a general multi-host WISE cluster or a transparent shared remote filesystem view.
+这支持远程 MCP 端点。它**不会**创建通用多主机 WISE 集群或透明共享远程文件系统视图。
 
-### Plugin-Embedded MCP Servers
+### 插件内嵌 MCP 服务器
 
-Plugins can define MCP servers in their manifest:
+插件可在其清单中定义 MCP 服务器：
 
 ```json
 {
@@ -256,66 +260,68 @@ Plugins can define MCP servers in their manifest:
 }
 ```
 
-## Plugin Manifest Format
+<a id="plugin-manifest-format"></a>
+## 插件清单格式
 
-### Complete Schema
+### 完整 Schema
 
-| Field | Type | Required | Description |
+| 字段 | 类型 | 必填 | 说明 |
 |-------|------|----------|-------------|
-| `name` | string | Yes | Plugin name (alphanumeric, hyphens, underscores) |
-| `version` | string | Yes | Semantic version (e.g., "1.0.0") |
-| `description` | string | No | Human-readable description |
-| `namespace` | string | No | Prefix for tool names (defaults to plugin name) |
-| `skills` | string\|string[] | No | Path(s) to skills directory |
-| `agents` | string\|string[] | No | Path(s) to agents directory |
-| `commands` | string\|string[] | No | Path(s) to commands directory |
-| `mcpServers` | object | No | MCP server configurations (name → McpServerEntry) |
-| `permissions` | PluginPermission[] | No | Permissions needed for plugin tools |
-| `tools` | PluginToolDefinition[] | No | Tool definitions |
+| `name` | string | 是 | 插件名（字母数字、连字符、下划线） |
+| `version` | string | 是 | 语义版本（例如 "1.0.0"） |
+| `description` | string | 否 | 人类可读说明 |
+| `namespace` | string | 否 | 工具名前缀（默认为插件名） |
+| `skills` | string\|string[] | 否 | 技能目录路径 |
+| `agents` | string\|string[] | 否 | agents 目录路径 |
+| `commands` | string\|string[] | 否 | commands 目录路径 |
+| `mcpServers` | object | 否 | MCP 服务器配置（name → McpServerEntry） |
+| `permissions` | PluginPermission[] | 否 | 插件工具所需权限 |
+| `tools` | PluginToolDefinition[] | 否 | 工具定义 |
 
 ### McpServerEntry
 
-| Field | Type | Required | Description |
+| 字段 | 类型 | 必填 | 说明 |
 |-------|------|----------|-------------|
-| `command` | string | Yes | Command to run server (e.g., "node", "npx") |
-| `args` | string[] | No | Command arguments |
-| `env` | object | No | Environment variables to pass to server |
-| `enabled` | boolean | No | Whether server connects on init (default: true) |
-| `description` | string | No | Human-readable description |
+| `command` | string | 是 | 运行服务器的命令（例如 "node"、"npx"） |
+| `args` | string[] | 否 | 命令参数 |
+| `env` | object | 否 | 传递给服务器的环境变量 |
+| `enabled` | boolean | 否 | 服务器是否在初始化时连接（默认：true） |
+| `description` | string | 否 | 人类可读说明 |
 
 ### PluginPermission
 
-| Field | Type | Description |
+| 字段 | 类型 | 说明 |
 |-------|------|-------------|
-| `tool` | string | Tool name requiring permission |
-| `scope` | "read"\|"write"\|"execute"\|"all" | Permission scope |
-| `patterns` | string[] | Regex patterns for allowed paths/commands |
-| `reason` | string | Why this permission is needed |
+| `tool` | string | 需要权限的工具名 |
+| `scope` | "read"\|"write"\|"execute"\|"all" | 权限作用域 |
+| `patterns` | string[] | 允许路径/命令的正则模式 |
+| `reason` | string | 为何需要此权限 |
 
 ### PluginToolDefinition
 
-| Field | Type | Description |
+| 字段 | 类型 | 说明 |
 |-------|------|-------------|
-| `name` | string | Tool name (becomes `namespace:name`) |
-| `description` | string | Human-readable description |
-| `handler` | string | Path to handler function or command |
-| `inputSchema` | object | JSON Schema for tool input |
+| `name` | string | 工具名（变为 `namespace:name`） |
+| `description` | string | 人类可读说明 |
+| `handler` | string | 处理器函数或命令的路径 |
+| `inputSchema` | object | 工具输入的 JSON Schema |
 
-## Tool Registration
+<a id="tool-registration"></a>
+## 工具注册
 
-### Registration Process
+### 注册流程
 
-Tools are registered in this order:
+工具按以下顺序注册：
 
-1. **Plugin discovery** - Plugins found in configured paths
-2. **Tool extraction** - Skills, agents, and tool definitions extracted from plugins
-3. **MCP server discovery** - MCP servers found from config files
-4. **Tool conversion** - MCP tools converted to ExternalTool format
-5. **Conflict resolution** - Tools with same name resolved by priority
+1. **插件发现** - 在配置路径中找到的插件
+2. **工具提取** - 从插件提取技能、智能体与工具定义
+3. **MCP 服务器发现** - 从配置文件发现的 MCP 服务器
+4. **工具转换** - 将 MCP 工具转换为 ExternalTool 格式
+5. **冲突解析** - 同名工具按优先级解析
 
-### Tool Naming
+### 工具命名
 
-Tools use a namespaced format:
+工具使用命名空间格式：
 
 ```
 {namespace}:{tool-name}
@@ -326,19 +332,19 @@ Examples:
 - context7:query-docs
 ```
 
-Short names also work:
+短名同样可用：
 ```javascript
 getRegistry().getTool('search')     // Finds 'my-plugin:search'
 getRegistry().getTool('my-plugin:search')  // Exact match
 ```
 
-### Conflict Resolution
+### 冲突解析
 
-When two plugins provide a tool with the same name:
+当两个插件提供同名工具时：
 
-1. **Priority value** - Tool with higher priority wins (default: 50)
-2. **Namespace** - Use full namespaced name to disambiguate
-3. **Manual** - Check conflicts and re-register with different priority
+1. **优先级值** - 高优先级工具胜出（默认：50）
+2. **命名空间** - 使用完整命名空间名消歧
+3. **手动** - 检查冲突并以不同优先级重新注册
 
 ```javascript
 // Check for conflicts
@@ -349,11 +355,12 @@ const winner = conflicts[0].winner;
 console.log(`${winner.source} won with priority ${winner.priority}`);
 ```
 
-## Permission System
+<a id="permission-system"></a>
+## 权限系统
 
-### Safe Patterns
+### 安全模式
 
-Read-only tools are auto-approved without user prompting:
+只读工具自动批准，无需提示用户：
 
 ```javascript
 // Check if tool is safe
@@ -361,13 +368,13 @@ const result = checkPermission('mcp__filesystem__read_file');
 // { allowed: true, reason: "Filesystem read (read-only)" }
 ```
 
-Built-in safe patterns cover:
+内置安全模式覆盖：
 
-- **Context7** - Documentation queries (read-only)
-- **Filesystem** - Read operations only
-- **Exa** - Web search (read-only, external)
+- **Context7** - 文档查询（只读）
+- **Filesystem** - 仅读操作
+- **Exa** - 网页搜索（只读、外部）
 
-### Permission Check Flow
+### 权限检查流程
 
 ```
 Tool invocation
@@ -381,7 +388,7 @@ Check tool capabilities → Safe caps (auto-approve) or Dangerous (ask user)
 Execute or Deny
 ```
 
-### Auto-Approval Examples
+### 自动批准示例
 
 ```javascript
 // Read-only tools are safe
@@ -393,9 +400,9 @@ checkPermission('filesystem:write_file', { path: '/etc/passwd' })
 // { allowed: false, askUser: true, reason: "Tool requires explicit permission" }
 ```
 
-### Caching Permissions
+### 缓存权限
 
-Permission decisions are cached. Users can grant or deny persistently:
+权限决策会被缓存。用户可持久授权或拒绝：
 
 ```javascript
 // User grants permission
@@ -409,9 +416,9 @@ checkPermission('custom:dangerous-tool', { mode: 'aggressive' });
 clearPermissionCache();
 ```
 
-### Registering Safe Patterns
+### 注册安全模式
 
-Plugins can register safe patterns in manifest:
+插件可在清单中注册安全模式：
 
 ```json
 {
@@ -427,11 +434,12 @@ Plugins can register safe patterns in manifest:
 }
 ```
 
-These are automatically integrated when the plugin is initialized.
+插件初始化时这些会自动集成。
 
-## MCP Bridge
+<a id="mcp-bridge"></a>
+## MCP 桥接
 
-### Connecting to Servers
+### 连接服务器
 
 ```javascript
 import { getMcpBridge } from './compatibility';
@@ -449,7 +457,7 @@ for (const [serverName, tools] of results) {
 }
 ```
 
-### Invoking Tools
+### 调用工具
 
 ```javascript
 // Invoke a tool on an MCP server
@@ -465,9 +473,9 @@ if (result.success) {
 }
 ```
 
-### Reading Resources
+### 读取资源
 
-Some MCP servers provide resources (documents, APIs, etc.):
+部分 MCP 服务器提供资源（文档、API 等）：
 
 ```javascript
 // Read a resource
@@ -478,7 +486,7 @@ if (result.success) {
 }
 ```
 
-### Connection Management
+### 连接管理
 
 ```javascript
 // Check connection status
@@ -497,9 +505,9 @@ bridge.disconnect('filesystem');
 bridge.disconnectAll();
 ```
 
-### Events
+### 事件
 
-Monitor bridge activity:
+监控桥接活动：
 
 ```javascript
 const bridge = getMcpBridge();
@@ -517,9 +525,10 @@ bridge.on('server-error', ({ server, error }) => {
 });
 ```
 
-## API Reference
+<a id="api-reference"></a>
+## API 参考
 
-### Initialization
+### 初始化
 
 ```typescript
 import {
@@ -541,7 +550,7 @@ console.log(`Tools: ${result.toolCount}`);
 console.log(`Connected: ${result.connectedServers.join(', ')}`);
 ```
 
-### Discovery Functions
+### 发现函数
 
 ```typescript
 import {
@@ -581,7 +590,7 @@ const pluginPaths = getPluginPaths();
 const mcpPath = getMcpConfigPath();
 ```
 
-### Registry Functions
+### 注册表函数
 
 ```typescript
 import {
@@ -633,7 +642,7 @@ registry.addEventListener(event => {
 });
 ```
 
-### Permission Functions
+### 权限函数
 
 ```typescript
 import {
@@ -681,7 +690,7 @@ if (shouldDelegate('external:tool')) {
 integrateWithPermissionSystem();
 ```
 
-### MCP Bridge Functions
+### MCP 桥接函数
 
 ```typescript
 import {
@@ -712,9 +721,10 @@ bridge.disconnectAll();
 resetMcpBridge();
 ```
 
-## Examples
+<a id="examples"></a>
+## 示例
 
-### Example 1: Initialize and List Tools
+### 示例 1：初始化并列出工具
 
 ```javascript
 import { initializeCompatibility, getRegistry } from './compatibility';
@@ -743,7 +753,7 @@ async function listAvailableTools() {
 listAvailableTools().catch(console.error);
 ```
 
-### Example 2: Search and Use a Tool
+### 示例 2：搜索并使用工具
 
 ```javascript
 import {
@@ -787,7 +797,7 @@ async function searchAndRead() {
 searchAndRead().catch(console.error);
 ```
 
-### Example 3: Handle Plugin with MCP Server
+### 示例 3：处理带 MCP 服务器的插件
 
 ```javascript
 import {
@@ -826,7 +836,7 @@ async function setupPluginMcp() {
 setupPluginMcp().catch(console.error);
 ```
 
-### Example 4: Conflict Resolution
+### 示例 4：冲突解析
 
 ```javascript
 import { getRegistry } from './compatibility';
@@ -858,7 +868,7 @@ function showConflicts() {
 showConflicts();
 ```
 
-### Example 5: Custom Permission Pattern
+### 示例 5：自定义权限模式
 
 ```javascript
 import {
@@ -889,19 +899,20 @@ function registerCustomPatterns() {
 registerCustomPatterns();
 ```
 
-## Troubleshooting
+<a id="troubleshooting"></a>
+## 故障排查
 
-### Plugins Not Discovered
+### 插件未被发现
 
-**Problem:** `discoverPlugins()` returns empty array.
+**问题：** `discoverPlugins()` 返回空数组。
 
-**Checklist:**
-- Plugins are in `~/.claude/plugins/` or `~/.claude/installed-plugins/`
-- Each plugin has a `plugin.json` in the root or `.claude-plugin/` subdirectory
-- Plugin name doesn't conflict with reserved names (e.g., 'wise')
-- File permissions allow reading the directory
+**检查清单：**
+- 插件位于 `~/.claude/plugins/` 或 `~/.claude/installed-plugins/`
+- 每个插件在根目录或 `.claude-plugin/` 子目录有 `plugin.json`
+- 插件名不与保留名冲突（例如 'wise'）
+- 文件权限允许读取该目录
 
-**Debug:**
+**调试：**
 ```javascript
 import { getPluginPaths } from './compatibility';
 
@@ -915,18 +926,18 @@ for (const path of paths) {
 }
 ```
 
-### MCP Server Won't Connect
+### MCP 服务器无法连接
 
-**Problem:** `bridge.connect()` times out.
+**问题：** `bridge.connect()` 超时。
 
-**Checklist:**
-- Server command is correct (e.g., `npx`, `node`)
-- Command is executable and in PATH
-- Arguments are valid
-- Server implements MCP protocol (JSON-RPC 2.0)
-- Check stderr output for errors
+**检查清单：**
+- 服务器命令正确（例如 `npx`、`node`）
+- 命令可执行且在 PATH 中
+- 参数有效
+- 服务器实现 MCP 协议（JSON-RPC 2.0）
+- 检查 stderr 输出的错误
 
-**Debug:**
+**调试：**
 ```javascript
 import { getMcpBridge } from './compatibility';
 
@@ -941,17 +952,17 @@ bridge.on('connect-error', ({ server, error }) => {
 });
 ```
 
-### Tools Not Showing Up
+### 工具未显示
 
-**Problem:** Registered tools don't appear in `getRegistry().getAllTools()`.
+**问题：** 已注册工具未出现在 `getRegistry().getAllTools()` 中。
 
-**Causes and solutions:**
-- Plugin not discovered - Check plugin discovery first
-- Tools not extracted - Ensure SKILL.md files exist in skills directory
-- Namespace conflict - Two plugins with same namespace
-- Tool registration failed - Check registry events for errors
+**原因与解决方案：**
+- 插件未发现 - 先检查插件发现
+- 工具未提取 - 确保技能目录中存在 SKILL.md 文件
+- 命名空间冲突 - 两个插件使用同一命名空间
+- 工具注册失败 - 检查注册表事件中的错误
 
-**Debug:**
+**调试：**
 ```javascript
 import { getRegistry, discoverPlugins } from './compatibility';
 
@@ -978,16 +989,16 @@ registry.addEventListener(event => {
 });
 ```
 
-### Permission Always Denied
+### 权限总是被拒绝
 
-**Problem:** Tools requiring permission always get denied even after user approval.
+**问题：** 需要权限的工具即使用户批准后也总是被拒绝。
 
-**Solutions:**
-- Clear permission cache: `clearPermissionCache()`
-- Ensure you're using same tool name/input for cached decision
-- Check if tool matches a dangerous pattern that overrides caching
+**解决方案：**
+- 清除权限缓存：`clearPermissionCache()`
+- 确保缓存决策使用相同的工具名/输入
+- 检查工具是否匹配覆盖缓存的危险模式
 
-**Debug:**
+**调试：**
 ```javascript
 import {
   checkPermission,
@@ -1008,17 +1019,17 @@ console.log('Allowed:', result.allowed);
 console.log('Reason:', result.reason);
 ```
 
-### Manifest Parse Errors
+### 清单解析错误
 
-**Problem:** Plugin loads but manifest parsing fails.
+**问题：** 插件加载但清单解析失败。
 
-**Checklist:**
-- `plugin.json` is valid JSON (use `npm install -g jsonlint` to validate)
-- Required fields present: `name`, `version`
-- No syntax errors in paths or configs
-- File encoding is UTF-8
+**检查清单：**
+- `plugin.json` 是有效 JSON（使用 `npm install -g jsonlint` 校验）
+- 必填字段存在：`name`、`version`
+- 路径或配置无语法错误
+- 文件编码为 UTF-8
 
-**Debug:**
+**调试：**
 ```javascript
 import { getPluginInfo } from './compatibility';
 
@@ -1029,11 +1040,11 @@ if (plugin && !plugin.loaded) {
 }
 ```
 
-### MCP Tool Invocation Fails
+### MCP 工具调用失败
 
-**Problem:** Tool invocation returns error.
+**问题：** 工具调用返回错误。
 
-**Debug:**
+**调试：**
 ```javascript
 import { getMcpBridge } from './compatibility';
 
@@ -1054,15 +1065,15 @@ if (!result.success) {
 }
 ```
 
-## Best Practices
+## 最佳实践
 
-1. **Initialize early** - Call `initializeCompatibility()` on startup
-2. **Cache registry** - Reuse `getRegistry()` instance, don't repeatedly initialize
-3. **Handle permissions gracefully** - Always check `checkPermission()` before invoking dangerous tools
-4. **Monitor events** - Use event listeners to track plugin/server status changes
-5. **Version check** - Include version constraints in plugin manifests for compatibility
-6. **Test plugins locally** - Before publishing, test with local discovery paths
-7. **Use namespaces** - Set `namespace` in manifest to avoid conflicts
-8. **Document permissions** - Clearly explain why plugins need specific scopes
-9. **Handle errors** - MCP connections can fail; implement retry logic
-10. **Clean up** - Call `disconnectAll()` and `resetMcpBridge()` on shutdown
+1. **尽早初始化** - 启动时调用 `initializeCompatibility()`
+2. **缓存注册表** - 复用 `getRegistry()` 实例，不要重复初始化
+3. **优雅处理权限** - 调用危险工具前始终检查 `checkPermission()`
+4. **监控事件** - 使用事件监听器跟踪插件/服务器状态变更
+5. **版本检查** - 在插件清单中包含版本约束以保障兼容
+6. **本地测试插件** - 发布前用本地发现路径测试
+7. **使用命名空间** - 在清单中设置 `namespace` 以避免冲突
+8. **文档化权限** - 清晰说明插件为何需要特定作用域
+9. **处理错误** - MCP 连接可能失败；实现重试逻辑
+10. **清理** - 关闭时调用 `disconnectAll()` 与 `resetMcpBridge()`

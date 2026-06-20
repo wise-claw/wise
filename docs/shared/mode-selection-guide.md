@@ -1,137 +1,137 @@
-# Mode Selection Guide
+# 模式选择指南
 
-## Quick Decision
+## 快速决策
 
-| If you want...                                                        | Use this                       | Keyword                                        |
+| 如果你想要...                                                         | 使用此模式                     | 关键词                                          |
 | --------------------------------------------------------------------- | ------------------------------ | ---------------------------------------------- |
-| Clarify vague requirements first                                      | `deep-interview`               | "deep interview", "ouroboros", "don't assume"  |
-| Full autonomous build from idea                                       | `autopilot`                    | "autopilot", "build me", "I want a"            |
-| Parallel autonomous (3-5x faster)                                     | `team` (replaces `ultrapilot`) | `/team N:executor "task"`                      |
-| Persistence until verified done                                       | `ralph`                        | "ralph", "don't stop"                          |
-| Parallel execution, manual oversight                                  | `ultrawork`                    | "ulw", "ultrawork"                             |
-| Cost-efficient execution                                              | `` (modifier)                  | "eco", "budget"                                |
-| Many similar independent tasks                                        | `team` (replaces `swarm`)      | `/team N:executor "task"`                      |
-| Native Claude Code cross-turn loop with a single completion condition | Claude Code `/goal`            | `/goal "condition with proof"`                 |
-| Durable goal ledger without starting another loop                     | artifact-only Ultragoal        | Write goal artifacts/checkpoints/evidence only |
+| 先澄清模糊需求                                                        | `deep-interview`               | "deep interview", "ouroboros", "don't assume"  |
+| 从想法到完整自主构建                                                   | `autopilot`                    | "autopilot", "build me", "I want a"            |
+| 并行自主（快 3-5 倍）                                                  | `team`（替代 `ultrapilot`）    | `/team N:executor "task"`                      |
+| 持久化直至验证完成                                                     | `ralph`                        | "ralph", "don't stop"                          |
+| 并行执行，人工监督                                                     | `ultrawork`                    | "ulw", "ultrawork"                             |
+| 高性价比执行                                                           | `` （修饰器）                  | "eco", "budget"                                |
+| 许多相似的独立任务                                                     | `team`（替代 `swarm`）         | `/team N:executor "task"`                      |
+| 单一完成条件下的 Claude Code 原生跨轮循环                              | Claude Code `/goal`            | `/goal "condition with proof"`                 |
+| 不启动另一循环的持久目标账本                                           | 仅制品 Ultragoal               | 仅写入目标制品/checkpoint/证据                 |
 
-> **Note:** `ultrapilot` and `swarm` are **deprecated** — they now route to `team` mode.
+> **说明：** `ultrapilot` 与 `swarm` **已弃用** — 它们现在路由到 `team` 模式。
 
-## If You're Confused or Uncertain
+## 如果你感到困惑或不确定
 
-**Don't know what you don't know?** Start with `/deep-interview` - it uses Socratic questioning to clarify vague ideas, expose hidden assumptions, and measure clarity before any code is written.
+**不知道自己不知道什么？** 从 `/deep-interview` 开始 — 它用苏格拉底式提问澄清模糊想法、暴露隐藏假设，并在编写任何代码前度量清晰度。
 
-**Already have a clear idea?** Start with `autopilot` - it handles most scenarios and transitions to other modes automatically.
+**已有清晰想法？** 从 `autopilot` 开始 — 它处理大多数场景并自动切换到其他模式。
 
-## Detailed Decision Flowchart
+## 详细决策流程图
 
 ```
-Uncertain about requirements or have a vague idea?
-├── YES: Use deep-interview to clarify before execution
-└── NO: Continue below
+对需求不确定或有模糊想法?
+├── 是: 执行前用 deep-interview 澄清
+└── 否: 继续下方
 
-Want autonomous execution?
-├── YES: Is task parallelizable into 3+ independent components?
-│   ├── YES: team N:executor (parallel autonomous with file ownership)
-│   └── NO: autopilot (sequential with ralph phases)
-└── NO: Want parallel execution with manual oversight?
-    ├── YES: Do you want cost optimization?
-    │   ├── YES: eco + ultrawork
-    │   └── NO: ultrawork alone
-    └── NO: Want persistence until verified done?
-        ├── YES: ralph (persistence + ultrawork + verification)
-        └── NO: Standard orchestration (delegate to agents directly)
+需要自主执行?
+├── 是: 任务能否拆分为 3+ 个独立组件?
+│   ├── 是: team N:executor（带文件所有权的并行自主）
+│   └── 否: autopilot（带 ralph 阶段的顺序执行）
+└── 否: 需要带人工监督的并行执行?
+    ├── 是: 需要成本优化吗?
+    │   ├── 是: eco + ultrawork
+    │   └── 否: 单独 ultrawork
+    └── 否: 需要持久化直至验证完成?
+        ├── 是: ralph（持久化 + ultrawork + 验证）
+        └── 否: 标准编排（直接委派给智能体）
 
-Have many similar independent tasks (e.g., "fix 47 errors")?
-└── YES: team N:executor (N agents claiming from task pool)
+有许多相似的独立任务（如「修复 47 个错误」）?
+└── 是: team N:executor（N 个智能体从任务池领取）
 
-Already have one measurable completion condition and want Claude Code to keep the session moving?
-└── YES: Claude Code /goal, unless Ralph/Team/UltraQA/autopilot already owns the loop
+已有一个可度量的完成条件，且想让 Claude Code 保持会话推进?
+└── 是: Claude Code /goal，除非 Ralph/Team/UltraQA/autopilot 已拥有该循环
 
-Need durable tracking but no active execution loop yet?
-└── YES: artifact-only Ultragoal ledger/checkpoints/evidence
+需要持久跟踪但尚无活跃执行循环?
+└── 是: 仅制品 Ultragoal 账本/checkpoint/证据
 ```
 
-## Goal-Oriented Workflow Selection
+## 目标导向工作流选择
 
-Claude Code `/goal`, Ralph, Team, UltraQA, and artifact-only Ultragoal all help with "keep going until done" work, but they own different parts of the workflow. Pick one primary loop authority for a session; do not run competing persistence loops at the same time.
+Claude Code `/goal`、Ralph、Team、UltraQA 与仅制品 Ultragoal 都有助于「持续直至完成」类工作，但它们拥有工作流的不同部分。为会话选择一个主循环权威；不要同时运行相互竞争的持久化循环。
 
-| Workflow                | Primary authority                      | Best fit                                                                                | Evidence and completion rule                                                                 | Avoid when                                                                                 |
+| 工作流                  | 主要权威                               | 最适用场景                                                                              | 证据与完成规则                                                                               | 避免当                                                                                     |
 | ----------------------- | -------------------------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| Claude Code `/goal`     | Claude Code native goal loop           | One active session needs a measurable completion condition and cross-turn persistence   | Surface proof in the conversation, then let the `/goal` evaluator judge the stated condition | Ralph, Team, UltraQA, autopilot, or another Stop-hook loop is already driving continuation |
-| Ralph                   | WISE persistence loop                   | Single-owner implementation that must finish all PRD stories with reviewer verification | Fresh tests/build/lint plus reviewer approval against PRD criteria                           | Work should be split across several owners first                                           |
-| Team                    | WISE coordinated team pipeline          | Parallel work with explicit task ownership and staged verification                      | Task results, worker commits, team verification/fix loop evidence                            | One person can finish faster than coordination overhead                                    |
-| UltraQA                 | WISE QA cycling loop                    | Repeated test/build/lint/typecheck failures until a quality gate passes                 | Command output for the chosen QA goal on every cycle                                         | Requirements or implementation scope are still undefined                                   |
-| Artifact-only Ultragoal | Durable goal artifacts, no active loop | Planning, handoff, or audit trail when a runtime loop is unavailable or unsafe          | Goal ledger, checkpoints, handoff prompts, and attached evidence                             | The user expects automatic execution without selecting Ralph/Team/`/goal`                  |
+| Claude Code `/goal`     | Claude Code 原生目标循环               | 一个活跃会话需要可度量的完成条件与跨轮持久化                                            | 在对话中呈现证据，再由 `/goal` 评估器判断所陈述的条件                                        | Ralph、Team、UltraQA、autopilot 或其他 Stop-hook 循环已在驱动续跑                          |
+| Ralph                   | WISE 持久化循环                        | 单一 owner 实现必须完成所有 PRD story 并通过 reviewer 验证                              | 新鲜的测试/build/lint 加按 PRD 标准的 reviewer 批准                                          | 工作应先拆分给多个 owner                                                                   |
+| Team                    | WISE 协调 team 流水线                  | 带显式任务所有权与分阶段验证的并行工作                                                  | 任务结果、worker commit、team 验证/修复循环证据                                             | 一人能比协调开销更快完成时                                                                 |
+| UltraQA                 | WISE QA 循环                           | 重复 test/build/lint/typecheck 失败直至质量门通过                                       | 每轮所选 QA 目标的命令输出                                                                   | 需求或实现范围尚未定义时                                                                   |
+| 仅制品 Ultragoal        | 持久目标制品，无活跃循环               | 运行时循环不可用或不安全时的规划、handoff 或审计轨迹                                    | 目标账本、checkpoint、handoff prompt 与附加证据                                             | 用户期望自动执行却未选择 Ralph/Team/`/goal` 时                                             |
 
-### Claude Code `/goal` source boundary
+### Claude Code `/goal` 来源边界
 
-WISE docs treat `/goal` facts as Claude Code facts. Cite Claude Code or Anthropic sources only when documenting its behavior: the [Claude Code `/goal` docs](https://code.claude.com/docs/en/goal) and [Anthropic Claude Code changelog](https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md). Do not use OpenAI/Codex documentation as authority for `/goal`.
+WISE 文档将 `/goal` 事实视为 Claude Code 事实。文档化其行为时仅引用 Claude Code 或 Anthropic 来源：[Claude Code `/goal` 文档](https://code.claude.com/docs/en/goal)与 [Anthropic Claude Code changelog](https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md)。不得以 OpenAI/Codex 文档作为 `/goal` 的权威。
 
-Important limitation: the `/goal` evaluator judges from evidence surfaced in the Claude Code conversation. WISE docs and handoffs must not claim that the evaluator independently runs shell commands, reads files, or inspects hidden repository state. If tests, diffs, or logs matter, run them through the normal WISE/Claude Code tools and include the result in the visible evidence before relying on `/goal` status.
+重要限制：`/goal` 评估器从 Claude Code 对话中呈现的证据作出判断。WISE 文档与 handoff 不得声称评估器独立运行 shell 命令、读取文件或检查隐藏仓库状态。若测试、diff 或日志相关，请通过正常 WISE/Claude Code 工具运行，并在依赖 `/goal` 状态前将结果纳入可见证据。
 
-### Conflict policy
+### 冲突策略
 
-Use the deterministic policy names `refuse`, `adopt_existing`, and `artifact_only` when documenting or implementing loop-conflict handling.
+文档化或实现循环冲突处理时，使用确定性策略名 `refuse`、`adopt_existing` 与 `artifact_only`。
 
-When a goal-like request enters an WISE session:
+当类目标请求进入 WISE 会话时：
 
-1. If Ralph, Team, UltraQA, autopilot, or a Stop-hook loop is active, keep that WISE loop as the authority and use `/goal` only as a documented handoff option.
-2. If Claude Code `/goal` is already active, either adopt that existing goal explicitly, refuse to start a competing WISE loop, or degrade to artifact-only Ultragoal documentation.
-3. If hooks, workspace trust, or managed settings make `/goal` unavailable, use Ralph/Team/UltraQA or artifact-only Ultragoal instead of pretending `/goal` is active.
-4. Always attach command/test/review evidence before declaring durable WISE completion. `/goal` evaluator success alone is not the WISE final-review gate.
+1. 若 Ralph、Team、UltraQA、autopilot 或 Stop-hook 循环已活跃，保留该 WISE 循环为权威，仅将 `/goal` 用作文档化的 handoff 选项。
+2. 若 Claude Code `/goal` 已活跃，要么显式采纳该现有目标，要么拒绝启动竞争的 WISE 循环，要么降级为仅制品 Ultragoal 文档。
+3. 若 hooks、工作区信任或托管设置使 `/goal` 不可用，改用 Ralph/Team/UltraQA 或仅制品 Ultragoal，而非假装 `/goal` 处于活跃。
+4. 声明持久 WISE 完成前，始终附加命令/测试/审查证据。`/goal` 评估器成功本身不是 WISE 最终审查门控。
 
-## Examples
+## 示例
 
-| User Request                            | Best Mode       | Why                             |
+| 用户请求                                | 最佳模式        | 原因                           |
 | --------------------------------------- | --------------- | ------------------------------- |
-| "Build me a REST API"                   | autopilot       | Single coherent deliverable     |
-| "Build frontend, backend, and database" | team 3:executor | Clear component boundaries      |
-| "Fix all 47 TypeScript errors"          | team 5:executor | Many independent similar tasks  |
-| "Refactor auth module thoroughly"       | ralph           | Need persistence + verification |
-| "Quick parallel execution"              | ultrawork       | Manual oversight preferred      |
-| "Save tokens while fixing errors"       | + ultrawork     | Cost-conscious parallel         |
-| "Don't stop until done"                 | ralph           | Persistence keyword detected    |
+| 「帮我构建一个 REST API」               | autopilot       | 单一连贯交付物                 |
+| 「构建前端、后端和数据库」              | team 3:executor | 清晰的组件边界                 |
+| 「修复全部 47 个 TypeScript 错误」      | team 5:executor | 许多独立相似任务               |
+| 「彻底重构认证模块」                    | ralph           | 需要持久化 + 验证              |
+| 「快速并行执行」                        | ultrawork       | 偏好人工监督                   |
+| 「修复错误时节省 token」                | + ultrawork     | 成本敏感的并行                 |
+| 「完成前不要停」                        | ralph           | 检测到持久化关键词             |
 
-## Mode Types
+## 模式类型
 
-### Standalone Modes
+### 独立模式
 
-These run independently:
+这些独立运行：
 
-- **autopilot**: Autonomous end-to-end execution
-- **team**: Canonical orchestration with coordinated agents (replaces `ultrapilot` and `swarm`)
+- **autopilot**：自主端到端执行
+- **team**：带协调智能体的规范编排（替代 `ultrapilot` 与 `swarm`）
 
-> **Deprecated:** `ultrapilot` and `swarm` now route to `team` mode.
+> **已弃用：** `ultrapilot` 与 `swarm` 现路由到 `team` 模式。
 
-### Wrapper Modes
+### 包装器模式
 
-These wrap other modes:
+这些包装其他模式：
 
-- **ralph**: Adds persistence + verification around ultrawork
+- **ralph**：在 ultrawork 外加持久化 + 验证
 
-### Component Modes
+### 组件模式
 
-These are used by other modes:
+这些被其他模式使用：
 
-- **ultrawork**: Parallel execution engine (used by ralph, autopilot)
+- **ultrawork**：并行执行引擎（由 ralph、autopilot 使用）
 
-### Modifier Modes
+### 修饰器模式
 
-These modify how other modes work:
+这些修改其他模式的工作方式：
 
-- \*\*\*\*: Changes model routing to prefer cheaper tiers
+- \*\*\*\*：改变模型路由以偏好更便宜的层级
 
-## Valid Combinations
+## 有效组合
 
-| Combination     | Effect                                 |
+| 组合            | 效果                                   |
 | --------------- | -------------------------------------- |
-| `eco ralph`     | Ralph persistence with cheaper agents  |
-| `eco ultrawork` | Parallel execution with cheaper agents |
-| `eco autopilot` | Autonomous execution with cost savings |
+| `eco ralph`     | 使用更便宜智能体的 Ralph 持久化        |
+| `eco ultrawork` | 使用更便宜智能体的并行执行             |
+| `eco autopilot` | 带成本节约的自主执行                   |
 
-## Invalid Combinations
+## 无效组合
 
-| Combination      | Why Invalid                       |
+| 组合             | 为何无效                          |
 | ---------------- | --------------------------------- |
-| `autopilot team` | Both are standalone - use one     |
-| `` alone         | Needs an execution mode to modify |
+| `autopilot team` | 两者都是独立模式 — 选其一         |
+| `` 单独          | 需要一个执行模式来修饰            |

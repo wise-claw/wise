@@ -1,16 +1,16 @@
-# Verification Tiers
+# 验证层级
 
-Verification scales with task complexity to optimize cost while maintaining quality.
+验证随任务复杂度伸缩，以在保持质量的同时优化成本。
 
-## Tier Definitions
+## 层级定义
 
-| Tier | Criteria | Agent | Model | Evidence Required |
+| 层级 | 标准 | 智能体 | 模型 | 所需证据 |
 |------|----------|-------|-------|-------------------|
-| **LIGHT** | <5 files, <100 lines, full test coverage | architect-low | haiku | lsp_diagnostics clean |
-| **STANDARD** | Default (not LIGHT or THOROUGH) | architect-medium | sonnet | diagnostics + build pass |
-| **THOROUGH** | >20 files OR architectural/security changes | architect | opus | Full review + all tests |
+| **LIGHT** | <5 文件，<100 行，完整测试覆盖 | architect-low | haiku | lsp_diagnostics 无问题 |
+| **STANDARD** | 默认（非 LIGHT 或 THOROUGH） | architect-medium | sonnet | 诊断 + build 通过 |
+| **THOROUGH** | >20 文件或架构/安全变更 | architect | opus | 完整审查 + 全部测试 |
 
-## Selection Interface
+## 选择接口
 
 ```typescript
 interface ChangeMetadata {
@@ -24,32 +24,32 @@ interface ChangeMetadata {
 type VerificationTier = 'LIGHT' | 'STANDARD' | 'THOROUGH';
 ```
 
-## Selection Logic
+## 选择逻辑
 
 ```
 IF hasSecurityImplications OR hasArchitecturalChanges:
-  → THOROUGH (always for security/architecture)
+  → THOROUGH（安全/架构始终如此）
 ELIF filesChanged > 20:
-  → THOROUGH (large scope)
+  → THOROUGH（大范围）
 ELIF filesChanged < 5 AND linesChanged < 100 AND testCoverage === 'full':
-  → LIGHT (small, well-tested)
+  → LIGHT（小而充分测试）
 ELSE:
-  → STANDARD (default)
+  → STANDARD（默认）
 ```
 
-## Override Triggers
+## 覆盖触发器
 
-User keywords that override auto-detection:
+覆盖自动检测的用户关键词：
 
-| Keyword | Forces Tier |
+| 关键词 | 强制层级 |
 |---------|-------------|
 | "thorough", "careful", "important", "critical" | THOROUGH |
 | "quick", "simple", "trivial", "minor" | LIGHT |
-| Security-related file changes | THOROUGH (always) |
+| 安全相关文件变更 | THOROUGH（始终） |
 
-## Architectural Change Detection
+## 架构变更检测
 
-Files that trigger `hasArchitecturalChanges`:
+触发 `hasArchitecturalChanges` 的文件：
 - `**/config.{ts,js,json}`
 - `**/schema.{ts,prisma,sql}`
 - `**/definitions.ts`
@@ -57,9 +57,9 @@ Files that trigger `hasArchitecturalChanges`:
 - `package.json`
 - `tsconfig.json`
 
-## Security Implication Detection
+## 安全影响检测
 
-Path patterns that trigger `hasSecurityImplications`:
+触发 `hasSecurityImplications` 的路径模式：
 - `**/auth/**`
 - `**/security/**`
 - `**/permissions?.{ts,js}`
@@ -71,30 +71,30 @@ Path patterns that trigger `hasSecurityImplications`:
 - `**/jwt*`
 - `**/.env*`
 
-## Evidence Types
+## 证据类型
 
-Required evidence for different claim types:
+不同声明类型所需的证据：
 
-| Claim | Required Evidence |
+| 声明 | 所需证据 |
 |-------|-------------------|
-| "Fixed" | Test showing it passes now |
-| "Implemented" | lsp_diagnostics clean + build pass |
-| "Refactored" | All tests still pass |
-| "Debugged" | Root cause identified with file:line |
+| 「已修复」 | 显示现在通过的测试 |
+| 「已实现」 | lsp_diagnostics 无问题 + build 通过 |
+| 「已重构」 | 所有测试仍通过 |
+| 「已调试」 | 以 file:line 定位根因 |
 
-## Cost Comparison
+## 成本对比
 
-| Tier | Relative Cost | Use Case |
+| 层级 | 相对成本 | 用例 |
 |------|---------------|----------|
-| LIGHT | 1x | Single-file bug fixes with tests |
-| STANDARD | 5x | Multi-file feature additions |
-| THOROUGH | 20x | Major refactoring, security changes |
+| LIGHT | 1x | 带测试的单文件 bug 修复 |
+| STANDARD | 5x | 多文件功能新增 |
+| THOROUGH | 20x | 重大重构、安全变更 |
 
-Estimated savings: ~40% reduction in verification costs by using tiered system vs. always using THOROUGH.
+预估节约：使用层级系统相比始终使用 THOROUGH，验证成本降低约 40%。
 
-## Usage in Modes
+## 在模式中使用
 
-All persistence modes (ralph, autopilot) should use the tier-selector before spawning verification agents:
+所有持久化模式（ralph、autopilot）在派生验证智能体前应使用 tier-selector：
 
 ```typescript
 import { selectVerificationTier, getVerificationAgent } from '../verification/tier-selector';

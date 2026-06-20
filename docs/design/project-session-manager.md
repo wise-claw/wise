@@ -1,57 +1,59 @@
-# Project Session Manager (PSM) - Design Document
+# 项目会话管理器 (PSM) - 设计文档
 
-> **Skill Name:** `project-session-manager` (alias: `psm`)
-> **Version:** 1.0.0
-> **Author:** wise
-> **Status:** Design Draft
+> **技能名：** `project-session-manager`（别名：`psm`）
+> **版本：** 1.0.0
+> **作者：** wise
+> **状态：** 设计草案
 
-## Executive Summary
+## 概要
 
-Project Session Manager (PSM) automates the creation and management of isolated development environments using git worktrees and tmux sessions with Claude Code. It enables parallel work across multiple tasks, projects, and repositories while maintaining clean separation and easy context switching.
-
----
-
-## Table of Contents
-
-1. [Problem Statement](#1-problem-statement)
-2. [Use Cases](#2-use-cases)
-3. [Command Interface](#3-command-interface)
-4. [Architecture](#4-architecture)
-5. [Directory Structure](#5-directory-structure)
-6. [Session Naming Conventions](#6-session-naming-conventions)
-7. [Workflow Presets](#7-workflow-presets)
-8. [State Management](#8-state-management)
-9. [Cleanup Strategies](#9-cleanup-strategies)
-10. [Integration Points](#10-integration-points)
-11. [Edge Cases & Error Handling](#11-edge-cases--error-handling)
-12. [Security Considerations](#12-security-considerations)
-13. [Future Enhancements](#13-future-enhancements)
+项目会话管理器 (PSM) 通过 git worktree 与 tmux 会话自动化创建和管理隔离开发环境，并结合 Claude Code。它支持跨多个任务、项目与仓库并行工作，同时保持清晰隔离与便捷的上下文切换。
 
 ---
 
-## 1. Problem Statement
+## 目录
 
-### Current Pain Points
-
-1. **Context Switching Overhead**: Switching between tasks requires stashing changes, switching branches, and losing Claude Code context
-2. **PR Review Isolation**: Reviewing PRs often contaminates the working directory
-3. **Parallel Work Limitation**: Can only work on one task at a time per repository
-4. **Session Management**: Manual tmux session creation is tedious and inconsistent
-5. **Cleanup Burden**: Orphaned worktrees and sessions accumulate over time
-
-### Solution
-
-PSM provides a unified interface to:
-- Create isolated worktrees with a single command
-- Spawn pre-configured tmux sessions with Claude Code
-- Track and manage all active sessions
-- Automate cleanup of completed work
+1. [问题陈述](#1-problem-statement)
+2. [用例](#2-use-cases)
+3. [命令接口](#3-command-interface)
+4. [架构](#4-architecture)
+5. [目录结构](#5-directory-structure)
+6. [会话命名约定](#6-session-naming-conventions)
+7. [工作流预设](#7-workflow-presets)
+8. [状态管理](#8-state-management)
+9. [清理策略](#9-cleanup-strategies)
+10. [集成点](#10-integration-points)
+11. [边界情况与错误处理](#11-edge-cases--error-handling)
+12. [安全考量](#12-security-considerations)
+13. [未来增强](#13-future-enhancements)
 
 ---
 
-## 2. Use Cases
+<a id="1-problem-statement"></a>
+## 1. 问题陈述
 
-### 2.1 PR Review
+### 当前痛点
+
+1. **上下文切换开销**：在任务间切换需要暂存变更、切换分支，并丢失 Claude Code 上下文
+2. **PR 审查隔离**：审查 PR 常会污染工作目录
+3. **并行工作受限**：每个仓库一次只能处理一个任务
+4. **会话管理**：手动创建 tmux 会话既繁琐又不一致
+5. **清理负担**：孤儿 worktree 与会话会随时间累积
+
+### 解决方案
+
+PSM 提供统一接口以：
+- 用单条命令创建隔离 worktree
+- 用 Claude Code 生成预配置 tmux 会话
+- 跟踪并管理所有活跃会话
+- 自动化清理已完成工作
+
+---
+
+<a id="2-use-cases"></a>
+## 2. 用例
+
+### 2.1 PR 审查
 
 ```bash
 # Review PR #123 from wise repo
@@ -64,14 +66,14 @@ PSM provides a unified interface to:
 /psm review wise#123 --focus "security implications"
 ```
 
-**What happens:**
-1. Fetches PR branch
-2. Creates worktree at `~/.psm/worktrees/wise/pr-123`
-3. Spawns tmux session `psm:wise:pr-123`
-4. Launches Claude Code with PR context pre-loaded
-5. Opens diff in editor (optional)
+**执行过程：**
+1. 拉取 PR 分支
+2. 在 `~/.psm/worktrees/wise/pr-123` 创建 worktree
+3. 生成 tmux 会话 `psm:wise:pr-123`
+4. 启动 Claude Code 并预加载 PR 上下文
+5. 在编辑器中打开 diff（可选）
 
-### 2.2 Issue Fixing
+### 2.2 修复 Issue
 
 ```bash
 # Fix issue #42
@@ -84,14 +86,14 @@ PSM provides a unified interface to:
 /psm fix https://github.com/anthropics/claude-code/issues/789
 ```
 
-**What happens:**
-1. Fetches issue details via `gh`
-2. Creates feature branch from main
-3. Creates worktree at `~/.psm/worktrees/wise/issue-42`
-4. Spawns tmux session with issue context
-5. Pre-populates Claude Code with issue description
+**执行过程：**
+1. 经 `gh` 拉取 issue 详情
+2. 从 main 创建 feature 分支
+3. 在 `~/.psm/worktrees/wise/issue-42` 创建 worktree
+4. 生成带 issue 上下文的 tmux 会话
+5. 向 Claude Code 预填 issue 描述
 
-### 2.3 Feature Development
+### 2.3 功能开发
 
 ```bash
 # Start new feature
@@ -104,13 +106,13 @@ PSM provides a unified interface to:
 /psm feature wise "dark-mode" --base develop
 ```
 
-**What happens:**
-1. Creates feature branch from specified base
-2. Creates worktree
-3. Spawns session with feature context
-4. Optionally creates draft PR
+**执行过程：**
+1. 从指定 base 创建 feature 分支
+2. 创建 worktree
+3. 生成带功能上下文的会话
+4. 可选创建草稿 PR
 
-### 2.4 Release Preparation
+### 2.4 发布准备
 
 ```bash
 # Prepare release
@@ -123,13 +125,13 @@ PSM provides a unified interface to:
 /psm release wise v3.4.1 --hotfix --base v3.4.0
 ```
 
-**What happens:**
-1. Creates release branch
-2. Creates worktree
-3. Spawns session with release checklist
-4. Pre-loads CHANGELOG context
+**执行过程：**
+1. 创建 release 分支
+2. 创建 worktree
+3. 生成带发布清单的会话
+4. 预加载 CHANGELOG 上下文
 
-### 2.5 Session Management
+### 2.5 会话管理
 
 ```bash
 # List all sessions
@@ -157,7 +159,7 @@ PSM provides a unified interface to:
 /psm cleanup --force --older-than 7d
 ```
 
-### 2.6 Quick Context Switch
+### 2.6 快速上下文切换
 
 ```bash
 # Switch to another session (detach current, attach target)
@@ -169,38 +171,39 @@ PSM provides a unified interface to:
 
 ---
 
-## 3. Command Interface
+<a id="3-command-interface"></a>
+## 3. 命令接口
 
-### 3.1 Primary Commands
+### 3.1 主要命令
 
-| Command | Description | Aliases |
+| 命令 | 说明 | 别名 |
 |---------|-------------|---------|
-| `review <ref>` | Start PR review session | `pr`, `r` |
-| `fix <ref>` | Start issue fix session | `issue`, `i` |
-| `feature <name>` | Start feature development | `feat`, `f` |
-| `release <version>` | Start release preparation | `rel` |
-| `list [project]` | List active sessions | `ls`, `l` |
-| `attach <session>` | Attach to session | `a` |
-| `detach` | Detach from current | `d` |
-| `switch [session]` | Switch sessions | `sw`, `s` |
-| `kill <session>` | Kill session | `k`, `rm` |
-| `cleanup` | Clean up completed | `gc`, `clean` |
-| `status` | Show current session info | `st` |
+| `review <ref>` | 启动 PR 审查会话 | `pr`, `r` |
+| `fix <ref>` | 启动 issue 修复会话 | `issue`, `i` |
+| `feature <name>` | 启动功能开发 | `feat`, `f` |
+| `release <version>` | 启动发布准备 | `rel` |
+| `list [project]` | 列出活跃会话 | `ls`, `l` |
+| `attach <session>` | 接入会话 | `a` |
+| `detach` | 从当前会话分离 | `d` |
+| `switch [session]` | 切换会话 | `sw`, `s` |
+| `kill <session>` | 终止会话 | `k`, `rm` |
+| `cleanup` | 清理已完成会话 | `gc`, `clean` |
+| `status` | 显示当前会话信息 | `st` |
 
-### 3.2 Global Flags
+### 3.2 全局 flag
 
-| Flag | Description | Default |
+| Flag | 说明 | 默认值 |
 |------|-------------|---------|
-| `--project`, `-p` | Project identifier or path | Current directory |
-| `--no-claude` | Skip Claude Code launch | false |
-| `--no-tmux` | Use current terminal | false |
-| `--editor`, `-e` | Open in editor after | false |
-| `--verbose`, `-v` | Verbose output | false |
-| `--dry-run` | Show what would happen | false |
+| `--project`, `-p` | 项目标识符或路径 | 当前目录 |
+| `--no-claude` | 跳过启动 Claude Code | false |
+| `--no-tmux` | 使用当前终端 | false |
+| `--editor`, `-e` | 之后在编辑器中打开 | false |
+| `--verbose`, `-v` | 详细输出 | false |
+| `--dry-run` | 显示将执行的操作 | false |
 
-### 3.3 Project References
+### 3.3 项目引用
 
-PSM supports multiple reference formats:
+PSM 支持多种引用格式：
 
 ```bash
 # Short alias (requires ~/.psm/projects.json config)
@@ -219,7 +222,7 @@ https://github.com/anthropics/claude-code/pull/123
 #123
 ```
 
-### 3.4 Project Aliases Configuration
+### 3.4 项目别名配置
 
 ```json
 // ~/.psm/projects.json
@@ -251,9 +254,10 @@ https://github.com/anthropics/claude-code/pull/123
 
 ---
 
-## 4. Architecture
+<a id="4-architecture"></a>
+## 4. 架构
 
-### 4.1 Component Overview
+### 4.1 组件概览
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -288,7 +292,7 @@ https://github.com/anthropics/claude-code/pull/123
     └─────────────────────────────────────────────────────────┘
 ```
 
-### 4.2 Session Lifecycle
+### 4.2 会话生命周期
 
 ```
 ┌────────────┐     ┌────────────┐     ┌────────────┐     ┌────────────┐
@@ -304,7 +308,7 @@ https://github.com/anthropics/claude-code/pull/123
   - Launch claude
 ```
 
-### 4.3 Data Flow
+### 4.3 数据流
 
 ```
 User Command
@@ -344,9 +348,10 @@ User Command
 
 ---
 
-## 5. Directory Structure
+<a id="5-directory-structure"></a>
+## 5. 目录结构
 
-### 5.1 Global PSM Directory
+### 5.1 全局 PSM 目录
 
 ```
 ~/.psm/
@@ -369,7 +374,7 @@ User Command
         └── pr-456/
 ```
 
-### 5.2 Per-Session Directory
+### 5.2 单会话目录
 
 ```
 ~/.psm/worktrees/wise/pr-123/
@@ -380,7 +385,7 @@ User Command
 └── .wise/                    # WISE state (if applicable)
 ```
 
-### 5.3 Session Metadata File
+### 5.3 会话元数据文件
 
 ```json
 // .psm-session.json
@@ -409,46 +414,48 @@ User Command
 
 ---
 
-## 6. Session Naming Conventions
+<a id="6-session-naming-conventions"></a>
+## 6. 会话命名约定
 
-### 6.1 Tmux Session Names
+### 6.1 Tmux 会话名
 
-Format: `psm:<project>:<type>-<identifier>`
+格式：`psm:<project>:<type>-<identifier>`
 
-| Type | Pattern | Example |
+| 类型 | 模式 | 示例 |
 |------|---------|---------|
-| PR Review | `psm:<proj>:pr-<num>` | `psm:wise:pr-123` |
-| Issue Fix | `psm:<proj>:issue-<num>` | `psm:wise:issue-42` |
-| Feature | `psm:<proj>:feat-<name>` | `psm:wise:feat-auth` |
-| Release | `psm:<proj>:rel-<ver>` | `psm:wise:rel-v3.5.0` |
-| Generic | `psm:<proj>:<name>` | `psm:wise:experiment` |
+| PR 审查 | `psm:<proj>:pr-<num>` | `psm:wise:pr-123` |
+| Issue 修复 | `psm:<proj>:issue-<num>` | `psm:wise:issue-42` |
+| 功能开发 | `psm:<proj>:feat-<name>` | `psm:wise:feat-auth` |
+| 发布 | `psm:<proj>:rel-<ver>` | `psm:wise:rel-v3.5.0` |
+| 通用 | `psm:<proj>:<name>` | `psm:wise:experiment` |
 
-### 6.2 Worktree Directory Names
+### 6.2 Worktree 目录名
 
-Format: `<type>-<identifier>`
+格式：`<type>-<identifier>`
 
-| Type | Pattern | Example |
+| 类型 | 模式 | 示例 |
 |------|---------|---------|
-| PR Review | `pr-<num>` | `pr-123` |
-| Issue Fix | `issue-<num>` | `issue-42` |
-| Feature | `feat-<name>` | `feat-auth` |
-| Release | `rel-<ver>` | `rel-v3.5.0` |
+| PR 审查 | `pr-<num>` | `pr-123` |
+| Issue 修复 | `issue-<num>` | `issue-42` |
+| 功能开发 | `feat-<name>` | `feat-auth` |
+| 发布 | `rel-<ver>` | `rel-v3.5.0` |
 
-### 6.3 Branch Names
+### 6.3 分支名
 
-| Type | Pattern | Example |
+| 类型 | 模式 | 示例 |
 |------|---------|---------|
-| PR Review | (uses PR branch) | `feature/add-hooks` |
-| Issue Fix | `fix/<issue>-<slug>` | `fix/42-auth-timeout` |
-| Feature | `feature/<name>` | `feature/auth` |
-| Release | `release/<ver>` | `release/v3.5.0` |
-| Hotfix | `hotfix/<ver>` | `hotfix/v3.4.1` |
+| PR 审查 | （使用 PR 分支） | `feature/add-hooks` |
+| Issue 修复 | `fix/<issue>-<slug>` | `fix/42-auth-timeout` |
+| 功能开发 | `feature/<name>` | `feature/auth` |
+| 发布 | `release/<ver>` | `release/v3.5.0` |
+| 热修复 | `hotfix/<ver>` | `hotfix/v3.4.1` |
 
 ---
 
-## 7. Workflow Presets
+<a id="7-workflow-presets"></a>
+## 7. 工作流预设
 
-### 7.1 PR Review Preset
+### 7.1 PR 审查预设
 
 ```yaml
 name: pr-review
@@ -477,7 +484,7 @@ steps:
         {{changed_files}}
 ```
 
-### 7.2 Issue Fix Preset
+### 7.2 Issue 修复预设
 
 ```yaml
 name: issue-fix
@@ -506,7 +513,7 @@ steps:
         {{related_files}}
 ```
 
-### 7.3 Feature Development Preset
+### 7.3 功能开发预设
 
 ```yaml
 name: feature-dev
@@ -530,7 +537,7 @@ steps:
         {{suggested_files}}
 ```
 
-### 7.4 Release Preparation Preset
+### 7.4 发布准备预设
 
 ```yaml
 name: release-prep
@@ -563,9 +570,10 @@ steps:
 
 ---
 
-## 8. State Management
+<a id="8-state-management"></a>
+## 8. 状态管理
 
-### 8.1 Sessions Registry
+### 8.1 会话注册表
 
 ```json
 // ~/.psm/sessions.json
@@ -607,7 +615,7 @@ steps:
 }
 ```
 
-### 8.2 State Transitions
+### 8.2 状态转换
 
 ```
 ┌───────────┐
@@ -641,29 +649,30 @@ steps:
 └───────────┘
 ```
 
-### 8.3 Auto-Archive Triggers
+### 8.3 自动归档触发条件
 
-Sessions automatically transition to ARCHIVED when:
+会话在以下情况下自动转为 ARCHIVED：
 
-1. **PR Merged**: GitHub webhook or polling detects merge
-2. **Issue Closed**: GitHub webhook or polling detects closure
-3. **Inactivity Timeout**: No access for configured days (default: 14)
-4. **Manual Archive**: User marks as complete
+1. **PR 已合并**：GitHub webhook 或轮询检测到合并
+2. **Issue 已关闭**：GitHub webhook 或轮询检测到关闭
+3. **不活动超时**：超过配置天数未访问（默认：14）
+4. **手动归档**：用户标记为完成
 
 ---
 
-## 9. Cleanup Strategies
+<a id="9-cleanup-strategies"></a>
+## 9. 清理策略
 
-### 9.1 Cleanup Levels
+### 9.1 清理级别
 
-| Level | Command | What it Cleans |
+| 级别 | 命令 | 清理内容 |
 |-------|---------|----------------|
-| Safe | `/psm cleanup` | Merged PRs, closed issues, archived |
-| Moderate | `/psm cleanup --stale` | + Inactive > 14 days |
-| Aggressive | `/psm cleanup --force` | + All detached sessions |
-| Nuclear | `/psm cleanup --all` | Everything (with confirmation) |
+| 安全 | `/psm cleanup` | 已合并 PR、已关闭 issue、已归档 |
+| 中等 | `/psm cleanup --stale` | + 不活动超过 14 天 |
+| 激进 | `/psm cleanup --force` | + 所有已分离会话 |
+| 彻底 | `/psm cleanup --all` | 全部（需确认） |
 
-### 9.2 Cleanup Algorithm
+### 9.2 清理算法
 
 ```python
 def cleanup(options):
@@ -705,15 +714,15 @@ def cleanup(options):
         log(f"Cleaned: {session.id}")
 ```
 
-### 9.3 Cleanup Safeguards
+### 9.3 清理保护措施
 
-1. **Uncommitted Changes Check**: Warn if worktree has uncommitted changes
-2. **Unpushed Commits Check**: Warn if local commits not pushed
-3. **Active Session Check**: Never cleanup currently attached session
-4. **Confirmation Prompt**: For aggressive/nuclear cleanup
-5. **Dry Run**: Always preview what will be cleaned
+1. **未提交变更检查**：worktree 有未提交变更时警告
+2. **未推送提交检查**：本地提交未推送时警告
+3. **活跃会话检查**：永不清理当前接入的会话
+4. **确认提示**：激进/彻底清理时需确认
+5. **试运行**：始终预览将清理的内容
 
-### 9.4 Scheduled Cleanup
+### 9.4 定时清理
 
 ```json
 // ~/.psm/config.json
@@ -730,19 +739,20 @@ def cleanup(options):
 
 ---
 
-## 10. Integration Points
+<a id="10-integration-points"></a>
+## 10. 集成点
 
-### 10.1 WISE Skill Integration
+### 10.1 WISE 技能集成
 
-| WISE Skill | PSM Integration |
+| WISE 技能 | PSM 集成 |
 |-----------|-----------------|
-| `autopilot` | Can spawn PSM session for isolated work |
-| `ultrawork` | Parallel agents across PSM sessions |
-| `ralph` | Persistence tracking per PSM session |
-| `git-master` | Aware of worktree context |
-| `deepsearch` | Scoped to session worktree |
+| `autopilot` | 可为隔离工作生成 PSM 会话 |
+| `ultrawork` | 跨 PSM 会话的并行智能体 |
+| `ralph` | 按 PSM 会话进行持久化跟踪 |
+| `git-master` | 感知 worktree 上下文 |
+| `deepsearch` | 限定于会话 worktree 范围 |
 
-### 10.2 Clawdbot Integration
+### 10.2 Clawdbot 集成
 
 ```typescript
 // Clawdbot can manage PSM sessions
@@ -761,17 +771,17 @@ interface ClawdbotPSMIntegration {
 }
 ```
 
-### 10.3 GitHub Integration
+### 10.3 GitHub 集成
 
-| Feature | Integration |
+| 功能 | 集成 |
 |---------|-------------|
-| PR Creation | Auto-create draft PR from feature session |
-| PR Status | Track merge status for cleanup |
-| Issue Linking | Auto-link commits to issue |
-| Review Comments | Load review comments as context |
-| CI Status | Show CI status in session info |
+| PR 创建 | 从功能会话自动创建草稿 PR |
+| PR 状态 | 跟踪合并状态以用于清理 |
+| Issue 关联 | 自动将提交关联到 issue |
+| 审查评论 | 加载审查评论作为上下文 |
+| CI 状态 | 在会话信息中显示 CI 状态 |
 
-### 10.4 Editor Integration
+### 10.4 编辑器集成
 
 ```bash
 # VSCode
@@ -784,11 +794,11 @@ interface ClawdbotPSMIntegration {
 /psm review wise#123 --editor nvim
 ```
 
-Opens editor in worktree directory alongside tmux session.
+在 tmux 会话旁于 worktree 目录中打开编辑器。
 
-### 10.5 HUD Integration
+### 10.5 HUD 集成
 
-PSM status in WISE HUD statusline:
+WISE HUD statusline 中的 PSM 状态：
 
 ```
 [psm:wise:pr-123] 📋 Review | 🕐 2h active | 📁 ~/.psm/worktrees/wise/pr-123
@@ -796,22 +806,23 @@ PSM status in WISE HUD statusline:
 
 ---
 
-## 11. Edge Cases & Error Handling
+<a id="11-edge-cases--error-handling"></a>
+## 11. 边界情况与错误处理
 
-### 11.1 Common Edge Cases
+### 11.1 常见边界情况
 
-| Scenario | Handling |
+| 场景 | 处理方式 |
 |----------|----------|
-| Worktree already exists | Offer: attach, recreate, or abort |
-| Tmux session name conflict | Append timestamp suffix |
-| PR branch force-pushed | Warn and offer to refetch |
-| Network offline | Cache what's possible, queue GitHub ops |
-| Git dirty state in main repo | Warn but allow (worktree is isolated) |
-| Worktree on different filesystem | Use git clone instead |
-| Very large repository | Shallow clone option |
-| Session metadata corrupted | Rebuild from git/tmux state |
+| worktree 已存在 | 提供：接入、重建或中止 |
+| tmux 会话名冲突 | 追加时间戳后缀 |
+| PR 分支被强制推送 | 警告并提供重新拉取选项 |
+| 网络离线 | 缓存可缓存内容，排队 GitHub 操作 |
+| 主仓库 git 脏状态 | 警告但允许（worktree 已隔离） |
+| worktree 位于不同文件系统 | 改用 git clone |
+| 极大仓库 | 提供浅克隆选项 |
+| 会话元数据损坏 | 从 git/tmux 状态重建 |
 
-### 11.2 Error Recovery
+### 11.2 错误恢复
 
 ```bash
 # Rebuild sessions.json from existing worktrees and tmux
@@ -827,7 +838,7 @@ PSM status in WISE HUD statusline:
 /psm repair --full
 ```
 
-### 11.3 Conflict Resolution
+### 11.3 冲突解决
 
 ```
 User runs: /psm review wise#123
@@ -843,15 +854,16 @@ Options:
 
 ---
 
-## 12. Security Considerations
+<a id="12-security-considerations"></a>
+## 12. 安全考量
 
-### 12.1 Credential Handling
+### 12.1 凭据处理
 
-- **GitHub Token**: Uses existing `gh` CLI auth, never stored by PSM
-- **SSH Keys**: Relies on system SSH agent
-- **Secrets in Worktrees**: Worktrees inherit .gitignore, secrets not duplicated
+- **GitHub Token**：使用既有 `gh` CLI 认证，PSM 永不存储
+- **SSH 密钥**：依赖系统 SSH agent
+- **worktree 中的密钥**：worktree 继承 .gitignore，密钥不重复
 
-### 12.2 Path Sanitization
+### 12.2 路径净化
 
 ```python
 def sanitize_session_name(name: str) -> str:
@@ -866,28 +878,29 @@ def sanitize_session_name(name: str) -> str:
     return name
 ```
 
-### 12.3 Permissions
+### 12.3 权限
 
-- Worktree directories: `0755` (user rwx, others rx)
-- Session metadata: `0600` (user only)
-- Config files: `0600` (user only)
+- worktree 目录：`0755`（用户 rwx，其他 rx）
+- 会话元数据：`0600`（仅用户）
+- 配置文件：`0600`（仅用户）
 
 ---
 
-## 13. Future Enhancements
+<a id="13-future-enhancements"></a>
+## 13. 未来增强
 
-### 13.1 Planned Features
+### 13.1 计划功能
 
-| Feature | Priority | Description |
+| 功能 | 优先级 | 说明 |
 |---------|----------|-------------|
-| Session Templates | High | Custom workflow templates |
-| Team Sharing | Medium | Share session configs |
-| Session Recording | Medium | Record session for replay |
-| Cloud Sync | Low | Sync sessions across machines |
-| Auto-PR Creation | Medium | Create PR when session completes |
-| Session Metrics | Low | Time tracking per session |
+| 会话模板 | 高 | 自定义工作流模板 |
+| 团队共享 | 中 | 共享会话配置 |
+| 会话录制 | 中 | 录制会话以供回放 |
+| 云同步 | 低 | 跨机器同步会话 |
+| 自动创建 PR | 中 | 会话完成时创建 PR |
+| 会话指标 | 低 | 按会话跟踪时间 |
 
-### 13.2 Extension Points
+### 13.2 扩展点
 
 ```typescript
 // Plugin interface for custom workflows
@@ -908,16 +921,16 @@ interface PSMPlugin {
 }
 ```
 
-### 13.3 Potential Integrations
+### 13.3 潜在集成
 
-- **Linear**: Create sessions from Linear issues
-- **Jira**: Create sessions from Jira tickets
-- **Slack**: Notifications on session events
-- **Discord**: Team session coordination
+- **Linear**：从 Linear issue 创建会话
+- **Jira**：从 Jira 工单创建会话
+- **Slack**：会话事件通知
+- **Discord**：团队会话协调
 
 ---
 
-## Appendix A: Quick Reference Card
+## 附录 A：快速参考卡
 
 ```
 ┌────────────────────────────────────────────────────────────┐
@@ -950,7 +963,7 @@ interface PSMPlugin {
 
 ---
 
-## Appendix B: Configuration Reference
+## 附录 B：配置参考
 
 ```json
 // ~/.psm/config.json (complete)
@@ -995,7 +1008,7 @@ interface PSMPlugin {
 
 ---
 
-## Appendix C: Example Session Transcript
+## 附录 C：会话交互示例
 
 ```bash
 $ /psm review wise#123
@@ -1029,5 +1042,5 @@ Attaching to session...
 
 ---
 
-*Document Version: 1.0.0*
-*Last Updated: 2024-01-26*
+*文档版本：1.0.0*
+*最后更新：2024-01-26*

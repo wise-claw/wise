@@ -1,16 +1,16 @@
-# OpenClaw / Clawhip Routing Contract
+# OpenClaw / Clawhip 路由契约
 
-This document defines the normalized event contract WISE emits through the OpenClaw bridge for native Clawhip-style consumers.
+本文档定义 WISE 经 OpenClaw 桥接向原生 Clawhip 风格消费者发送的规范化事件契约。
 
-## Goals
+## 目标
 
-- Keep the raw hook event (`event`) for backward compatibility.
-- Add a normalized `signal` object for routing and dedupe-friendly filtering.
-- Make command/native gateways receive the same logical payload shape as HTTP gateways.
+- 保留原始 hook 事件（`event`）以保持向后兼容。
+- 新增规范化 `signal` 对象，用于路由与便于去重的过滤。
+- 使命令/原生网关与 HTTP 网关接收相同逻辑 payload 形状。
 
-## Payload shape
+## Payload 形状
 
-HTTP gateways receive JSON with this structure:
+HTTP 网关接收如下结构的 JSON：
 
 ```json
 {
@@ -41,17 +41,17 @@ HTTP gateways receive JSON with this structure:
 }
 ```
 
-## `signal` contract
+## `signal` 契约
 
-| Field      | Meaning                                                                           |
+| 字段      | 含义                                                                           |
 | ---------- | --------------------------------------------------------------------------------- |
-| `kind`     | Routing family: `session`, `tool`, `test`, `pull-request`, `question`, `keyword`  |
-| `name`     | Stable logical signal name                                                        |
-| `phase`    | Lifecycle phase: `started`, `finished`, `failed`, `idle`, `detected`, `requested` |
-| `routeKey` | Canonical routing key for downstream consumers                                    |
-| `priority` | `high` for operational signals, `low` for generic tool noise                      |
+| `kind`     | 路由家族：`session`、`tool`、`test`、`pull-request`、`question`、`keyword`  |
+| `name`     | 稳定的逻辑信号名                                                        |
+| `phase`    | 生命周期阶段：`started`、`finished`、`failed`、`idle`、`detected`、`requested` |
+| `routeKey` | 下游消费者使用的规范路由键                                    |
+| `priority` | 运维类信号为 `high`，通用工具噪声为 `low`                      |
 
-Additional fields may appear when applicable:
+适用时可能额外出现以下字段：
 
 - `toolName`
 - `command`
@@ -59,22 +59,22 @@ Additional fields may appear when applicable:
 - `prUrl`
 - `summary`
 
-## Native command gateway contract
+## 原生命令网关契约
 
-Command gateways now get the same normalized payload through both:
+命令网关现在通过两种方式获得相同的规范化 payload：
 
-- template variable: `{{payloadJson}}`
-- env var: `OPENCLAW_PAYLOAD_JSON`
+- 模板变量：`{{payloadJson}}`
+- 环境变量：`OPENCLAW_PAYLOAD_JSON`
 
-They also receive convenience env vars:
+它们还获得便捷环境变量：
 
 - `OPENCLAW_SIGNAL_ROUTE_KEY`
 - `OPENCLAW_SIGNAL_PHASE`
 - `OPENCLAW_SIGNAL_KIND`
 
-That lets native Clawhip routing consume one contract whether the transport is HTTP or shell-command based.
+这使得原生 Clawhip 路由无论传输层是 HTTP 还是 shell 命令，都能消费同一契约。
 
-## Current high-priority route keys
+## 当前高优先级路由键
 
 - `session.started`
 - `session.finished`
@@ -88,19 +88,19 @@ That lets native Clawhip routing consume one contract whether the transport is H
 - `pull-request.failed`
 - `tool.failed`
 
-Generic `tool.started` / `tool.finished` remain available as low-priority fallback signals.
+通用 `tool.started` / `tool.finished` 仍作为低优先级降级信号可用。
 
-## Noise reduction
+## 噪声抑制
 
-- `AskUserQuestion` now emits only the dedicated `question.requested` signal instead of also emitting generic tool lifecycle events.
-- OpenClaw now collapses repeated attached-tmux lifecycle bursts before dispatching them to downstream native gateways.
-  - `session-start` collapses on `{projectPath, tmuxSession}` for a short burst window.
-  - `keyword-detector` (the `UserPromptSubmit` bridge surface) collapses prompt-submitted bursts on `{projectPath, tmuxSession, normalized prompt}`.
-  - `stop` / `session-end` collapse on `{projectPath, tmuxSession}` for a short burst window.
-- Consumers should prefer `signal.priority === "high"` or explicit `signal.routeKey` filters instead of routing directly on raw hook names.
+- `AskUserQuestion` 现在仅发送专用 `question.requested` 信号，不再同时发送通用工具生命周期事件。
+- OpenClaw 现在在向下游原生网关分发前，折叠重复的 attached-tmux 生命周期突发。
+  - `session-start` 在短突发窗口内按 `{projectPath, tmuxSession}` 折叠。
+  - `keyword-detector`（`UserPromptSubmit` 桥接面）按 `{projectPath, tmuxSession, normalized prompt}` 折叠 prompt-submitted 突发。
+  - `stop` / `session-end` 在短突发窗口内按 `{projectPath, tmuxSession}` 折叠。
+- 消费者应优先使用 `signal.priority === "high"` 或显式 `signal.routeKey` 过滤，而非直接基于原始 hook 名路由。
 
-## Stability notes
+## 稳定性说明
 
-- Raw `event` names are preserved for backward compatibility.
-- `signal` is the preferred routing surface for new native Clawhip integrations.
-- `context` remains a whitelisted subset; internal raw tool input/output are used only to derive normalized signals and are not forwarded in `payload.context`.
+- 原始 `event` 名保留以保持向后兼容。
+- `signal` 是新原生 Clawhip 集成首选的路由面。
+- `context` 保持为白名单子集；内部原始工具输入/输出仅用于推导规范化信号，不会转发到 `payload.context`。

@@ -1,25 +1,26 @@
-# Delegation Enforcer
+# 委派强制器
 
-**Automatic model parameter injection for Task/Agent calls**
+**为 Task/Agent 调用自动注入 model 参数**
 
-## Problem
+## 问题
 
-Claude Code does NOT automatically apply model parameters from agent definitions. When you invoke the `Task` tool (or `Agent` tool), you must manually specify the `model` parameter every time, even though each agent has a default model defined in its configuration.
+Claude Code **不会**自动应用 agent 定义中的 model 参数。当你调用 `Task` 工具（或 `Agent` 工具）时，必须每次手动指定 `model` 参数，即使每个 agent 都在其配置中定义了默认 model。
 
-This leads to:
-- Verbose delegation code
-- Forgotten model parameters defaulting to parent model
-- Inconsistent model usage across codebase
+这会导致：
 
-## Solution
+- 冗长的委派代码
+- 遗漏 model 参数时回退到父 model
+- 代码库中 model 使用不一致
 
-The **Delegation Enforcer** is middleware that automatically injects the model parameter based on agent definitions when not explicitly specified.
+## 解决方案
 
-## How It Works
+**委派强制器**是一个中间件，当未显式指定时，会基于 agent 定义自动注入 model 参数。
+
+## 工作原理
 
 ### 1. Pre-Tool-Use Hook
 
-The enforcer runs as a pre-tool-use hook that intercepts `Task` and `Agent` tool calls:
+强制器作为 pre-tool-use hook 运行，拦截 `Task` 与 `Agent` 工具调用：
 
 ```typescript
 // Before enforcement
@@ -36,9 +37,9 @@ Task(
 )
 ```
 
-### 2. Agent Definition Lookup
+### 2. Agent 定义查找
 
-Each agent has a default model in its definition:
+每个 agent 在其定义中有一个默认 model：
 
 ```typescript
 export const executorAgent: AgentConfig = {
@@ -50,11 +51,11 @@ export const executorAgent: AgentConfig = {
 };
 ```
 
-The enforcer reads this definition and injects the model when not specified.
+强制器读取该定义，并在未指定时注入 model。
 
-### 3. Explicit Models Preserved
+### 3. 保留显式 model
 
-If you explicitly specify a model, it's always preserved:
+若你显式指定 model，它始终被保留：
 
 ```typescript
 // Explicit model is never overridden
@@ -67,11 +68,11 @@ Task(
 
 ## API
 
-### Core Functions
+### 核心函数
 
 #### `enforceModel(agentInput: AgentInput): EnforcementResult`
 
-Enforces model parameter for a single agent delegation call.
+为单次 agent 委派调用强制 model 参数。
 
 ```typescript
 import { enforceModel } from 'wise';
@@ -89,7 +90,7 @@ console.log(result.injected); // true
 
 #### `getModelForAgent(agentType: string): ModelType`
 
-Get the default model for an agent type.
+获取某 agent 类型的默认 model。
 
 ```typescript
 import { getModelForAgent } from 'wise';
@@ -101,7 +102,7 @@ getModelForAgent('executor-high'); // 'opus'
 
 #### `isAgentCall(toolName: string, toolInput: unknown): boolean`
 
-Check if a tool invocation is an agent delegation call.
+检查某次工具调用是否为 agent 委派调用。
 
 ```typescript
 import { isAgentCall } from 'wise';
@@ -110,9 +111,9 @@ isAgentCall('Task', { subagent_type: 'executor', ... }); // true
 isAgentCall('Bash', { command: 'ls' }); // false
 ```
 
-### Hook Integration
+### Hook 集成
 
-The enforcer automatically integrates with the pre-tool-use hook:
+强制器自动与 pre-tool-use hook 集成：
 
 ```typescript
 import { processHook } from 'wise';
@@ -130,49 +131,49 @@ const result = await processHook('pre-tool-use', hookInput);
 console.log(result.modifiedInput.model); // 'sonnet'
 ```
 
-## Agent Model Mapping
+## Agent Model 映射
 
-| Agent Type | Default Model | Use Case |
-|------------|---------------|----------|
-| `architect` | opus | Complex analysis, debugging |
-| `architect-medium` | sonnet | Standard analysis |
-| `architect-low` | haiku | Quick questions |
-| `executor` | sonnet | Standard implementation |
-| `executor-high` | opus | Complex refactoring |
-| `executor-low` | haiku | Simple changes |
-| `explore` | haiku | Fast code search |
-| `designer` | sonnet | UI implementation |
-| `designer-high` | opus | Complex UI architecture |
-| `designer-low` | haiku | Simple styling |
-| `document-specialist` | sonnet | Documentation lookup |
-| `writer` | haiku | Documentation writing |
-| `vision` | sonnet | Image analysis |
-| `planner` | opus | Strategic planning |
-| `critic` | opus | Plan review |
-| `analyst` | opus | Pre-planning analysis |
-| `qa-tester` | sonnet | CLI testing |
-| `scientist` | sonnet | Data analysis |
-| `scientist-high` | opus | Complex research |
+| Agent 类型            | 默认 model | 用途              |
+| --------------------- | ---------- | ----------------- |
+| `architect`           | opus       | 复杂分析、调试    |
+| `architect-medium`    | sonnet     | 标准分析          |
+| `architect-low`       | haiku      | 快速问题          |
+| `executor`            | sonnet     | 标准实现          |
+| `executor-high`       | opus       | 复杂重构          |
+| `executor-low`        | haiku      | 简单变更          |
+| `explore`             | haiku      | 快速代码搜索      |
+| `designer`            | sonnet     | UI 实现           |
+| `designer-high`       | opus       | 复杂 UI 架构      |
+| `designer-low`        | haiku      | 简单样式          |
+| `document-specialist` | sonnet     | 文档查找          |
+| `writer`              | haiku      | 文档编写          |
+| `vision`              | sonnet     | 图像分析          |
+| `planner`             | opus       | 战略规划          |
+| `critic`              | opus       | 计划审查          |
+| `analyst`             | opus       | 规划前分析        |
+| `qa-tester`           | sonnet     | CLI 测试          |
+| `scientist`           | sonnet     | 数据分析          |
+| `scientist-high`      | opus       | 复杂研究          |
 
-## Debug Mode
+## 调试模式
 
-Enable debug logging to see when models are auto-injected:
+启用调试日志以查看 model 何时被自动注入：
 
 ```bash
 export WISE_DEBUG=true
 ```
 
-When enabled, you'll see warnings like:
+启用后，你将看到类似如下警告：
 
 ```
 [WISE] Auto-injecting model: sonnet for executor
 ```
 
-**Important:** Warnings are ONLY shown when `WISE_DEBUG=true`. Without this flag, enforcement happens silently.
+**重要：** 警告**仅**在 `WISE_DEBUG=true` 时显示。无此 flag 时，强制静默进行。
 
-## Usage Examples
+## 使用示例
 
-### Before (Manual)
+### 之前（手动）
 
 ```typescript
 // Every delegation needs explicit model
@@ -189,7 +190,7 @@ Task(
 )
 ```
 
-### After (Automatic)
+### 之后（自动）
 
 ```typescript
 // Model automatically injected from definition
@@ -204,7 +205,7 @@ Task(
 )
 ```
 
-### Override When Needed
+### 需要时覆盖
 
 ```typescript
 // Use haiku for a simple executor task
@@ -215,63 +216,63 @@ Task(
 )
 ```
 
-## Implementation Details
+## 实现细节
 
-### Hook Integration
+### Hook 集成
 
-The enforcer runs in the `pre-tool-use` hook:
+强制器在 `pre-tool-use` hook 中运行：
 
-1. Hook receives tool invocation
-2. Checks if tool is `Task` or `Agent`
-3. Checks if `model` parameter is missing
-4. Looks up agent definition
-5. Injects default model
-6. Returns modified input
+1. Hook 接收工具调用
+2. 检查工具是否为 `Task` 或 `Agent`
+3. 检查 `model` 参数是否缺失
+4. 查找 agent 定义
+5. 注入默认 model
+6. 返回修改后的输入
 
-### Error Handling
+### 错误处理
 
-- Unknown agent types throw errors
-- Agents without default models throw errors
-- Invalid input structures are passed through unchanged
-- Non-agent tools are ignored
+- 未知 agent 类型抛出错误
+- 无默认 model 的 agent 抛出错误
+- 无效输入结构原样透传
+- 非 agent 工具被忽略
 
-### Performance
+### 性能
 
-- O(1) lookup: Direct hash map lookup for agent definitions
-- No async operations: Synchronous enforcement
-- Minimal overhead: Only applies to Task/Agent calls
+- O(1) 查找：对 agent 定义直接哈希表查找
+- 无异步操作：同步强制
+- 最小开销：仅作用于 Task/Agent 调用
 
-## Testing
+## 测试
 
-Run tests:
+运行测试：
 
 ```bash
 npm test -- delegation-enforcer
 ```
 
-Run demo:
+运行 demo：
 
 ```bash
 npx tsx examples/delegation-enforcer-demo.ts
 ```
 
-## Benefits
+## 优势
 
-1. **Cleaner Code**: No need to manually specify model every time
-2. **Consistency**: Always uses correct model tier for each agent
-3. **Safety**: Explicit models always preserved
-4. **Transparency**: Debug mode shows when models are injected
-5. **Zero Config**: Works automatically with existing agent definitions
+1. **更干净的代码**：无需每次手动指定 model
+2. **一致性**：始终为每个 agent 使用正确的 model 层级
+3. **安全**：显式 model 始终保留
+4. **透明**：调试模式显示 model 何时注入
+5. **零配置**：与既有 agent 定义自动协同
 
-## Migration
+## 迁移
 
-No migration needed! The enforcer is backward compatible:
+无需迁移！强制器向后兼容：
 
-- Existing code with explicit models continues working
-- New code can omit model parameter
-- No breaking changes
+- 带显式 model 的既有代码继续工作
+- 新代码可省略 model 参数
+- 无破坏性变更
 
-## Related
+## 相关
 
-- [Agent Definitions](./AGENTS.md) - Complete agent reference
-- [Features Reference](./FEATURES.md) - Model routing and delegation categories
+- [Agent 定义](./AGENTS.md) - 完整 agent 参考
+- [功能参考](./FEATURES.md) - Model 路由与委派类别

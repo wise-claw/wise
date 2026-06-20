@@ -2,7 +2,7 @@
 
 > 本文描述 WISE 如何通过 Claude Code 官方扩展点（Plugin、Hooks、Skills、MCP、Subagent、CLAUDE.md）实现多智能体编排，以及各子系统在运行时的协作关系。
 >
-> 相关文档：[架构](../架构.md) · [HOOKS.md](../HOOKS.md) · [参考.md](../参考.md) · [LOCAL_PLUGIN_INSTALL.md](../LOCAL_PLUGIN_INSTALL.md)
+> 相关文档：[架构](../架构.md) · [HOOKS.md](../HOOKS.md) · [参考.md](../参考.md) · [本地插件安装.md](../本地插件安装.md)
 
 ## 1. 设计目标与边界
 
@@ -677,7 +677,7 @@ claude plugin update wise@wise
 /setup          # 刷新 CLAUDE.md
 ```
 
-或使用 `--plugin-dir` 免 cache 热加载（见 [LOCAL_PLUGIN_INSTALL.md](../LOCAL_PLUGIN_INSTALL.md)）。
+或使用 `--plugin-dir` 免 cache 热加载（见 [本地插件安装.md](../本地插件安装.md)）。
 
 ### 12.3 `wise setup` 的 plugin-dir 模式
 
@@ -779,7 +779,7 @@ Marketplace 安装会 cache 到 `~/.claude/plugins/cache/`；本地开发需 `ma
 | [CLAUDE_CODE_GOAL_ADAPTER.md](./CLAUDE_CODE_GOAL_ADAPTER.md) | `/goal` 适配器契约 |
 | [SYNC-SYSTEM.md](../SYNC-SYSTEM.md) | 状态同步 |
 | [DELEGATION-ENFORCER.md](../DELEGATION-ENFORCER.md) | 委派强制协议 |
-| [LOCAL_PLUGIN_INSTALL.md](../LOCAL_PLUGIN_INSTALL.md) | 本地插件开发 |
+| [本地插件安装.md](../本地插件安装.md) | 本地插件开发 |
 | [TEAM-WORKTREE-MODE.md](../TEAM-WORKTREE-MODE.md) | Team worktree 模式 |
 
 ---

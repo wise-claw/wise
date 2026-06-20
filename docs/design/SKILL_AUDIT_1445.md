@@ -1,26 +1,26 @@
-# Issue #1445 Skill Audit
+# Issue #1445 技能审计
 
-Date: 2026-03-08
+日期：2026-03-08
 
-## Goal
+## 目标
 
-Audit the seven questioned-value skills called out in issue #1445 and decide whether they are ready for deprecation, should remain built-in, or need follow-up instrumentation before any removal decision.
+审计 issue #1445 中点名的七个低价值技能，判定它们是否已可弃用、应保留为内建，或在做出任何移除决定前需要补充埋点。
 
-## Skills Reviewed
+## 已审计技能
 
-| Skill | Lines | Initial concern | Audit verdict |
+| 技能 | 行数 | 初始顾虑 | 审计结论 |
 | --- | ---: | --- | --- |
-| `configure-notifications` | 1213 | Large for a narrow task | Keep for now; too much behavior to deprecate without usage data |
-| `sciwise` | 510 | Niche scientific workflow | Keep for now; niche is not the same as unused |
-| `deep-interview` | 551 | Complex and unclear frequency | Keep for now; keyword-triggered planning surface still exists |
-| `project-session-manager` | 564 | Overlaps with native worktrees | Keep for now; still provides tmux/session orchestration beyond plain git worktrees |
-| `writer-memory` | 443 | Domain-specific | Keep for now; domain specificity alone is not sufficient removal evidence |
-| `external-context` | 83 | Thin wrapper concern | Candidate for later consolidation, but not enough evidence for removal today |
-| `release` | 87 | Project-specific | Keep for now; project-specific maintenance workflows are expected in this repo |
+| `configure-notifications` | 1213 | 对狭窄任务而言过大 | 暂保留；行为过多，无使用数据不宜弃用 |
+| `sciwise` | 510 | 小众科研工作流 | 暂保留；小众不等于无用 |
+| `deep-interview` | 551 | 复杂且频率不明 | 暂保留；关键词触发的规划面仍存在 |
+| `project-session-manager` | 564 | 与原生 worktree 重叠 | 暂保留；仍提供超出纯 git worktree 的 tmux/会话编排 |
+| `writer-memory` | 443 | 领域特定 | 暂保留；仅领域特定不足以作为移除证据 |
+| `external-context` | 83 | 薄包装顾虑 | 后续整合候选，但当前证据不足以移除 |
+| `release` | 87 | 项目特定 | 暂保留；本仓库预期存在项目特定的维护工作流 |
 
-## Existing Evidence Sources
+## 既有证据来源
 
-The repository already has useful observability surfaces that can support a future deprecation decision:
+仓库已具备有用的可观测性面，可支撑未来的弃用决定：
 
 - `src/hooks/subagent-tracker/flow-tracer.ts`
 - `src/hooks/subagent-tracker/session-replay.ts`
@@ -28,30 +28,30 @@ The repository already has useful observability surfaces that can support a futu
 - `docs/PERFORMANCE-MONITORING.md`
 - `skills/learn-about-wise/SKILL.md`
 
-These surfaces provide session-level traces, replay data, and aggregate summaries. They are enough to support a structured manual audit before adding new opt-in telemetry.
+这些面提供会话级 trace、回放数据与聚合摘要。在新增可选遥测之前，它们足以支撑结构化的人工审计。
 
-## Why This Issue Is Not Deprecation-Ready Yet
+## 为何此 Issue 尚不具备弃用条件
 
-A removal/deprecation decision still lacks three things:
+移除/弃用决定仍缺少三样东西：
 
-1. **A denominator** — whether usage should be measured against canonical skills only, canonical + deprecated aliases, or by user sessions.
-2. **A time window** — there is no agreed threshold for "<5% usage" across days, weeks, or releases.
-3. **A privacy posture** — adding new telemetry would require explicit opt-in scope and retention rules.
+1. **分母** — 使用量应仅对规范技能度量、对规范 + 已弃用别名度量，还是按用户会话度量。
+2. **时间窗口** — 跨天、周或发布版本没有统一的 "<5% 使用量" 阈值。
+3. **隐私姿态** — 新增遥测需要显式的可选范围与保留规则。
 
-Without those, immediate removals would be arbitrary and hard to defend.
+缺少这些，立即移除将是武断且难以辩护的。
 
-## Recommended Evaluation Rubric
+## 推荐评估准则
 
-Before any future deprecation PR, require all of the following:
+在未来任何弃用 PR 之前，要求满足以下全部条件：
 
-1. At least one release cycle of trace-derived usage data or a clearly documented manual sampling method.
-2. A written threshold for low usage, including the population being measured.
-3. A migration path for any command that remains user-facing.
-4. A replacement surface, if the skill is removed because native tools or other skills already cover the use case.
+1. 至少一个发布周期的 trace 推导使用数据，或清晰文档化的人工采样方法。
+2. 书面的低使用量阈值，包括所度量的总体。
+3. 任何仍面向用户的命令的迁移路径。
+4. 替代面（若技能因原生工具或其他技能已覆盖该用例而移除）。
 
-## Recommended Next Steps
+## 推荐后续步骤
 
-### Keep as-is for now
+### 暂按原样保留
 
 - `configure-notifications`
 - `sciwise`
@@ -60,16 +60,16 @@ Before any future deprecation PR, require all of the following:
 - `writer-memory`
 - `release`
 
-### Revisit later with stronger evidence
+### 稍后以更强证据重新评估
 
 - `external-context`
 
-### Follow-up work if maintainers want harder data
+### 若维护者需要更硬数据的后续工作
 
-1. Document a trace-based audit workflow using existing `trace_summary` and replay data.
-2. Decide whether `learn-about-wise` should surface that audit view directly.
-3. Only then consider new opt-in telemetry if the trace workflow proves insufficient.
+1. 文档化基于既有 `trace_summary` 与回放数据的 trace 审计工作流。
+2. 决定 `learn-about-wise` 是否应直接暴露该审计视图。
+3. 仅在 trace 工作流证明不足时，才考虑新增可选遥测。
 
-## Conclusion
+## 结论
 
-Issue #1445 is valid as an audit request, but it does **not** currently justify removing any of the reviewed skills. The correct outcome today is an audit record plus a clearer decision framework, not a deprecation batch.
+Issue #1445 作为审计请求是合理的，但当前**不**足以证明移除任何已审计技能。今日的正确结论是一份审计记录加上更清晰的决策框架，而非一批弃用。

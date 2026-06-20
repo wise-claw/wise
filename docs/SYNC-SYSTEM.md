@@ -1,79 +1,79 @@
-# Metadata Sync System
+# 元数据同步系统
 
-## Overview
+## 概述
 
-The metadata sync system ensures consistency between `package.json` (source of truth) and all documentation files across the project. It prevents version drift, outdated badges, and manual update errors.
+元数据同步系统确保 `package.json`（唯一真相来源）与项目中所有文档文件之间的一致性。它防止版本漂移、过期徽章与手动更新错误。
 
-## Why We Need This
+## 为何需要
 
-### The Problem
+### 问题所在
 
-In a typical project lifecycle:
+在典型的项目生命周期中：
 
-1. Developer bumps version in `package.json` to `3.5.0`
-2. Creates a release commit
-3. **Forgets** to update version badge in `README.md` (still shows `3.4.0`)
-4. **Forgets** to update version header in `docs/参考.md`
-5. **Forgets** to update agent count in `.github/CLAUDE.md` after adding new agents
-6. Users see inconsistent version information across documentation
-7. CI builds look professional but contain stale metadata
+1. 开发者在 `package.json` 中将版本升至 `3.5.0`
+2. 创建发布提交
+3. **忘记**更新 `README.md` 中的版本徽章（仍显示 `3.4.0`）
+4. **忘记**更新 `docs/参考.md` 中的版本标题
+5. 添加新智能体后**忘记**更新 `.github/CLAUDE.md` 中的智能体数量
+6. 用户在各文档中看到不一致的版本信息
+7. CI 构建看起来专业，却包含过期元数据
 
-**Result:** Confusion, reduced trust, unprofessional appearance.
+**结果：** 困惑、信任降低、观感不专业。
 
-### The Solution
+### 解决方案
 
-A single automated script that:
-- Reads canonical metadata from `package.json`
-- Updates all documentation files in one pass
-- Can verify sync status (for CI/CD)
-- Supports dry-run mode for safety
-- Reports exactly what changed
+一个自动化脚本，能够：
+- 从 `package.json` 读取规范元数据
+- 一次性更新所有文档文件
+- 可验证同步状态（用于 CI/CD）
+- 支持预演模式以保证安全
+- 精确报告变更内容
 
-## How It Works
+## 工作原理
 
-### Source of Truth
+### 唯一真相来源
 
-`package.json` is the **single source of truth** for:
+`package.json` 是以下字段的**唯一真相来源**：
 
-| Field | Used For |
+| 字段 | 用途 |
 |-------|----------|
-| `version` | Version badges, headers, references |
-| `name` | npm package links, download badges |
-| `description` | Project taglines (future) |
-| `keywords` | SEO metadata (future) |
-| `repository.url` | GitHub links |
-| `homepage` | Website links |
+| `version` | 版本徽章、标题、引用 |
+| `name` | npm 包链接、下载徽章 |
+| `description` | 项目标语（未来） |
+| `keywords` | SEO 元数据（未来） |
+| `repository.url` | GitHub 链接 |
+| `homepage` | 网站链接 |
 
-### Target Files
+### 目标文件
 
-The script syncs these files:
+脚本同步以下文件：
 
-| File | What Gets Updated |
+| 文件 | 更新内容 |
 |------|-------------------|
-| `README.md` | npm version/download badges |
-| `docs/参考.md` | Version badges, version headers |
-| `.github/CLAUDE.md` | Agent count, skill count |
-| `docs/架构.md` | Version references |
-| `CHANGELOG.md` | Latest version header (verify only) |
+| `README.md` | npm 版本/下载徽章 |
+| `docs/参考.md` | 版本徽章、版本标题 |
+| `.github/CLAUDE.md` | 智能体数量、技能数量 |
+| `docs/架构.md` | 版本引用 |
+| `CHANGELOG.md` | 最新版本标题（仅验证） |
 
-### Dynamic Metadata
+### 动态元数据
 
-Some metadata is computed, not read:
+部分元数据为计算所得，而非读取：
 
-- **Agent count** - Counts `.yaml`/`.yml` files in `agents/` directory
-- **Skill count** - Counts `.md` files in `skills/` directory
+- **智能体数量** - 统计 `agents/` 目录下的 `.yaml`/`.yml` 文件
+- **技能数量** - 统计 `skills/` 目录下的 `.md` 文件
 
-This ensures documentation always reflects current state.
+这确保文档始终反映当前状态。
 
-## Usage
+## 用法
 
-### Basic Sync
+### 基本同步
 
 ```bash
 npm run sync-metadata
 ```
 
-Syncs all files. Output:
+同步所有文件。输出：
 ```
 📦 Metadata Sync System
 ========================
@@ -97,13 +97,13 @@ Skills: 45
 ✅ Successfully synced 3 file(s)!
 ```
 
-### Dry Run (Preview Changes)
+### 预演（预览变更）
 
 ```bash
 npm run sync-metadata -- --dry-run
 ```
 
-Shows what **would** change without writing files:
+显示**将要**变更的内容而不写入文件：
 
 ```
 🔍 DRY RUN MODE - No files will be modified
@@ -118,15 +118,15 @@ Shows what **would** change without writing files:
 Run without --dry-run to apply changes
 ```
 
-### Verify Sync (CI/CD)
+### 验证同步（CI/CD）
 
 ```bash
 npm run sync-metadata -- --verify
 ```
 
-Checks if files are in sync. Exits with status code:
-- `0` - All files in sync
-- `1` - Files out of sync (shows which ones)
+检查文件是否已同步。退出状态码：
+- `0` - 所有文件已同步
+- `1` - 文件未同步（显示哪些文件）
 
 ```
 🔍 Verifying metadata sync...
@@ -138,17 +138,17 @@ Checks if files are in sync. Exits with status code:
 Run: npm run sync-metadata
 ```
 
-### Help
+### 帮助
 
 ```bash
 npm run sync-metadata -- --help
 ```
 
-## When to Run
+## 何时运行
 
-### Manual Workflow
+### 手动工作流
 
-Run sync **before** committing version changes:
+在提交版本变更**之前**运行同步：
 
 ```bash
 # 1. Bump version
@@ -162,9 +162,9 @@ git add .
 git commit -m "chore: release v3.5.0"
 ```
 
-### Automated Workflow (Recommended)
+### 自动化工作流（推荐）
 
-Add to `package.json`:
+添加到 `package.json`：
 
 ```json
 {
@@ -174,15 +174,15 @@ Add to `package.json`:
 }
 ```
 
-Now `npm version patch` automatically:
-1. Bumps version in `package.json`
-2. Runs sync script
-3. Stages synced files
-4. Creates version commit
+现在 `npm version patch` 会自动：
+1. 在 `package.json` 中升级版本
+2. 运行同步脚本
+3. 暂存已同步文件
+4. 创建版本提交
 
-### Pre-Commit Hook
+### 提交前 Hook
 
-Add to `.husky/pre-commit`:
+添加到 `.husky/pre-commit`：
 
 ```bash
 #!/bin/sh
@@ -197,20 +197,20 @@ if [ $? -ne 0 ]; then
 fi
 ```
 
-### CI/CD Pipeline
+### CI/CD 流水线
 
-Add verification step to GitHub Actions:
+为 GitHub Actions 添加验证步骤：
 
 ```yaml
 - name: Verify Metadata Sync
   run: npm run sync-metadata -- --verify
 ```
 
-## How to Extend
+## 如何扩展
 
-### Adding a New Target File
+### 添加新目标文件
 
-Edit `scripts/sync-metadata.ts`:
+编辑 `scripts/sync-metadata.ts`：
 
 ```typescript
 function getFileSyncConfigs(): FileSync[] {
@@ -235,9 +235,9 @@ function getFileSyncConfigs(): FileSync[] {
 }
 ```
 
-### Adding Dynamic Metadata
+### 添加动态元数据
 
-Add a new function:
+新增一个函数：
 
 ```typescript
 function getFeatureCount(): number {
@@ -247,7 +247,7 @@ function getFeatureCount(): number {
 }
 ```
 
-Use in replacement:
+在替换中使用：
 
 ```typescript
 {
@@ -257,9 +257,9 @@ Use in replacement:
 }
 ```
 
-### Adding New Metadata Sources
+### 添加新元数据来源
 
-Extend the `Metadata` interface:
+扩展 `Metadata` 接口：
 
 ```typescript
 interface Metadata {
@@ -276,7 +276,7 @@ interface Metadata {
 }
 ```
 
-Update `loadMetadata()`:
+更新 `loadMetadata()`：
 
 ```typescript
 function loadMetadata(): Metadata {
@@ -291,27 +291,27 @@ function loadMetadata(): Metadata {
 }
 ```
 
-## Implementation Details
+## 实现细节
 
-### Safe Replacement Strategy
+### 安全替换策略
 
-The script uses **regex-based replacement** with safeguards:
+脚本使用**基于正则的替换**并带有保护措施：
 
-1. **Read entire file** into memory
-2. **Apply all replacements** to string
-3. **Compare** original vs modified content
-4. **Only write** if content changed
+1. 将整个文件**读入**内存
+2. 对字符串**应用所有替换**
+3. **比较**原始与修改后内容
+4. 仅在内容变更时**写入**
 
-This prevents:
-- Unnecessary file writes (preserves timestamps)
-- Partial updates (atomic operation)
-- Permission errors (fails before write)
+这避免了：
+- 不必要的文件写入（保留时间戳）
+- 部分更新（原子操作）
+- 权限错误（在写入前失败）
 
-### Pattern Design
+### 模式设计
 
-Patterns are designed to be:
+模式设计为：
 
-**Specific enough** to match only intended content:
+**足够具体**，仅匹配预期内容：
 ```typescript
 // GOOD - matches only npm badge
 /\[!\[npm version\]\(https:\/\/img\.shields\.io\/npm\/v\/[^)]+\)/g
@@ -320,33 +320,33 @@ Patterns are designed to be:
 /\[!\[[^\]]+\]\([^)]+\)/g
 ```
 
-**Flexible enough** to handle variations:
+**足够灵活**，处理变体：
 ```typescript
 // Matches: 3.4.0, 10.0.0, 2.1.3-beta
 /\d+\.\d+\.\d+(-[a-z0-9]+)?/
 ```
 
-### Error Handling
+### 错误处理
 
-The script handles:
+脚本处理：
 
-- **Missing files** - Warns but continues
-- **Invalid package.json** - Fails fast with clear error
-- **Permission errors** - Reports and exits
-- **Regex failures** - Reports pattern that failed
+- **文件缺失** - 警告但继续
+- **无效 package.json** - 快速失败并给出清晰错误
+- **权限错误** - 报告并退出
+- **正则失败** - 报告失败的模式
 
-### Performance
+### 性能
 
-For a typical project:
-- **Files read:** 5-10
-- **Execution time:** <100ms
-- **Memory usage:** <10MB
+对于典型项目：
+- **读取文件数：** 5-10
+- **执行时间：** <100ms
+- **内存使用：** <10MB
 
-Scales linearly with number of target files.
+随目标文件数量线性扩展。
 
-## Testing
+## 测试
 
-### Manual Testing
+### 手动测试
 
 ```bash
 # 1. Make a change to package.json
@@ -362,9 +362,9 @@ npm run sync-metadata
 git diff
 ```
 
-### Automated Testing
+### 自动化测试
 
-The script exports functions for testing:
+脚本导出函数用于测试：
 
 ```typescript
 import { loadMetadata, syncFile, verifySync } from './scripts/sync-metadata.js';
@@ -381,73 +381,73 @@ test('syncs README badges', () => {
 });
 ```
 
-## Troubleshooting
+## 故障排查
 
-### "File not found" warnings
+### "File not found" 警告
 
-**Symptom:** Script reports files as not found.
+**症状：** 脚本报文件未找到。
 
-**Cause:** File moved or deleted.
+**原因：** 文件已移动或删除。
 
-**Fix:** Remove from `getFileSyncConfigs()` or update path.
+**修复：** 从 `getFileSyncConfigs()` 中移除或更新路径。
 
-### "No changes detected" but files are stale
+### "No changes detected" 但文件已过期
 
-**Symptom:** Script reports no changes, but files show old version.
+**症状：** 脚本报无变更，但文件显示旧版本。
 
-**Cause:** Pattern doesn't match current file format.
+**原因：** 模式不匹配当前文件格式。
 
-**Fix:** Update regex pattern to match actual content.
+**修复：** 更新正则模式以匹配实际内容。
 
-### Version updated but badge still old
+### 版本已更新但徽章仍为旧值
 
-**Symptom:** package.json has new version, badge unchanged.
+**症状：** package.json 已含新版本，徽章未变。
 
-**Cause:** Badge may be cached by shields.io CDN.
+**原因：** 徽章可能被 shields.io CDN 缓存。
 
-**Fix:** Wait 5 minutes or use `?cache=bust` parameter.
+**修复：** 等待 5 分钟或使用 `?cache=bust` 参数。
 
-### Permission denied errors
+### 权限拒绝错误
 
-**Symptom:** Script fails with EACCES.
+**症状：** 脚本以 EACCES 失败。
 
-**Cause:** Files are read-only or owned by different user.
+**原因：** 文件为只读或属不同用户。
 
-**Fix:**
+**修复：**
 ```bash
 chmod +w docs/*.md
 # or
 sudo chown $USER docs/*.md
 ```
 
-## Best Practices
+## 最佳实践
 
-### 1. Always dry-run first
+### 1. 始终先预演
 
-Before releasing:
+发布前：
 ```bash
 npm run sync-metadata -- --dry-run
 ```
 
-Review changes, then apply.
+审查变更后应用。
 
-### 2. Sync before committing
+### 2. 提交前同步
 
-Add to your workflow:
+加入你的工作流：
 ```bash
 npm run sync-metadata && git add -A
 ```
 
-### 3. Use verification in CI
+### 3. 在 CI 中使用验证
 
-Catch stale docs in pull requests:
+在 pull request 中捕获过期文档：
 ```yaml
 - run: npm run sync-metadata -- --verify
 ```
 
-### 4. Keep patterns maintainable
+### 4. 保持模式可维护
 
-Document complex regex:
+为复杂正则加注释：
 ```typescript
 {
   // Matches: [![Version](https://img.shields.io/badge/version-3.4.0-ff6b6b)]
@@ -458,48 +458,48 @@ Document complex regex:
 }
 ```
 
-### 5. Test after package.json changes
+### 5. package.json 变更后测试
 
-After any change to package.json:
+package.json 任何变更后：
 ```bash
 npm run sync-metadata -- --verify
 ```
 
-## Migration Guide
+## 迁移指南
 
-If you're adding this to an existing project:
+若将其添加到现有项目：
 
-### Step 1: Audit Current State
+### 步骤 1：审计当前状态
 
-Find all hardcoded versions:
+查找所有硬编码版本：
 ```bash
 grep -r "3\.4\.0" docs/ README.md .github/
 ```
 
-### Step 2: Standardize Format
+### 步骤 2：标准化格式
 
-Choose consistent badge format:
+选择一致的徽章格式：
 ```markdown
 [![Version](https://img.shields.io/badge/version-3.4.0-ff6b6b)]
 ```
 
-Update all instances manually.
+手动更新所有实例。
 
-### Step 3: Run Initial Sync
+### 步骤 3：运行初始同步
 
 ```bash
 npm run sync-metadata
 ```
 
-Should report "All files are already in sync".
+应报告 "All files are already in sync"。
 
-### Step 4: Add to Workflow
+### 步骤 4：加入工作流
 
-Add npm script, pre-commit hook, CI verification.
+添加 npm 脚本、pre-commit hook、CI 验证。
 
-### Step 5: Document for Team
+### 步骤 5：为团队编写文档
 
-Update CONTRIBUTING.md:
+更新 CONTRIBUTING.md：
 ```markdown
 ## Releasing
 
@@ -508,19 +508,19 @@ Update CONTRIBUTING.md:
 3. Commit and tag
 ```
 
-## Future Enhancements
+## 未来增强
 
-Potential improvements:
+潜在改进：
 
-- [ ] Support for multi-language docs (i18n)
-- [ ] Sync to website/landing page
-- [ ] Extract feature count from source code
-- [ ] Auto-update dependency versions in docs
-- [ ] Integration with release workflow
-- [ ] Markdown AST-based updates (safer than regex)
-- [ ] Configuration file for custom patterns
-- [ ] Plugin system for custom metadata sources
+- [ ] 支持多语言文档（i18n）
+- [ ] 同步到网站/落地页
+- [ ] 从源码提取特性数量
+- [ ] 自动更新文档中的依赖版本
+- [ ] 与发布工作流集成
+- [ ] 基于 Markdown AST 的更新（比正则更安全）
+- [ ] 用于自定义模式的配置文件
+- [ ] 用于自定义元数据来源的插件系统
 
-## Related
+## 相关
 
-- [CI/CD Pipeline](../.github/workflows/)
+- [CI/CD 流水线](../.github/workflows/)

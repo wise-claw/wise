@@ -1,16 +1,16 @@
-# Hooks System
+# Hooks 系统
 
-> WISE's 20 hooks intercept Claude Code lifecycle events to enable magic keywords, context injection, and quality enforcement.
+> WISE 的 20 个 hook 拦截 Claude Code 生命周期事件，以实现魔法关键词、上下文注入与质量强制。
 
-## What Are Hooks?
+## 什么是 Hooks？
 
-Hooks are scripts that execute automatically in response to Claude Code lifecycle events. wise extends Claude Code's default behavior with 20 hooks.
+Hooks 是在 Claude Code 生命周期事件触发时自动执行的脚本。wise 通过 20 个 hook 扩展了 Claude Code 的默认行为。
 
-When a user submits a prompt, a tool runs, or a session starts/ends, hooks fire automatically to inject additional context, activate modes, and manage state.
+当用户提交 prompt、工具运行或会话开始/结束时，hook 会自动触发以注入额外上下文、激活模式并管理 state。
 
-## How Hooks Work
+## Hooks 如何工作
 
-Hooks are defined in a `hooks.json` file. Each hook follows this structure:
+Hooks 定义在 `hooks.json` 文件中。每个 hook 遵循如下结构：
 
 ```json
 {
@@ -29,218 +29,218 @@ Hooks are defined in a `hooks.json` file. Each hook follows this structure:
 }
 ```
 
-- **EventName**: The lifecycle event the hook responds to
-- **matcher**: Condition for running the hook (`*` matches all cases)
-- **command**: The Node.js script to execute
-- **timeout**: Maximum execution time in seconds
+- **EventName**：hook 响应的生命周期事件
+- **matcher**：运行 hook 的条件（`*` 匹配所有情况）
+- **command**：要执行的 Node.js 脚本
+- **timeout**：最大执行时间（秒）
 
-Hook output is injected into Claude via `<system-reminder>` tags. Additional context is passed through `hookSpecificOutput.additionalContext`.
+Hook 输出经 `<system-reminder>` 标签注入 Claude。额外上下文通过 `hookSpecificOutput.additionalContext` 传递。
 
-## Hook Categories
+## Hook 类别
 
-WISE hooks fall into four categories:
+WISE hook 分为四类：
 
-### Core Hooks
+### 核心 Hooks
 
-Handle orchestration, keyword detection, and mode persistence.
+处理编排、关键词检测与模式持久化。
 
-| Hook | Description |
-|------|-------------|
-| keyword-detector | Detects magic keywords and activates corresponding skills |
-| persistent-mode | Enforces continuation when an execution mode (ralph, autopilot, ultrawork, etc.) is active — injects reinforcement messages on Stop to prevent premature halting |
+| Hook | 说明 |
+|------|------|
+| keyword-detector | 检测魔法关键词并激活对应技能 |
+| persistent-mode | 当执行模式（ralph、autopilot、ultrawork 等）激活时强制续跑 — 在 Stop 时注入强化消息以防过早停止 |
 
-### Context Management Hooks
+### 上下文管理 Hooks
 
-Manage memory, project state, and compaction.
+管理记忆、项目 state 与压缩。
 
-| Hook | Description |
-|------|-------------|
-| notepad | Compaction-resistant memory system |
-| project-memory | Manages project-level memory |
-| pre-compact | Processes state before compaction |
+| Hook | 说明 |
+|------|------|
+| notepad | 抗压缩记忆系统 |
+| project-memory | 管理项目级记忆 |
+| pre-compact | 在压缩前处理 state |
 
-### Quality / Verification Hooks
+### 质量 / 验证 Hooks
 
-Handle code quality, permissions, and subagent tracking.
+处理代码质量、权限与 subagent 跟踪。
 
-| Hook | Description |
-|------|-------------|
-| permission-handler | Handles permission requests and validation |
-| subagent-tracker | Tracks subagent spawn and completion |
-| code-simplifier | Auto-simplifies recently modified files on Stop (opt-in) |
+| Hook | 说明 |
+|------|------|
+| permission-handler | 处理权限请求与校验 |
+| subagent-tracker | 跟踪 subagent 生成与完成 |
+| code-simplifier | 在 Stop 时自动简化最近修改的文件（可选启用） |
 
-## Disabling Hooks
+## 禁用 Hooks
 
-### Disable All Hooks
+### 禁用全部 Hooks
 
 ```bash
 export DISABLE_WISE=1
 ```
 
-### Disable Specific Hooks
+### 禁用特定 Hooks
 
 ```bash
 export WISE_SKIP_HOOKS="keyword-detector,notepad"
 ```
 
-Separate hook names with commas to skip only those hooks.
+用逗号分隔 hook 名称，以仅跳过这些 hook。
 
 ---
 
-## Lifecycle Events
+## 生命周期事件
 
-Claude Code emits events throughout a session. WISE attaches hooks to these events to extend behavior. There are 11 lifecycle events.
+Claude Code 在整个会话中发出事件。WISE 将 hook 挂载到这些事件以扩展行为。共有 11 个生命周期事件。
 
 ### UserPromptSubmit
 
-Fires when the user submits a prompt.
+在用户提交 prompt 时触发。
 
-| Script | Role | Timeout |
-|--------|------|---------|
-| `keyword-detector.mjs` | Detects magic keywords and invokes the corresponding skill | 5s |
-| `skill-injector.mjs` | Injects skill prompts | 3s |
+| 脚本 | 作用 | 超时 |
+|------|------|------|
+| `keyword-detector.mjs` | 检测魔法关键词并调用对应技能 | 5s |
+| `skill-injector.mjs` | 注入技能 prompt | 3s |
 
-Runs on all user input (`matcher: "*"`). When the keyword detector finds keywords like "ultrawork", "ralph", or "autopilot", it injects the corresponding skill invocation instruction via `additionalContext`.
+对所有用户输入运行（`matcher: "*"`）。当关键词检测器发现 "ultrawork"、"ralph" 或 "autopilot" 等关键词时，会通过 `additionalContext` 注入对应的技能调用指令。
 
 ### SessionStart
 
-Fires when a new session begins.
+在新会话开始时触发。
 
-| Script | Matcher | Role | Timeout |
-|--------|---------|------|---------|
-| `session-start.mjs` | `*` | Session initialization, state restoration | 5s |
-| `project-memory-session.mjs` | `*` | Loads project memory | 5s |
-| `setup-init.mjs` | `init` | Initial setup wizard | 30s |
-| `setup-maintenance.mjs` | `maintenance` | Maintenance tasks | 60s |
+| 脚本 | 匹配器 | 作用 | 超时 |
+|------|--------|------|------|
+| `session-start.mjs` | `*` | 会话初始化、state 恢复 | 5s |
+| `project-memory-session.mjs` | `*` | 加载项目记忆 | 5s |
+| `setup-init.mjs` | `init` | 初始 setup 向导 | 30s |
+| `setup-maintenance.mjs` | `maintenance` | 维护任务 | 60s |
 
-The `init` and `maintenance` matchers only run in special cases. For normal session starts, only the two `*` matcher scripts execute.
+`init` 与 `maintenance` 匹配器仅在特殊情况运行。正常会话启动时，仅执行两个 `*` 匹配器脚本。
 
 ### PreToolUse
 
-Fires immediately before Claude uses a tool.
+在 Claude 使用工具前立即触发。
 
-| Script | Role | Timeout |
-|--------|------|---------|
-| `pre-tool-enforcer.mjs` | Validates rules before tool use | 3s |
+| 脚本 | 作用 | 超时 |
+|------|------|------|
+| `pre-tool-enforcer.mjs` | 在工具使用前校验规则 | 3s |
 
-Runs on all tool calls (`matcher: "*"`). Enforces agent permission restrictions (e.g., blocking Write/Edit for read-only agents).
+对所有工具调用运行（`matcher: "*"`）。强制智能体权限限制（例如，对只读智能体阻止 Write/Edit）。
 
 ### PermissionRequest
 
-Fires when a permission request arises during Bash tool execution.
+在 Bash 工具执行期间产生权限请求时触发。
 
-| Script | Matcher | Role | Timeout |
-|--------|---------|------|---------|
-| `permission-handler.mjs` | `Bash` | Handles Bash command permissions | 5s |
+| 脚本 | 匹配器 | 作用 | 超时 |
+|------|--------|------|------|
+| `permission-handler.mjs` | `Bash` | 处理 Bash 命令权限 | 5s |
 
-Only processes permission requests for the Bash tool.
+仅处理 Bash 工具的权限请求。
 
 ### PostToolUse
 
-Fires after a tool use completes.
+在工具使用完成后触发。
 
-| Script | Role | Timeout |
-|--------|------|---------|
-| `post-tool-verifier.mjs` | Verifies tool results and injects additional context | 3s |
-| `project-memory-posttool.mjs` | Updates project memory | 3s |
+| 脚本 | 作用 | 超时 |
+|------|------|------|
+| `post-tool-verifier.mjs` | 验证工具结果并注入额外上下文 | 3s |
+| `project-memory-posttool.mjs` | 更新项目记忆 | 3s |
 
-Injects additional guidance based on Read, Write, Edit, and Bash results. For example, after reading a file it may hint "consider using parallel reads."
+根据 Read、Write、Edit 与 Bash 结果注入额外指引。例如，读取文件后可能提示"考虑使用并行读取"。
 
 ### PostToolUseFailure
 
-Fires when a tool use fails.
+在工具使用失败时触发。
 
-| Script | Role | Timeout |
-|--------|------|---------|
-| `post-tool-use-failure.mjs` | Provides recovery guidance for failed tool use | 3s |
+| 脚本 | 作用 | 超时 |
+|------|------|------|
+| `post-tool-use-failure.mjs` | 为失败的工具使用提供恢复指引 | 3s |
 
-Disable via `DISABLE_WISE=1` (or `DISABLE_WISE=true`) or `WISE_SKIP_HOOKS=post-tool-use-failure` (the `post-tool-use` token also skips it, alongside `post-tool-verifier.mjs`).
+可通过 `DISABLE_WISE=1`（或 `DISABLE_WISE=true`）或 `WISE_SKIP_HOOKS=post-tool-use-failure` 禁用（`post-tool-use` token 也会跳过它，同时跳过 `post-tool-verifier.mjs`）。
 
 ### SubagentStart
 
-Fires when a subagent is spawned.
+在生成 subagent 时触发。
 
-| Script | Role | Timeout |
-|--------|------|---------|
-| `subagent-tracker.mjs start` | Tracks subagent start, injects prompts | 3s |
+| 脚本 | 作用 | 超时 |
+|------|------|------|
+| `subagent-tracker.mjs start` | 跟踪 subagent 启动、注入 prompt | 3s |
 
-Records the subagent name, start time, and session information.
+记录 subagent 名称、启动时间与会话信息。
 
 ### SubagentStop
 
-Fires when a subagent completes.
+在 subagent 完成时触发。
 
-| Script | Role | Timeout |
-|--------|------|---------|
-| `subagent-tracker.mjs stop` | Tracks subagent completion | 5s |
-| `verify-deliverables.mjs` | Verifies subagent deliverables | 5s |
+| 脚本 | 作用 | 超时 |
+|------|------|------|
+| `subagent-tracker.mjs stop` | 跟踪 subagent 完成 | 5s |
+| `verify-deliverables.mjs` | 验证 subagent 交付物 | 5s |
 
 ### PreCompact
 
-Fires immediately before context compaction.
+在上下文压缩前立即触发。
 
-| Script | Role | Timeout |
-|--------|------|---------|
-| `pre-compact.mjs` | Preserves state before compaction | 10s |
-| `project-memory-precompact.mjs` | Preserves project memory | 5s |
+| 脚本 | 作用 | 超时 |
+|------|------|------|
+| `pre-compact.mjs` | 在压缩前保留 state | 10s |
+| `project-memory-precompact.mjs` | 保留项目记忆 | 5s |
 
-Saves important state and memory before compaction runs because the context window is full.
+因上下文窗口已满而运行压缩前，保存重要的 state 与记忆。
 
 ### Stop
 
-Fires when Claude finishes a response.
+在 Claude 完成响应时触发。
 
-| Script | Role | Timeout |
-|--------|------|---------|
-| `context-guard-stop.mjs` | Monitors context usage | 5s |
-| `persistent-mode.cjs` | Maintains active mode state (ralph, ultrawork, etc.) | 10s |
-| `code-simplifier.mjs` | Auto-simplifies modified files (opt-in) | 5s |
+| 脚本 | 作用 | 超时 |
+|------|------|------|
+| `context-guard-stop.mjs` | 监控上下文使用量 | 5s |
+| `persistent-mode.cjs` | 维护激活模式 state（ralph、ultrawork 等） | 10s |
+| `code-simplifier.mjs` | 自动简化已修改文件（可选启用） | 5s |
 
-`persistent-mode` injects a reinforcement message like "The boulder never stops" when an active execution mode is running, prompting continued work.
+当有激活的执行模式运行时，`persistent-mode` 会注入如"The boulder never stops"的强化消息，提示继续工作。
 
 ### SessionEnd
 
-Fires when a session ends.
+在会话结束时触发。
 
-| Script | Role | Timeout |
-|--------|------|---------|
-| `session-end.mjs` | Saves session summary, sends callback notifications | 30s |
+| 脚本 | 作用 | 超时 |
+|------|------|------|
+| `session-end.mjs` | 保存会话摘要、发送回调通知 | 30s |
 
-Saves agent activity, token usage, and other session data to `.wise/sessions/`. If configured, sends completion notifications via Discord, Telegram, or Slack.
+将智能体活动、token 使用量与其他会话数据保存到 `.wise/sessions/`。若已配置，则通过 Discord、Telegram 或 Slack 发送完成通知。
 
 ---
 
-## Core Hooks
+## 核心 Hooks
 
-### Core Hook Details
+### 核心 Hook 详情
 
 #### keyword-detector
 
-Detects magic keywords in user prompts and invokes the corresponding skill.
+检测用户 prompt 中的魔法关键词并调用对应技能。
 
-- **Event**: UserPromptSubmit
-- **Behavior**: Sanitizes the prompt (removes code blocks, URLs, file paths) then matches keyword patterns
-- **Conflict resolution**: cancel has highest priority, then ralph > autopilot > ultrawork
-- **Safety**: Disabled inside team workers to prevent infinite spawning
+- **事件**：UserPromptSubmit
+- **行为**：净化 prompt（移除代码块、URL、文件路径）后匹配关键词模式
+- **冲突解决**：cancel 优先级最高，其次 ralph > autopilot > ultrawork
+- **安全**：在 team worker 内禁用，以防无限生成
 
-See the [Magic Keywords](#magic-keywords) section for the full keyword list.
+完整关键词列表见[魔法关键词](#magic-keywords)节。
 
 #### persistent-mode
 
-Enforces continuation when an execution mode is active. This is the hook that keeps skills like autopilot, ralph, and ultrawork running.
+当执行模式激活时强制续跑。这是让 autopilot、ralph 与 ultrawork 等技能持续运行的 hook。
 
-- **Event**: Stop
-- **Behavior**: Checks `.wise/state/` for active mode state files. If any mode (ralph, ultragoal, autopilot, ultrawork, ultraqa, team, pipeline) is active, injects a reinforcement message to prevent Claude from stopping.
-- **Reinforcement message**: "The boulder never stops" — prompts Claude to continue working
-- **Staleness check**: States older than 2 hours are treated as inactive to prevent stale state from blocking new sessions
-- **Notification**: Sends Discord/Telegram/Slack notification on first stop (if configured)
-- **Cancel**: Use `/wise:cancel` to deactivate modes
+- **事件**：Stop
+- **行为**：检查 `.wise/state/` 中的激活模式 state 文件。若任一模式（ralph、ultragoal、autopilot、ultrawork、ultraqa、team、pipeline）激活，则注入强化消息以防 Claude 停止。
+- **强化消息**："The boulder never stops" — 提示 Claude 继续工作
+- **陈旧检查**：超过 2 小时的 state 视为非激活，以防陈旧 state 阻塞新会话
+- **通知**：首次 stop 时发送 Discord/Telegram/Slack 通知（若已配置）
+- **取消**：使用 `/wise:cancel` 停用模式
 
-> **Note**: autopilot, ralph, ultrawork, and ultraqa are **skills** (invoked via keyword-detector), not hooks. The persistent-mode hook is what enforces their continuation by blocking the Stop event.
+> **说明**：autopilot、ralph、ultrawork 与 ultraqa 是**技能**（经 keyword-detector 调用），不是 hooks。persistent-mode hook 通过阻塞 Stop 事件来强制其续跑。
 
-### Mode State Management
+### 模式 State 管理
 
-Execution mode hooks manage state files in the `.wise/state/` directory.
+执行模式 hook 管理 `.wise/state/` 目录中的 state 文件。
 
 ```json
 {
@@ -256,85 +256,85 @@ Execution mode hooks manage state files in the `.wise/state/` directory.
 }
 ```
 
-When a session ID is present, state is stored in session scope under `.wise/state/sessions/{sessionId}/`.
+当存在会话 ID 时，state 存储于 `.wise/state/sessions/{sessionId}/` 下的会话作用域中。
 
 
-#### ultragoal-state.json lifecycle
+#### ultragoal-state.json 生命周期
 
-`ultragoal-state.json` is the session-scoped Stop/PreToolUse guard for `$ultragoal` runs. The durable plan and audit trail remain `.wise/ultragoal/goals.json` and `.wise/ultragoal/ledger.jsonl`; the state file only records the active runtime guard.
+`ultragoal-state.json` 是 `$ultragoal` 运行的会话作用域 Stop/PreToolUse 守卫。持久计划与审计账本保留在 `.wise/ultragoal/goals.json` 与 `.wise/ultragoal/ledger.jsonl`；state 文件仅记录激活的运行时守卫。
 
-- **Location**: `.wise/state/sessions/{sessionId}/ultragoal-state.json` when a Claude session id is available; legacy fallback is `.wise/state/ultragoal-state.json`.
-- **Active fields**: `active: true`, `session_id`, `project_path`, `started_at`, `last_checked_at`, `current_phase`, optional `claude_goal_objective`, and `reinforcement_count`.
-- **Stop hook**: reinforces only when the state is active, fresh (within the normal 2-hour mode-state freshness window), session-matching, and project-matching. Terminal phases (`complete`, `completed`, `done`, `all-done`, `failed`, `cancelled`) and all-done `.wise/ultragoal/goals.json` plans are ignored.
-- **PreToolUse guard**: while active, tools are denied unless the hook can see a matching active Claude `/goal` snapshot. Use `ALLOW_ULTRAGOAL_WITHOUT_GOAL=1` only as an intentional local bypass.
-- **Completion**: after the final quality gate and ultragoal checkpoint, mark the state inactive or run `/wise:cancel` so the state file is cleared with other workflow state.
+- **位置**：当存在 Claude 会话 id 时为 `.wise/state/sessions/{sessionId}/ultragoal-state.json`；legacy 降级为 `.wise/state/ultragoal-state.json`。
+- **激活字段**：`active: true`、`session_id`、`project_path`、`started_at`、`last_checked_at`、`current_phase`、可选 `claude_goal_objective` 与 `reinforcement_count`。
+- **Stop hook**：仅当 state 激活、新鲜（在正常 2 小时模式 state 新鲜窗口内）、会话匹配且项目匹配时才强化。终态阶段（`complete`、`completed`、`done`、`all-done`、`failed`、`cancelled`）与 all-done 的 `.wise/ultragoal/goals.json` 计划被忽略。
+- **PreToolUse 守卫**：激活时，除非 hook 能看到匹配的激活 Claude `/goal` 快照，否则工具被拒绝。仅在有意本地绕过时使用 `ALLOW_ULTRAGOAL_WITHOUT_GOAL=1`。
+- **完成**：在最终质量门与 ultragoal checkpoint 后，标记 state 为非激活或运行 `/wise:cancel`，以便该 state 文件随其他工作流 state 一并清除。
 
-#### Canceling a Mode
+#### 取消模式
 
 ```
 cancelwise
 ```
 
-or
+或
 
 ```
 /wise:cancel
 ```
 
-`cancel` removes state files for all active modes: ralph, autopilot, ultrawork, and any others.
+`cancel` 移除所有激活模式的 state 文件：ralph、autopilot、ultrawork 及其他。
 
 ---
 
-## Context Management Hooks
+## 上下文管理 Hooks
 
-Claude Code's context window is finite. During long sessions, compaction occurs and previous conversation content is summarized. WISE's context management hooks prepare for compaction, preserve important information, and maintain project-level memory.
+Claude Code 的上下文窗口有限。长会话中会发生压缩，之前的对话内容被摘要。WISE 的上下文管理 hook 为压缩做准备、保留重要信息并维护项目级记忆。
 
 ### notepad
 
-A compaction-resistant memory system.
+抗压缩记忆系统。
 
-- **Storage path**: `.wise/notepad.md`
-- **MCP tools**: `notepad_read`, `notepad_write_priority`, `notepad_write_working`, `notepad_write_manual`
-- **Behavior**: Information written to the notepad persists after compaction
+- **存储路径**：`.wise/notepad.md`
+- **MCP 工具**：`notepad_read`、`notepad_write_priority`、`notepad_write_working`、`notepad_write_manual`
+- **行为**：写入 notepad 的信息在压缩后仍保留
 
-The notepad supports three priority levels:
+notepad 支持三个优先级：
 
-| Priority | Tool | Description |
-|----------|------|-------------|
-| Priority | `notepad_write_priority` | Information that must never be lost |
-| Working | `notepad_write_working` | Current work-in-progress status |
-| Manual | `notepad_write_manual` | Manually recorded notes |
+| 优先级 | 工具 | 说明 |
+|--------|------|------|
+| Priority | `notepad_write_priority` | 绝不可丢失的信息 |
+| Working | `notepad_write_working` | 当前进行中工作状态 |
+| Manual | `notepad_write_manual` | 手动记录的笔记 |
 
-Use `notepad_prune` to clean up old entries and `notepad_stats` to check status.
+使用 `notepad_prune` 清理旧条目，使用 `notepad_stats` 检查状态。
 
 ### project-memory
 
-Manages permanent project-level memory.
+管理永久项目级记忆。
 
-- **Storage path**: `.wise/project-memory.json`
-- **MCP tools**: `project_memory_read`, `project_memory_write`, `project_memory_add_note`, `project_memory_add_directive`
-- **Related hooks**:
-  - `project-memory-session.mjs` (SessionStart): Loads project memory when session starts
-  - `project-memory-posttool.mjs` (PostToolUse): Updates memory after tool use
-  - `project-memory-precompact.mjs` (PreCompact): Preserves memory before compaction
-- **Multi-session contract**: Both writers acquire `withProjectMemoryLock` (see `src/lib/file-lock.ts`) before reading or rewriting `project-memory.json`. Concurrent sessions in the same workspace serialize through this lock, so lost-update races between parallel Claude sessions are impossible. See `tests/integration/concurrent-project-memory.test.ts` for the regression guard.
+- **存储路径**：`.wise/project-memory.json`
+- **MCP 工具**：`project_memory_read`、`project_memory_write`、`project_memory_add_note`、`project_memory_add_directive`
+- **相关 hooks**：
+  - `project-memory-session.mjs`（SessionStart）：会话开始时加载项目记忆
+  - `project-memory-posttool.mjs`（PostToolUse）：工具使用后更新记忆
+  - `project-memory-precompact.mjs`（PreCompact）：压缩前保留记忆
+- **多会话契约**：两个写入方在读取或重写 `project-memory.json` 前都获取 `withProjectMemoryLock`（见 `src/lib/file-lock.ts`）。同一 workspace 中的并发会话经此锁串行化，因此并行 Claude 会话间不可能发生丢失更新竞争。回归守卫见 `tests/integration/concurrent-project-memory.test.ts`。
 
-Two types of data are stored in project-memory:
+project-memory 中存储两类数据：
 
-- **Notes**: Learned facts about the project (architecture patterns, bug history, etc.)
-- **Directives**: Instructions to follow when working on the project
+- **Notes**：关于项目的习得事实（架构模式、bug 历史等）
+- **Directives**：在该项目上工作时须遵守的指令
 
 ### pre-compact
 
-Preserves important state immediately before compaction.
+在压缩前立即保留重要 state。
 
-- **Event**: PreCompact
-- **Behavior**: Summarizes and preserves the current work state, in-progress TODOs, and critical context
-- **Purpose**: Retains essential information so work can resume after compaction
+- **事件**：PreCompact
+- **行为**：摘要并保留当前工作 state、进行中 TODO 与关键上下文
+- **目的**：保留关键信息，以便压缩后可恢复工作
 
-### Context Preservation Strategy
+### 上下文保留策略
 
-WISE's context management hooks cooperate with the following strategy:
+WISE 的上下文管理 hook 按如下策略协作：
 
 ```
 Session Start
@@ -351,84 +351,85 @@ Session Start
 
 ---
 
-## Magic Keywords
+<a id="magic-keywords"></a>
+## 魔法关键词
 
-Magic keywords automatically activate WISE skills or execution modes when specific words or patterns are detected in the user's natural language prompt. No slash command is needed — include a keyword in your prompt and the feature activates automatically.
+当在用户自然语言 prompt 中检测到特定词语或模式时，魔法关键词会自动激活 WISE 技能或执行模式。无需斜杠命令 — 在 prompt 中包含关键词即可自动激活功能。
 
-### How keyword-detector Works
+### keyword-detector 如何工作
 
-`keyword-detector.mjs` runs on the UserPromptSubmit event.
+`keyword-detector.mjs` 在 UserPromptSubmit 事件上运行。
 
-1. Receives the user prompt and sanitizes it
-2. Removes code blocks, XML tags, URLs, and file paths to prevent false positives
-3. Matches keyword patterns against the sanitized text
-4. Resolves conflicts, then injects the skill invocation instruction
+1. 接收用户 prompt 并净化
+2. 移除代码块、XML 标签、URL 与文件路径以防误报
+3. 对净化后文本匹配关键词模式
+4. 解决冲突，然后注入技能调用指令
 
-**Safety measures:**
+**安全措施：**
 
-- **Sanitization**: Keywords inside code blocks, within URLs, or in file paths are ignored
-- **Team worker protection**: Disabled when the `WISE_TEAM_WORKER` environment variable is set (prevents infinite spawning)
-- **Disable**: Set `DISABLE_WISE=1` or `WISE_SKIP_HOOKS=keyword-detector`
+- **净化**：代码块、URL 或文件路径内的关键词被忽略
+- **team worker 保护**：设置 `WISE_TEAM_WORKER` 环境变量时禁用（防止无限生成）
+- **禁用**：设置 `DISABLE_WISE=1` 或 `WISE_SKIP_HOOKS=keyword-detector`
 
-### Execution Mode Keywords
+### 执行模式关键词
 
-These keywords invoke a skill and create a state file.
+这些关键词调用技能并创建 state 文件。
 
-| Keyword | Skill | Description |
-|---------|-------|-------------|
-| `cancelwise`, `stopwise` | cancel | Cancels all active modes |
-| `ralph`, `don't stop`, `must complete`, `until done` | ralph | Persistent execution until verification completes |
-| `autopilot`, `build me`, `I want a`, `handle it all`, `end to end`, `auto-pilot`, `full auto`, `fullsend`, `e2e this` | autopilot | Fully autonomous execution |
-| `ultrawork`, `ulw`, `uw` | ultrawork | Maximum parallel execution |
-| `ccg`, `claude-codex-gemini` | ccg | Claude-Codex-Gemini tri-model orchestration |
-| `ralplan` | ralplan | Consensus-based iterative planning |
-| `deep interview`, `ouroboros` | deep-interview | Socratic deep interview |
+| 关键词 | 技能 | 说明 |
+|--------|------|------|
+| `cancelwise`, `stopwise` | cancel | 取消所有激活模式 |
+| `ralph`, `don't stop`, `must complete`, `until done` | ralph | 持久执行直至验证完成 |
+| `autopilot`, `build me`, `I want a`, `handle it all`, `end to end`, `auto-pilot`, `full auto`, `fullsend`, `e2e this` | autopilot | 完全自主执行 |
+| `ultrawork`, `ulw`, `uw` | ultrawork | 最大并行执行 |
+| `ccg`, `claude-codex-gemini` | ccg | Claude-Codex-Gemini 三模型编排 |
+| `ralplan` | ralplan | 基于共识的迭代规划 |
+| `deep interview`, `ouroboros` | deep-interview | 苏格拉底式深度访谈 |
 
-### AI Slop Cleanup Keywords
+### AI Slop 清理关键词
 
-Supports two pattern types:
+支持两种模式类型：
 
-**Explicit patterns** (activate on their own):
+**显式模式**（自身即激活）：
 
 - `ai-slop`, `anti-slop`, `deslop`, `de-slop`
 
-**Combination patterns** (activate when an action keyword is combined with a smell keyword):
+**组合模式**（当动作关键词与气味关键词组合时激活）：
 
-| Action Keywords | Smell Keywords |
-|----------------|----------------|
+| 动作关键词 | 气味关键词 |
+|-----------|-----------|
 | `cleanup`, `refactor`, `simplify`, `dedupe`, `prune` | `slop`, `duplicate`, `dead code`, `unused code`, `over-abstraction`, `wrapper layers`, `needless abstractions`, `ai-generated`, `tech debt` |
 
-Example: "cleanup the duplicate code" → activates the ai-slop-cleaner skill.
+示例："cleanup the duplicate code" → 激活 ai-slop-cleaner 技能。
 
-### Agent Shortcut Keywords
+### 智能体快捷关键词
 
-Activate agents with natural language instead of slash commands.
+用自然语言而非斜杠命令激活智能体。
 
-| Keyword | Effect | Behavior |
-|---------|--------|----------|
-| `tdd`, `test first`, `red green` | TDD mode | Enforces test-first writing |
-| `code review`, `review code` | Code review mode | Runs comprehensive code review |
-| `security review`, `review security` | Security review mode | Runs security-focused review |
+| 关键词 | 效果 | 行为 |
+|--------|------|------|
+| `tdd`, `test first`, `red green` | TDD 模式 | 强制测试先行编写 |
+| `code review`, `review code` | 代码审查模式 | 运行全面代码审查 |
+| `security review`, `review security` | 安全审查模式 | 运行安全导向审查 |
 
-These keywords inject an inline mode message rather than invoking a skill.
+这些关键词注入内联模式消息，而非调用技能。
 
-### Reasoning Enhancement Keywords
+### 推理增强关键词
 
-| Keyword | Effect |
-|---------|--------|
-| `ultrathink`, `think hard`, `think deeply` | Activates extended reasoning mode |
-| `deepsearch`, `search the codebase`, `find in codebase` | Activates codebase-focused search mode |
-| `deep-analyze`, `deepanalyze` | Activates deep analysis mode |
+| 关键词 | 效果 |
+|--------|------|
+| `ultrathink`, `think hard`, `think deeply` | 激活扩展推理模式 |
+| `deepsearch`, `search the codebase`, `find in codebase` | 激活面向代码库的搜索模式 |
+| `deep-analyze`, `deepanalyze` | 激活深度分析模式 |
 
-### Localized Triggers (Korean / Japanese)
+### 本地化触发（韩语 / 日语）
 
-`keyword-detector.mjs` also recognizes Korean and Japanese aliases for these keywords (e.g. `랄프` / `ラルフ` → ralph, `코드 리뷰` / `コード レビュー` → code-review, `딥 분석` / `ディープ アナライズ` → analyze). Because Korean and Japanese have no ASCII word boundary, these aliases match by substring, so a localized alias inside a longer noun phrase still routes (e.g. `コードレビュー記事を要約して` → code-review).
+`keyword-detector.mjs` 还识别这些关键词的韩语与日语别名（如 `랄프` / `ラルフ` → ralph、`코드 리뷰` / `コード レビュー` → code-review、`딥 분석` / `ディープ アナライズ` → analyze）。由于韩语与日语无 ASCII 词边界，这些别名按子串匹配，因此更长名词短语中的本地化别名仍会路由（如 `コードレビュー記事を要約して` → code-review）。
 
-See [参考.md → Magic Keywords → Localized triggers](./参考.md#magic-keywords) for the full alias table and routing-behavior details (reviewer-suffix guard, informational suppression including `違いを教えて`/`何が違う` difference questions).
+完整别名表与路由行为细节（reviewer 后缀守卫、信息性抑制，包括 `違いを教えて`/`何が違う` 差异类问题）见[参考.md → 魔法关键词 → 本地化触发](./参考.md#magic-keywords)。
 
-### Priority and Conflict Resolution
+### 优先级与冲突解决
 
-When multiple keywords are detected simultaneously, they resolve by the following priority:
+当同时检测到多个关键词时，按以下优先级解决：
 
 ```
 cancel  (highest priority, exclusive)
@@ -447,9 +448,9 @@ cancel  (highest priority, exclusive)
                           → analyze
 ```
 
-`cancel` is exclusive — it ignores all other matches and only runs the cancel action. All other keywords can be matched together and are processed in priority order.
+`cancel` 是排他的 — 它忽略所有其他匹配，仅运行 cancel 动作。其他所有关键词可被同时匹配，并按优先级顺序处理。
 
-### Usage Examples
+### 使用示例
 
 ```bash
 # In Claude Code:
@@ -473,9 +474,9 @@ code review the recent changes
 stopwise
 ```
 
-### Note on the `team` Keyword
+### 关于 `team` 关键词的说明
 
-`team` is not auto-detected. It must be invoked explicitly via the `/team` slash command to prevent infinite spawning.
+`team` 不被自动检测。必须经 `/team` 斜杠命令显式调用，以防无限生成。
 
 ```
 /wise:team 3:executor "build a fullstack todo app"

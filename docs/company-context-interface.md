@@ -1,34 +1,31 @@
-# Company Context MCP Interface
+# 公司上下文 MCP 接口
 
-WISE supports a narrow, prompt-level contract for vendor-owned company context.
+WISE 支持一种窄化的、提示级的厂商公司上下文契约。
 
-This contract is aimed at a specific failure mode from issue #2692: purely
-prompt-directive company-context guidance is still missed in practice roughly 5%
-of the time. Making the lookup an explicit configured tool call materially
-reduces that miss mode at the spec layer without changing WISE runtime behavior.
+该契约针对 issue #2692 中的特定失败模式：纯提示指令式的公司上下文指引在实践中仍有约 5% 的遗漏率。将查询改为显式配置的工具调用，可在规格层显著降低该遗漏模式，而不改变 WISE 运行时行为。
 
-This is **not** a runtime enforcement feature. It gives WISE workflows:
+这**不是**运行时强制特性。它为 WISE 工作流提供：
 
-- a consistent tool shape,
-- an explicit WISE config block,
-- shared wording for when selected skills should consult that tool.
+- 一致的工具形状，
+- 显式的 WISE 配置块，
+- 当所选技能应查询该工具时的共享措辞。
 
-The tool invocation itself remains best-effort prompt behavior. It improves consistency, but it does **not** guarantee mathematically perfect execution.
+工具调用本身仍是尽力而为的提示行为。它提升一致性，但**不**保证数学意义上完美的执行。
 
-## Scope
+## 适用范围
 
-Use this when your organization already has an MCP server that can return internal conventions, security guidance, glossaries, or review checklists as plain reference material.
+当你的组织已拥有可返回内部约定、安全指引、术语表或审查清单作为普通参考材料的 MCP 服务器时使用本契约。
 
-This contract does **not** create:
+本契约**不**创建：
 
-- a remote WISE cluster,
-- a shared remote filesystem,
-- a runtime hook that force-calls the tool,
-- content validation, signing, or sandboxing of vendor output.
+- 远程 WISE 集群，
+- 共享远程文件系统，
+- 强制调用该工具的运行时 hook，
+- 对厂商输出的内容验证、签名或沙箱化。
 
-## Tool Contract
+## 工具契约
 
-Implement exactly one tool:
+精确实现一个工具：
 
 ```text
 tool: get_company_context
@@ -36,25 +33,25 @@ input:  { query: string }
 output: { context: string }
 ```
 
-- `query` is a natural-language summary built by the calling workflow.
-- `context` is markdown reference material.
+- `query` 是由调用工作流构建的自然语言摘要。
+- `context` 是 markdown 参考材料。
 
-## Trust Boundary
+## 信任边界
 
-`context` is **informational only**.
+`context` **仅供参考**。
 
-Vendor output must be treated as quoted advisory data, not executable instructions. It must not attempt to override system prompts, tell the agent to ignore earlier instructions, or impersonate policy enforcement.
+厂商输出必须被视为引述式建议数据，而非可执行指令。它不得试图覆盖系统提示、让智能体忽略先前指令，或冒充策略执行。
 
-WISE skill clauses should treat the returned markdown the same way `deep-dive` treats injected trace context: useful reference material, never instruction authority.
+WISE 技能条款应将返回的 markdown 视同 `deep-dive` 处理注入 trace 上下文的方式：有用的参考材料，而非指令权威。
 
-## WISE Configuration
+## WISE 配置
 
-Configure the contract in the standard WISE config surface:
+在标准 WISE 配置面配置该契约：
 
-- Project: `.claude/wise.jsonc`
-- User: `~/.config/claude-wise/config.jsonc`
+- 项目：`.claude/wise.jsonc`
+- 用户：`~/.config/claude-wise/config.jsonc`
 
-Project config overrides user config.
+项目配置覆盖用户配置。
 
 ```jsonc
 {
@@ -65,60 +62,55 @@ Project config overrides user config.
 }
 ```
 
-### Fields
+### 字段
 
-| Field | Type | Required | Meaning |
+| 字段 | 类型 | 必填 | 含义 |
 |-------|------|----------|---------|
-| `tool` | `string` | No | Full MCP tool name to call, such as `mcp__vendor__get_company_context` |
-| `onError` | `"warn" \| "silent" \| "fail"` | No | Prompt-level fallback when the configured call fails. Default: `"warn"` |
+| `tool` | `string` | 否 | 要调用的完整 MCP 工具名，如 `mcp__vendor__get_company_context` |
+| `onError` | `"warn" \| "silent" \| "fail"` | 否 | 配置的调用失败时的提示级降级。默认：`"warn"` |
 
-### Fallback Semantics
+### 降级语义
 
-- Unconfigured: skip the call and continue normally.
-- `warn`: briefly note the failure and continue.
-- `silent`: continue with no additional note.
-- `fail`: stop and surface the tool-call error.
+- 未配置：跳过调用并正常继续。
+- `warn`：简要提示失败并继续。
+- `silent`：继续，不附加额外提示。
+- `fail`：停止并暴露工具调用错误。
 
-## Workflow Trigger Stages
+## 工作流触发阶段
 
-These are the named stages used by the built-in skill prompts:
+以下是内置技能提示使用的命名阶段：
 
-| Skill | Stage |
+| 技能 | 阶段 |
 |-------|-------|
-| `deep-interview` | Before Phase 4 crystallizes the spec |
-| `deep-dive` | At Phase 4 start, after trace synthesis is available |
-| `ralplan` | Before the consensus loop begins |
-| `autopilot` | At Phase 0 entry |
-| `ralph` | Before each iteration picks the next story |
+| `deep-interview` | 在 Phase 4 固化规格之前 |
+| `deep-dive` | 在 Phase 4 开始时，trace 综合可用之后 |
+| `ralplan` | 在共识循环开始之前 |
+| `autopilot` | 在 Phase 0 进入时 |
+| `ralph` | 在每次迭代选取下一个 story 之前 |
 
-Each skill should build a `query` that summarizes the current task, current stage, known constraints, and relevant files or artifacts when available.
+每个技能应构建一个 `query`，汇总当前任务、当前阶段、已知约束，以及可用时的相关文件或制品。
 
-## MCP Registration
+## MCP 注册
 
-The company-context server itself is still registered through the normal MCP surfaces:
+公司上下文服务器本身仍通过常规 MCP 面注册：
 
-- Claude MCP configuration / `claude mcp add ...`
-- the unified MCP registry that WISE syncs to Codex
+- Claude MCP 配置 / `claude mcp add ...`
+- WISE 同步到 Codex 的统一 MCP registry
 
-This contract does not change how MCP servers are registered.
+本契约不改变 MCP 服务器的注册方式。
 
-For a tiny runnable reference implementation, see:
+一个最小可运行参考实现见：
 
 - [`examples/vendor-mcp-server/README.md`](../examples/vendor-mcp-server/README.md)
 
-## Residual Risk
+## 残余风险
 
-This interface addresses the observed ~5% prompt-directive miss mode by making
-the company-context lookup explicit, but it still operates at the skill-prompt
-layer. The documented MUST-call clauses should meaningfully reduce that miss
-rate, yet they do **not** guarantee a 0% miss rate or mathematically perfect
-invocation. If you need deterministic invocation, that would require a separate
-runtime enforcement design.
+本接口通过使公司上下文查询显式化，解决了观察到的约 5% 提示指令遗漏模式，但它仍运行在技能提示层。文档化的必须调用条款应能显著降低该遗漏率，但仍**不**保证 0% 遗漏率或数学意义上完美的调用。若需要确定性调用，需单独设计运行时强制机制。
 
-## Non-Goals
+## 非目标
 
-- Hook-level enforcement
-- Prompt-injection scanning of vendor output
-- Vendor signing or allowlisting
-- Per-skill override matrices beyond the single configured tool and `onError`
-- A bundled SDK or hosted company-context product
+- Hook 级强制
+- 对厂商输出的提示注入扫描
+- 厂商签名或允许列表
+- 超出单一配置工具与 `onError` 的每技能覆盖矩阵
+- 捆绑 SDK 或托管公司上下文产品

@@ -1,30 +1,30 @@
-# Developer API Reference
+# 开发者 API 参考
 
-> Internal API documentation for wise developers and contributors.
+> 面向 wise 开发者与贡献者的内部 API 文档。
 
-## Table of Contents
-1. [Notepad Wisdom System](#notepad-wisdom-system)
-2. [Delegation Categories](#delegation-categories)
-3. [Directory Diagnostics](#directory-diagnostics)
-4. [Dynamic Prompt Generation](#dynamic-prompt-generation)
-5. [Agent Templates](#agent-templates)
-6. [Session Resume](#session-resume)
+## 目录
+1. [Notepad 智慧系统](#notepad-wisdom-system)
+2. [委派分类](#delegation-categories)
+3. [目录诊断](#directory-diagnostics)
+4. [动态提示词生成](#dynamic-prompt-generation)
+5. [智能体模板](#agent-templates)
+6. [会话恢复](#session-resume)
 7. [Autopilot](#autopilot)
 
 ---
 
-## Notepad Wisdom System
+## Notepad 智慧系统
 
-Plan-scoped knowledge capture for agents executing tasks. Each plan gets its own notepad directory at `.wise/notepads/{plan-name}/` with four markdown files:
+为执行任务的智能体提供计划级知识捕获。每个计划在 `.wise/notepads/{plan-name}/` 下拥有独立的 notepad 目录，包含四个 markdown 文件：
 
-- **learnings.md**: Patterns, conventions, successful approaches
-- **decisions.md**: Architectural choices and rationales
-- **issues.md**: Problems and blockers
-- **problems.md**: Technical debt and gotchas
+- **learnings.md**：模式、约定、成功的方法
+- **decisions.md**：架构选择与理由
+- **issues.md**：问题与阻塞
+- **problems.md**：技术债与陷阱
 
-All entries are timestamped automatically.
+所有条目自动添加时间戳。
 
-### Core Functions
+### 核心函数
 
 ```typescript
 // Initialize notepad directory
@@ -41,7 +41,7 @@ readPlanWisdom(planName: string, directory?: string): PlanWisdom
 getWisdomSummary(planName: string, directory?: string): string
 ```
 
-### Types
+### 类型
 
 ```typescript
 export interface WisdomEntry {
@@ -60,7 +60,7 @@ export interface PlanWisdom {
 }
 ```
 
-### Usage Example
+### 使用示例
 
 ```typescript
 import { initPlanNotepad, addLearning, readPlanWisdom } from '@/features/notepad-wisdom';
@@ -76,23 +76,23 @@ console.log(wisdom.learnings[0].content);
 
 ---
 
-## Delegation Categories
+## 委派分类
 
-Semantic task classification that automatically determines model tier, temperature, and thinking budget.
+语义化任务分类，自动确定模型层级、温度和思考预算。
 
-### Available Categories
+### 可用分类
 
-| Category | Tier | Temp | Thinking | Use For |
-|----------|------|------|----------|---------|
-| `visual-engineering` | HIGH | 0.7 | high | UI/UX, frontend, design systems |
-| `ultrabrain` | HIGH | 0.3 | max | Complex reasoning, architecture, debugging |
-| `artistry` | MEDIUM | 0.9 | medium | Creative solutions, brainstorming |
-| `quick` | LOW | 0.1 | low | Simple lookups, basic operations |
-| `writing` | MEDIUM | 0.5 | medium | Documentation, technical writing |
-| `unspecified-low` | LOW | 0.1 | low | Default for simple tasks |
-| `unspecified-high` | HIGH | 0.5 | high | Default for complex tasks |
+| 分类 | 层级 | 温度 | 思考 | 用途 |
+|------|------|------|----------|---------|
+| `visual-engineering` | HIGH | 0.7 | high | UI/UX、前端、设计系统 |
+| `ultrabrain` | HIGH | 0.3 | max | 复杂推理、架构、调试 |
+| `artistry` | MEDIUM | 0.9 | medium | 创意方案、头脑风暴 |
+| `quick` | LOW | 0.1 | low | 简单查询、基础操作 |
+| `writing` | MEDIUM | 0.5 | medium | 文档、技术写作 |
+| `unspecified-low` | LOW | 0.1 | low | 简单任务的默认值 |
+| `unspecified-high` | HIGH | 0.5 | high | 复杂任务的默认值 |
 
-### Core Functions
+### 核心函数
 
 ```typescript
 // Resolve category configuration
@@ -115,7 +115,7 @@ getCategoryThinkingBudgetTokens(category: DelegationCategory): number
 getCategoryPromptAppend(category: DelegationCategory): string
 ```
 
-### Types
+### 类型
 
 ```typescript
 export type DelegationCategory =
@@ -146,7 +146,7 @@ export interface CategoryContext {
 }
 ```
 
-### Usage Example
+### 使用示例
 
 ```typescript
 import { getCategoryForTask, enhancePromptWithCategory } from '@/features/delegation-categories';
@@ -163,15 +163,15 @@ const enhancedPrompt = enhancePromptWithCategory(userRequest, resolved.category)
 
 ---
 
-## Directory Diagnostics
+## 目录诊断
 
-Project-level TypeScript/JavaScript QA enforcement using dual-strategy approach.
+项目级 TypeScript/JavaScript 质量保证，采用双策略方法。
 
-### Strategies
+### 策略
 
-- **`tsc`**: Fast TypeScript compilation check via `tsc --noEmit`
-- **`lsp`**: File-by-file Language Server Protocol diagnostics
-- **`auto`**: Auto-selects best strategy (default, prefers tsc when available)
+- **`tsc`**：通过 `tsc --noEmit` 进行快速 TypeScript 编译检查
+- **`lsp`**：逐文件的 Language Server Protocol 诊断
+- **`auto`**：自动选择最佳策略（默认，可用时优先使用 tsc）
 
 ### API
 
@@ -179,7 +179,7 @@ Project-level TypeScript/JavaScript QA enforcement using dual-strategy approach.
 runDirectoryDiagnostics(directory: string, strategy?: DiagnosticsStrategy): Promise<DirectoryDiagnosticResult>
 ```
 
-### Types
+### 类型
 
 ```typescript
 export type DiagnosticsStrategy = 'tsc' | 'lsp' | 'auto';
@@ -194,7 +194,7 @@ export interface DirectoryDiagnosticResult {
 }
 ```
 
-### Usage Example
+### 使用示例
 
 ```typescript
 import { runDirectoryDiagnostics } from '@/tools/diagnostics';
@@ -212,11 +212,11 @@ console.log('Build quality check passed!');
 
 ---
 
-## Dynamic Prompt Generation
+## 动态提示词生成
 
-Generate orchestrator prompts dynamically from agent metadata. Adding a new agent to `definitions.ts` automatically includes it in generated prompts.
+根据智能体元数据动态生成编排器提示词。向 `definitions.ts` 添加新智能体会自动将其纳入生成的提示词。
 
-### Core Functions
+### 核心函数
 
 ```typescript
 // Generate full orchestrator prompt
@@ -237,7 +237,7 @@ buildCriticalRules(): string
 buildCompletionChecklist(): string
 ```
 
-### Types
+### 类型
 
 ```typescript
 export interface GeneratorOptions {
@@ -252,7 +252,7 @@ export interface GeneratorOptions {
 }
 ```
 
-### Usage Example
+### 使用示例
 
 ```typescript
 import { getAgentDefinitions } from '@/agents/definitions';
@@ -265,46 +265,46 @@ const prompt = generateOrchestratorPrompt(agents);
 
 ---
 
-## Agent Templates
+## 智能体模板
 
-Standardized prompt structures for common task types.
+针对常见任务类型的标准化提示词结构。
 
-### Exploration Template
+### 探索模板
 
-For exploration, research, or search tasks.
+用于探索、研究或搜索任务。
 
-**Sections:**
-- **TASK**: What needs to be explored
-- **EXPECTED OUTCOME**: What the orchestrator expects back
-- **CONTEXT**: Background information
-- **MUST DO**: Required actions
-- **MUST NOT DO**: Constraints
-- **REQUIRED SKILLS**: Skills needed
-- **REQUIRED TOOLS**: Tools to use
+**章节：**
+- **TASK**：需要探索的内容
+- **EXPECTED OUTCOME**：编排器期望返回的内容
+- **CONTEXT**：背景信息
+- **MUST DO**：必须执行的动作
+- **MUST NOT DO**：约束
+- **REQUIRED SKILLS**：所需技能
+- **REQUIRED TOOLS**：使用的工具
 
-**Location:** `src/agents/templates/exploration-template.md`
+**位置：** `src/agents/templates/exploration-template.md`
 
-### Implementation Template
+### 实现模板
 
-For code implementation, refactoring, or modification tasks.
+用于代码实现、重构或修改任务。
 
-**Sections:**
-- **TASK**: Implementation goal
-- **EXPECTED OUTCOME**: Deliverable
-- **CONTEXT**: Project background
-- **MUST DO**: Required actions
-- **MUST NOT DO**: Constraints
-- **REQUIRED SKILLS**: Skills needed
-- **REQUIRED TOOLS**: Tools to use
-- **VERIFICATION CHECKLIST**: Pre-completion checks
+**章节：**
+- **TASK**：实现目标
+- **EXPECTED OUTCOME**：交付物
+- **CONTEXT**：项目背景
+- **MUST DO**：必须执行的动作
+- **MUST NOT DO**：约束
+- **REQUIRED SKILLS**：所需技能
+- **REQUIRED TOOLS**：使用的工具
+- **VERIFICATION CHECKLIST**：完成前检查
 
-**Location:** `src/agents/templates/implementation-template.md`
+**位置：** `src/agents/templates/implementation-template.md`
 
 ---
 
-## Session Resume
+## 会话恢复
 
-Wrapper for resuming background agent sessions with full context.
+用于恢复后台智能体会话并保留完整上下文的封装。
 
 ### API
 
@@ -312,7 +312,7 @@ Wrapper for resuming background agent sessions with full context.
 resumeSession(input: ResumeSessionInput): ResumeSessionOutput
 ```
 
-### Types
+### 类型
 
 ```typescript
 export interface ResumeSessionInput {
@@ -332,7 +332,7 @@ export interface ResumeSessionOutput {
 }
 ```
 
-### Usage Example
+### 使用示例
 
 ```typescript
 import { resumeSession } from '@/tools/resume-session';
@@ -355,17 +355,17 @@ if (result.success && result.context) {
 
 ## Autopilot
 
-Autonomous execution from idea to validated working code through a 5-phase development lifecycle.
+通过 5 阶段开发生命周期，实现从想法到经验证的可用代码的自主执行。
 
-### 5-Phase Workflow
+### 5 阶段工作流
 
-1. **Expansion** - Analyst + Architect expand idea into requirements and technical spec
-2. **Planning** - Architect creates execution plan (validated by Critic)
-3. **Execution** - Ralph + Ultrawork implement plan with parallel tasks
-4. **QA** - UltraQA ensures build/lint/tests pass through fix cycles
-5. **Validation** - Specialized architects perform functional, security, and quality reviews
+1. **Expansion** - Analyst 与 Architect 将想法扩展为需求和技术规格
+2. **Planning** - Architect 创建执行计划（由 Critic 验证）
+3. **Execution** - Ralph 与 Ultrawork 通过并行任务实现计划
+4. **QA** - UltraQA 通过修复循环确保构建/lint/测试通过
+5. **Validation** - 专门的架构师执行功能、安全和质量评审
 
-### Core Types
+### 核心类型
 
 ```typescript
 export type AutopilotPhase =
@@ -414,7 +414,7 @@ export interface AutopilotConfig {
 }
 ```
 
-### State Management
+### 状态管理
 
 ```typescript
 // Initialize session
@@ -450,7 +450,7 @@ getSpecPath(directory: string): string  // .wise/autopilot/spec.md
 getPlanPath(directory: string): string  // .wise/plans/autopilot-impl.md
 ```
 
-### Prompt Generation
+### 提示词生成
 
 ```typescript
 // Phase-specific prompts
@@ -467,7 +467,7 @@ getPhasePrompt(phase: string, context: object): string
 getTransitionPrompt(fromPhase: string, toPhase: string): string
 ```
 
-### Validation Coordination
+### 验证协调
 
 ```typescript
 export type ValidationVerdictType = 'functional' | 'security' | 'quality';
@@ -489,7 +489,7 @@ getValidationSpawnPrompt(specPath: string): string
 formatValidationResults(state: AutopilotState): string
 ```
 
-### Summaries
+### 摘要
 
 ```typescript
 // Generate summary
@@ -502,7 +502,7 @@ formatFailureSummary(state: AutopilotState, error?: string): string
 formatFileList(files: string[], title: string, maxFiles?: number): string
 ```
 
-### Cancellation & Resume
+### 取消与恢复
 
 ```typescript
 // Cancel and preserve progress
@@ -517,7 +517,7 @@ resumeAutopilot(directory: string): { success: boolean; message: string; state?:
 formatCancelMessage(result: CancelResult): string
 ```
 
-### Usage Example
+### 使用示例
 
 ```typescript
 import {
@@ -560,23 +560,23 @@ if (validationStatus?.allApproved) {
 }
 ```
 
-### State Persistence
+### 状态持久化
 
-All state is persisted to `.wise/state/autopilot-state.json` and includes:
+所有状态持久化到 `.wise/state/autopilot-state.json`，包括：
 
-- Active status and current phase
-- Original user idea
-- Phase-specific progress (expansion, planning, execution, qa, validation)
-- Files created and modified
-- Agent spawn count and metrics
-- Phase duration tracking
-- Session binding
+- 活跃状态与当前阶段
+- 原始用户想法
+- 各阶段进度（expansion、planning、execution、qa、validation）
+- 创建和修改的文件
+- 智能体派生数量与指标
+- 阶段耗时追踪
+- 会话绑定
 
 ---
 
-## See Also
+## 另请参见
 
-- [CHANGELOG.md](../CHANGELOG.md) - Version history
-- [架构](./架构.md) - System architecture
-- [MIGRATION.md](./MIGRATION.md) - Migration guide
-- [Agent Definitions](../src/agents/definitions.ts) - Agent configuration
+- [CHANGELOG.md](../CHANGELOG.md) - 版本历史
+- [架构](./架构.md) - 系统架构
+- [MIGRATION.md](./MIGRATION.md) - 迁移指南
+- [Agent Definitions](../src/agents/definitions.ts) - 智能体配置

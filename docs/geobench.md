@@ -1,6 +1,6 @@
-# GEO benchmark for wise
+# wise 的 GEO 基准测试
 
-This repository includes a [`geobench`](https://github.com/NomaDamas/geobench) product spec for measuring LLM answer visibility: hit rate, MRR, share of voice, citation rate/share, and confidence intervals.
+本仓库包含一个 [`geobench`](https://github.com/NomaDamas/geobench) 产品规格，用于衡量 LLM 回答可见性：命中率、MRR、声量份额、引用率/份额与置信区间。
 
 ```bash
 /path/to/geobench/dist/geobench estimate --product geobench/wise.yaml --providers openai --tier cheap
@@ -8,4 +8,4 @@ This repository includes a [`geobench`](https://github.com/NomaDamas/geobench) p
 /path/to/geobench/dist/geobench bench --product geobench/wise.yaml --providers openai --tier cheap --mode benchmark
 ```
 
-Publish aggregate metrics only; do not publish raw provider answers, secrets, or private run logs.
+仅发布聚合指标；不要发布原始 Provider 回答、密钥或私有运行日志。

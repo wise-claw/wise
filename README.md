@@ -19,3 +19,7 @@ autopilot: build a REST API for managing tasks
 ```
 
 That's it. The rest is automatic.
+
+## Documentation
+
+Full documentation: https://wise-claw.github.io/wise-website/docs/#

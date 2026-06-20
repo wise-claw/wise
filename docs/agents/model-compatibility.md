@@ -1,56 +1,41 @@
-# Model × Agent Compatibility Matrix
+# 模型 × 智能体兼容性矩阵
 
-Recommendation matrix for which model to pair with each WISE/OMO agent, framed
-around cost vs. quality. This page exists so the recurring "어떤 모델을 어느
-agent에 박아야 함?" question stops being tribal Discord knowledge.
+针对每个 WISE/OMO 智能体应搭配哪个模型的推荐矩阵，围绕成本与质量权衡。本页面旨在让反复出现的「该把哪个模型固定到哪个智能体？」问题不再仅是 Discord 上的小圈子经验。
 
-This is a **usage matrix, not a benchmark report**. Numbers and per-task scores
-are deliberately out of scope.
+这是一份**使用矩阵，而非基准测试报告**。数字与逐任务评分刻意不在范围内。
 
-## Recommendation matrix
+## 推荐矩阵
 
-| Agent | Role | Recommended (premium) | Recommended (cost-effective) | Avoid | Notes |
+| 智能体 | 角色 | 推荐（高端） | 推荐（高性价比） | 避免使用 | 说明 |
 |---|---|---|---|---|---|
-| Prometheus | Planning | Claude Opus 4.8, GPT-5.5 high | Sonnet 4.6 | — | Heavy reasoning; runs 1–2x per session |
-| Hyperplan | Planning | Claude Opus 4.8, GPT-5.5 high | Sonnet 4.6 | — | Same as Prometheus |
-| Sisyphus | Implementation | Sonnet 4.6 | DeepSeek V4 Pro, Kimi K2.5 | — | Token-heavy; cost matters most here |
-| Hephaestus | Implementation | Sonnet 4.6, Kimi K2.5 | DeepSeek V4 Pro | **GPT-\* (tool-calling/format breakage)** | Tuned for non-GPT |
-| Oracle | Review | Claude Opus 4.8, GPT-5.5 high | Sonnet 4.6 | — | Quality > cost; called sparingly |
-| Aletheia | Review | Sonnet 4.6 | DeepSeek V4 Pro | — | |
-| Hermes | Coordination | Sonnet 4.6 | DeepSeek V4 Flash | — | Coordinator only, not direct executor |
+| Prometheus | 规划 | Claude Opus 4.8, GPT-5.5 high | Sonnet 4.6 | — | 重度推理；每会话运行 1–2 次 |
+| Hyperplan | 规划 | Claude Opus 4.8, GPT-5.5 high | Sonnet 4.6 | — | 同 Prometheus |
+| Sisyphus | 实现 | Sonnet 4.6 | DeepSeek V4 Pro, Kimi K2.5 | — | token 消耗大；此处成本最关键 |
+| Hephaestus | 实现 | Sonnet 4.6, Kimi K2.5 | DeepSeek V4 Pro | **GPT-\*（工具调用/格式出错）** | 为非 GPT 模型调优 |
+| Oracle | 审查 | Claude Opus 4.8, GPT-5.5 high | Sonnet 4.6 | — | 质量优先于成本；调用较少 |
+| Aletheia | 审查 | Sonnet 4.6 | DeepSeek V4 Pro | — | |
+| Hermes | 协调 | Sonnet 4.6 | DeepSeek V4 Flash | — | 仅协调器，非直接执行器 |
 
-## Design rules
+## 设计规则
 
-These four rules drive every recommendation above. If you only remember one
-thing, remember rule 3.
+以下四条规则驱动上方每条推荐。如果只能记住一条，请记住规则 3。
 
-1. **Planning/Review = expensive; Implementation = cheap.**
-   Token weight typically differs 5–20× between a single Prometheus/Oracle pass
-   and a full Sisyphus implementation loop. Spend on the rare, decisive calls;
-   economize on the high-volume ones.
-2. **Hephaestus should not be paired with GPT-family models.**
-   Tool-calling and structured-output formats break. Use Sonnet 4.6 / Kimi K2.5
-   for premium and DeepSeek V4 Pro for cost-effective. This is the "Hephaestus
-   is trash with non-GPT models" folklore turned the right way up.
-3. **Sisyphus is the highest-value cost lever.**
-   Because Sisyphus dominates total tokens in any non-trivial session, swapping
-   it from Opus → Sonnet (or → DeepSeek V4 Pro) typically moves total spend
-   more than any other single change. Tune this slot first.
-4. **DeepSeek V4 Pro/Flash is now a first-class budget option.**
-   Treat V4 Pro as the default cost-effective choice for execution agents
-   (Sisyphus, Hephaestus, Aletheia) and V4 Flash as the default coordinator
-   model. It is no longer an experimental fallback.
+1. **规划/审查 = 昂贵；实现 = 便宜。**
+   单次 Prometheus/Oracle 遍历与完整 Sisyphus 实现循环之间的 token 开销通常相差 5–20 倍。在罕见且关键的调用上投入，在高频调用上节约。
+2. **Hephaestus 不应与 GPT 系列模型搭配。**
+   工具调用与结构化输出格式会出错。高端使用 Sonnet 4.6 / Kimi K2.5，高性价比使用 DeepSeek V4 Pro。这把「Hephaestus 搭配非 GPT 模型就是垃圾」的传言纠正了过来。
+3. **Sisyphus 是最高价值的成本杠杆。**
+   由于 Sisyphus 在任何非平凡会话中占据总 token 的大头，将其从 Opus → Sonnet（或 → DeepSeek V4 Pro）通常比任何其他单一改动更能影响总开销。优先调整这个槽位。
+4. **DeepSeek V4 Pro/Flash 现在是一等的经济型选项。**
+   将 V4 Pro 作为执行型智能体（Sisyphus、Hephaestus、Aletheia）的默认高性价比选择，将 V4 Flash 作为默认协调器模型。它不再是实验性降级方案。
 
-## Starter presets
+## 起步预设
 
-Pick the preset that matches your budget posture and adjust from there. Each
-block is a self-contained example — drop into your provider/agent config and
-edit per agent as needed.
+选择与你预算姿态匹配的预设并在此基础上调整。每个代码块都是自包含示例 — 直接放入你的 provider/agent 配置，按智能体需要编辑。
 
-### Premium (max quality)
+### 高端（最高质量）
 
-Use when correctness dominates cost: production-impacting refactors, security
-reviews, architecture decisions.
+当正确性压倒成本时使用：影响生产的重构、安全审查、架构决策。
 
 ```yaml
 agents:
@@ -63,10 +48,9 @@ agents:
   Hermes:      { model: claude-sonnet-4-6 }
 ```
 
-### Balanced (default)
+### 均衡（默认）
 
-Recommended starting point. Keeps planning/review on a strong model while
-moving the token-heavy implementation slot to a cost-effective one.
+推荐起点。将规划/审查保留在强模型上，同时将 token 消耗大的实现槽位移到高性价比模型。
 
 ```yaml
 agents:
@@ -79,11 +63,9 @@ agents:
   Hermes:      { model: deepseek-v4-flash }
 ```
 
-### Budget (cost-first)
+### 经济（成本优先）
 
-For long-running loops, batch refactors, or experimentation where total spend
-matters more than peak per-call quality. Keep Oracle on a strong model so the
-final review pass still catches regressions.
+用于长时间运行的循环、批量重构或实验，总开销比单次调用峰值质量更重要。将 Oracle 保留在强模型上，使最终审查遍仍能捕获回归。
 
 ```yaml
 agents:
@@ -96,8 +78,8 @@ agents:
   Hermes:      { model: deepseek-v4-flash }
 ```
 
-## Out of scope
+## 不在范围内
 
-- Provider routing internals (tracked elsewhere).
-- Benchmarks — this page is a usage matrix, not a benchmark report.
-- Hermes deep-coordination patterns.
+- Provider 路由内部机制（在别处跟踪）。
+- 基准测试 — 本页面是使用矩阵，而非基准测试报告。
+- Hermes 深度协调模式。
