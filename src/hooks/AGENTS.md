@@ -109,7 +109,7 @@ hook-name/
 1. Create hook directory with `index.ts`, `types.ts`, `constants.ts`
 2. Export from `index.ts` (hook re-exports)
 3. Register handler in `bridge.ts` if needed
-4. Update `docs/REFERENCE.md` (Hooks System section) with new hook entry
+4. Update `docs/参考.md` (Hooks System section) with new hook entry
 5. If execution mode hook, also create `skills/*/SKILL.md` and `commands/*.md`
 
 #### Hook Implementation

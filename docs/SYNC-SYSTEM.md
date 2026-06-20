@@ -13,7 +13,7 @@ In a typical project lifecycle:
 1. Developer bumps version in `package.json` to `3.5.0`
 2. Creates a release commit
 3. **Forgets** to update version badge in `README.md` (still shows `3.4.0`)
-4. **Forgets** to update version header in `docs/REFERENCE.md`
+4. **Forgets** to update version header in `docs/参考.md`
 5. **Forgets** to update agent count in `.github/CLAUDE.md` after adding new agents
 6. Users see inconsistent version information across documentation
 7. CI builds look professional but contain stale metadata
@@ -51,9 +51,9 @@ The script syncs these files:
 | File | What Gets Updated |
 |------|-------------------|
 | `README.md` | npm version/download badges |
-| `docs/REFERENCE.md` | Version badges, version headers |
+| `docs/参考.md` | Version badges, version headers |
 | `.github/CLAUDE.md` | Agent count, skill count |
-| `docs/ARCHITECTURE.md` | Version references |
+| `docs/架构.md` | Version references |
 | `CHANGELOG.md` | Latest version header (verify only) |
 
 ### Dynamic Metadata
@@ -86,7 +86,7 @@ Skills: 45
 ✓ README.md
   - npm version badge
 
-✓ docs/REFERENCE.md
+✓ docs/参考.md
   - Version badge
   - Version header
 
@@ -111,7 +111,7 @@ Shows what **would** change without writing files:
 📝 README.md
   - npm version badge
 
-📝 docs/REFERENCE.md
+📝 docs/参考.md
   - Version badge
 
 📊 2 file(s) would be updated
@@ -131,7 +131,7 @@ Checks if files are in sync. Exits with status code:
 ```
 🔍 Verifying metadata sync...
 ✓ README.md
-✗ docs/REFERENCE.md
+✗ docs/参考.md
   - Version badge needs update
 
 ❌ Files are out of sync!
@@ -454,7 +454,7 @@ Document complex regex:
   // Captures: version number only
   pattern: /\[!\[Version\]\(https:\/\/img\.shields\.io\/badge\/version-([^-]+)-[^)]+\)/g,
   replacement: (m) => `[![Version](https://img.shields.io/badge/version-${m.version}-ff6b6b)]`,
-  description: 'Version badge in REFERENCE.md',
+  description: 'Version badge in 参考.md',
 }
 ```
 

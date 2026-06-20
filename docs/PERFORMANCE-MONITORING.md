@@ -501,5 +501,5 @@ cleanupReplayFiles(directory: string): number
 ## See Also
 
 - [Analytics System](./ANALYTICS-SYSTEM.md) - Historical note on the removed analytics subsystem and current replacements
-- [Reference](./REFERENCE.md) - Complete feature reference
-- [Architecture](./ARCHITECTURE.md) - System architecture overview
+- [参考](./参考.md) - Complete feature reference
+- [架构](./架构.md) - System architecture overview

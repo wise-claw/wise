@@ -12,10 +12,10 @@ function readProjectFile(...segments: string[]): string {
 }
 
 describe('Tier-0 contract docs consistency', () => {
-  const referenceDoc = readProjectFile('docs', 'REFERENCE.md');
+  const referenceDoc = readProjectFile('docs', '参考.md');
   const claudeDoc = readProjectFile('docs', 'CLAUDE.md');
 
-  it('keeps REFERENCE ToC counts aligned with section headings', () => {
+  it('keeps 参考 ToC counts aligned with section headings', () => {
     const tocAgents = referenceDoc.match(/\[Agents \((\d+) Total\)\]\(#agents-\d+-total\)/);
     const headingAgents = referenceDoc.match(/^## Agents \((\d+) Total\)$/m);
     const tocSkills = referenceDoc.match(/\[Skills \((\d+) Total\)\]\(#skills-\d+-total\)/);
@@ -25,7 +25,7 @@ describe('Tier-0 contract docs consistency', () => {
     expect(tocSkills?.[1]).toBe(headingSkills?.[1]);
   });
 
-  it('documents all Tier-0 slash commands in REFERENCE.md', () => {
+  it('documents all Tier-0 slash commands in 参考.md', () => {
     for (const skillName of ['autopilot', 'ultrawork', 'ralph', 'team', 'ralplan']) {
       expect(referenceDoc).toContain(`/wise:${skillName}`);
     }

@@ -577,6 +577,6 @@ All state is persisted to `.wise/state/autopilot-state.json` and includes:
 ## See Also
 
 - [CHANGELOG.md](../CHANGELOG.md) - Version history
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture
+- [架构](./架构.md) - System architecture
 - [MIGRATION.md](./MIGRATION.md) - Migration guide
 - [Agent Definitions](../src/agents/definitions.ts) - Agent configuration

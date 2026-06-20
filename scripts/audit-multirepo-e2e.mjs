@@ -378,7 +378,7 @@ process.stdout.write(JSON.stringify({ root }) + '\\n');
 
   // ── 15. rollback — WISE_DISABLE_MULTIREPO=1 ───────────────────────────────
   {
-    // Documented in docs/REFERENCE.md: skips workspace marker, falls back to git-root.
+    // Documented in docs/参考.md: skips workspace marker, falls back to git-root.
     // FAIL here means the env var is documented but not yet implemented.
     const r = probeJSON(`
 const root = getWiseRoot(${JSON.stringify(join(base, 'api'))});
@@ -394,7 +394,7 @@ process.stdout.write(JSON.stringify({ root }) + '\\n');
         results.push(pass(15, `WISE_DISABLE_MULTIREPO=1 bypasses workspace anchor → api/.wise`));
       } else if (root === ws_wise) {
         results.push(fail(15,
-          'WISE_DISABLE_MULTIREPO=1 NOT implemented — documented in REFERENCE.md but not yet honoured in getWiseRoot()',
+          'WISE_DISABLE_MULTIREPO=1 NOT implemented — documented in 参考.md but not yet honoured in getWiseRoot()',
           expectedFallback, root));
       } else {
         results.push(fail(15, 'WISE_DISABLE_MULTIREPO=1 returned unexpected path', expectedFallback, root));

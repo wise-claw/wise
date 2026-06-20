@@ -17,7 +17,7 @@ describe("Claude Code /goal adapter docs contract", () => {
     "design",
     "CLAUDE_CODE_GOAL_ADAPTER.md",
   );
-  const referenceDoc = readProjectFile("docs", "REFERENCE.md");
+  const referenceDoc = readProjectFile("docs", "参考.md");
 
   it("documents Claude/Anthropic as the only authority for Claude Code /goal facts", () => {
     expect(adapterDoc).toContain("https://code.claude.com/docs/en/goal");
@@ -63,7 +63,7 @@ describe("Claude Code /goal adapter docs contract", () => {
     );
   });
 
-  it("links the adapter design from REFERENCE.md", () => {
+  it("links the adapter design from 参考.md", () => {
     expect(referenceDoc).toContain(
       "[Claude Code `/goal` Adapter Design](#claude-code-goal-adapter-design)",
     );

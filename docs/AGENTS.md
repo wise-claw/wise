@@ -19,8 +19,8 @@ This directory contains documentation for end-users and developers:
 |------|-------------|
 | `CLAUDE.md` | End-user orchestration instructions (installed to user projects) |
 | `FEATURES.md` | Developer API reference for internal features |
-| `REFERENCE.md` | API reference and configuration options |
-| `ARCHITECTURE.md` | System architecture overview |
+| `参考.md` | API reference and configuration options |
+| `架构.md` | System architecture overview |
 | `MIGRATION.md` | Version migration guides |
 | `COMPATIBILITY.md` | Compatibility matrix and requirements |
 | `TIERED_AGENTS_V2.md` | Model routing and tiered agent design |
@@ -47,12 +47,12 @@ This directory contains documentation for end-users and developers:
 
 | Trigger | File to Update |
 |---------|---------------|
-| Agent count or list changes | `REFERENCE.md` (Agents section) |
-| Skill count or list changes | `REFERENCE.md` (Skills section) |
-| Hook count or list changes | `REFERENCE.md` (Hooks System section) |
-| Magic keywords change | `REFERENCE.md` (Magic Keywords section) |
+| Agent count or list changes | `参考.md` (Agents section) |
+| Skill count or list changes | `参考.md` (Skills section) |
+| Hook count or list changes | `参考.md` (Hooks System section) |
+| Magic keywords change | `参考.md` (Magic Keywords section) |
 | Agent tool assignments change | `CLAUDE.md` (Agent Tool Matrix) |
-| Skill composition or architecture changes | `ARCHITECTURE.md` |
+| Skill composition or architecture changes | `架构.md` |
 | New internal API or feature | `FEATURES.md` |
 | Breaking changes or migrations | `MIGRATION.md` |
 | Tiered agent design updates | `TIERED_AGENTS_V2.md` |

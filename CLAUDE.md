@@ -108,7 +108,7 @@ Kill switches: `DISABLE_WISE`, `WISE_SKIP_HOOKS` (comma-separated).
 
 <worktree_paths>
 State: `.wise/state/`, `.wise/state/sessions/{sessionId}/`, `.wise/notepad.md`, `.wise/project-memory.json`, `.wise/plans/`, `.wise/research/`, `.wise/logs/`
-Multi-repo: drop a `.wise-workspace` marker at a non-git parent dir to anchor `.wise/` there. Resolution: `WISE_STATE_DIR > .wise-workspace > git > cwd`. The session-start hook uses PID-aware liveness — a dead owner session no longer suppresses state restore. State paths use the canonical `resolveSessionStatePaths()` (branded `ReadPath`/`WritePath`) — see `docs/REFERENCE.md`.
+Multi-repo: drop a `.wise-workspace` marker at a non-git parent dir to anchor `.wise/` there. Resolution: `WISE_STATE_DIR > .wise-workspace > git > cwd`. The session-start hook uses PID-aware liveness — a dead owner session no longer suppresses state restore. State paths use the canonical `resolveSessionStatePaths()` (branded `ReadPath`/`WritePath`) — see `docs/参考.md`.
 </worktree_paths>
 
 ## Setup

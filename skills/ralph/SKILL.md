@@ -237,7 +237,7 @@ Why bad: Did not refine scaffold criteria into task-specific ones. This is PRD t
 
 ## Parallel session caveats
 
-- **Multi-repo workspace anchor:** drop a `.wise-workspace` marker at the parent directory so multiple sessions across sub-repos share one `.wise/`. Resolution order: `WISE_STATE_DIR > .wise-workspace > git > cwd`. See `docs/REFERENCE.md`.
+- **Multi-repo workspace anchor:** drop a `.wise-workspace` marker at the parent directory so multiple sessions across sub-repos share one `.wise/`. Resolution order: `WISE_STATE_DIR > .wise-workspace > git > cwd`. See `docs/参考.md`.
 - **Session id source:** WISE_SESSION_ID env var wins in CLI contexts; hook payload data.session_id wins in hook contexts.
 - **Plan id (when applicable):** Two ralph runs in the same workspace will conflict on `prd.json`. Use distinct session IDs (the hook payload session_id is already isolated per Claude Code session). For parallel ultragoal-backed ralph runs, use `--plan-id`.
 - **Parallel verdict:** supported (each session writes its own session-scoped state)

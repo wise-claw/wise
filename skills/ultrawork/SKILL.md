@@ -127,7 +127,7 @@ Why bad: Opus is expensive overkill for a trivial fix. Use executor with Haiku i
 
 ## Parallel session caveats
 
-- **Multi-repo workspace anchor:** drop a `.wise-workspace` marker at the parent directory so multiple sessions across sub-repos share one `.wise/`. Resolution order: `WISE_STATE_DIR > .wise-workspace > git > cwd`. See `docs/REFERENCE.md`.
+- **Multi-repo workspace anchor:** drop a `.wise-workspace` marker at the parent directory so multiple sessions across sub-repos share one `.wise/`. Resolution order: `WISE_STATE_DIR > .wise-workspace > git > cwd`. See `docs/参考.md`.
 - **Session id source:** WISE_SESSION_ID env var wins in CLI contexts; hook payload data.session_id wins in hook contexts.
 - **Plan id (when applicable):** Ultrawork has no persistent state; two concurrent runs are independent by design. No plan-id needed.
 - **Parallel verdict:** supported (stateless component)

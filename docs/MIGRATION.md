@@ -997,7 +997,7 @@ Now that you understand the migration:
 
 1. **For immediate impact**: Start using keywords (`ralph`, `ulw`, `plan`) in your work
 2. **For full power**: Read [docs/CLAUDE.md](CLAUDE.md) to understand orchestration
-3. **For advanced usage**: Check [docs/ARCHITECTURE.md](ARCHITECTURE.md) for deep dives
+3. **For advanced usage**: Check [docs/架构.md](架构.md) for deep dives
 4. **For team onboarding**: Share this guide with teammates
 
 Welcome to wise!

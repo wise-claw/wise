@@ -124,7 +124,7 @@ function getFileSyncConfigs(): FileSync[] {
       ],
     },
     {
-      path: 'docs/REFERENCE.md',
+      path: 'docs/参考.md',
       replacements: [
         {
           pattern: /\[!\[Version\]\(https:\/\/img\.shields\.io\/badge\/version-[^-]+-[^)]+\)/g,
@@ -177,7 +177,7 @@ function getFileSyncConfigs(): FileSync[] {
       ],
     },
     {
-      path: 'docs/ARCHITECTURE.md',
+      path: 'docs/架构.md',
       replacements: [
         {
           pattern: /version \d+\.\d+\.\d+/gi,
@@ -360,9 +360,9 @@ ${color('Description:', colors.cyan)}
 
 ${color('Files Synced:', colors.cyan)}
   - README.md (npm badges + featured contributors)
-  - docs/REFERENCE.md (version badges and headers)
+  - docs/参考.md (version badges and headers)
   - .github/CLAUDE.md (agent/skill counts)
-  - docs/ARCHITECTURE.md (version references)
+  - docs/架构.md (version references)
   - CHANGELOG.md (version header verification)
 
 ${color('Examples:', colors.cyan)}

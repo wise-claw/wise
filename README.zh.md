@@ -11,7 +11,7 @@
 /wise-setup
 ```
 
-如果你通过 `wise --plugin-dir <path>` 或 `claude --plugin-dir <path>` 运行 WISE，请在 `wise setup` 中添加 `--plugin-dir-mode`（或提前导出 `WISE_PLUGIN_ROOT`），以避免复制插件在运行时已经提供的技能/代理。有关完整的决策矩阵和所有可用标志，请参阅 [REFERENCE.md 中的 Plugin directory flags 部分](./docs/REFERENCE.md#plugin-directory-flags)。
+如果你通过 `wise --plugin-dir <path>` 或 `claude --plugin-dir <path>` 运行 WISE，请在 `wise setup` 中添加 `--plugin-dir-mode`（或提前导出 `WISE_PLUGIN_ROOT`），以避免复制插件在运行时已经提供的技能/代理。有关完整的决策矩阵和所有可用标志，请参阅 [参考.md 中的 Plugin directory flags 部分](./docs/参考.md#plugin-directory-flags)。
 
 <!-- TODO(i18n): verify translation -->
 

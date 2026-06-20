@@ -142,7 +142,7 @@ This ensures clean state for future sessions. Stale state files with `active: fa
 
 ## Parallel session caveats
 
-- **Multi-repo workspace anchor:** drop a `.wise-workspace` marker at the parent directory so multiple sessions across sub-repos share one `.wise/`. Resolution order: `WISE_STATE_DIR > .wise-workspace > git > cwd`. See `docs/REFERENCE.md`.
+- **Multi-repo workspace anchor:** drop a `.wise-workspace` marker at the parent directory so multiple sessions across sub-repos share one `.wise/`. Resolution order: `WISE_STATE_DIR > .wise-workspace > git > cwd`. See `docs/参考.md`.
 - **Session id source:** WISE_SESSION_ID env var wins in CLI contexts; hook payload data.session_id wins in hook contexts.
 - **Plan id (when applicable):** UltraQA state is session-scoped. Mutual-exclusion with ralph applies only within the same session.
 - **Parallel verdict:** supported (session-scoped state)

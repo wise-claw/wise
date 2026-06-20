@@ -51,7 +51,7 @@ This roadmap defines the next wave: agent utilization cleanup, routing simplific
 
 ## Acceptance Criteria
 
-- Canonical agent matrix documented and linked from `docs/REFERENCE.md`.
+- Canonical agent matrix documented and linked from `docs/参考.md`.
 - Compatibility aliases remain functional for existing names.
 - Regression tests cover:
   - alias fidelity

@@ -2,7 +2,7 @@
 
 > 本文描述 WISE 如何通过 Claude Code 官方扩展点（Plugin、Hooks、Skills、MCP、Subagent、CLAUDE.md）实现多智能体编排，以及各子系统在运行时的协作关系。
 >
-> 相关文档：[ARCHITECTURE.md](../ARCHITECTURE.md) · [HOOKS.md](../HOOKS.md) · [REFERENCE.md](../REFERENCE.md) · [LOCAL_PLUGIN_INSTALL.md](../LOCAL_PLUGIN_INSTALL.md)
+> 相关文档：[架构](../架构.md) · [HOOKS.md](../HOOKS.md) · [参考.md](../参考.md) · [LOCAL_PLUGIN_INSTALL.md](../LOCAL_PLUGIN_INSTALL.md)
 
 ## 1. 设计目标与边界
 
@@ -744,7 +744,7 @@ Marketplace 安装会 cache 到 `~/.claude/plugins/cache/`；本地开发需 `ma
 2. 注册到 `.claude-plugin/plugin.json` 的 `skills` 数组
 3. 若需关键词触发：扩展 `scripts/keyword-detector.mjs` 或 `src/hooks/keyword-detector/`
 4. 若需持久模式：添加 `.wise/state/new-skill-state.json` 约定 + `persistent-mode.mjs` 分支
-5. 更新 `docs/REFERENCE.md`
+5. 更新 `docs/参考.md`
 
 ### 15.2 新增 Hook
 
@@ -757,7 +757,7 @@ Marketplace 安装会 cache 到 `~/.claude/plugins/cache/`；本地开发需 `ma
 
 1. 创建 `agents/new-agent.md`
 2. 更新 `src/agents/definitions.ts`（若 SDK 路径需要）
-3. 更新 `docs/REFERENCE.md` Agents 节
+3. 更新 `docs/参考.md` Agents 节
 
 ### 15.4 新增 MCP 工具
 
@@ -771,9 +771,9 @@ Marketplace 安装会 cache 到 `~/.claude/plugins/cache/`；本地开发需 `ma
 
 | 文档 | 内容 |
 |------|------|
-| [ARCHITECTURE.md](../ARCHITECTURE.md) | 面向用户的架构概览 |
+| [架构](../架构.md) | 面向用户的架构概览 |
 | [HOOKS.md](../HOOKS.md) | Hook 事件与禁用方式 |
-| [REFERENCE.md](../REFERENCE.md) | 完整 API、agents、skills 列表 |
+| [参考.md](../参考.md) | 完整 API、agents、skills 列表 |
 | [FEATURES.md](../FEATURES.md) | 内部特性开发者参考 |
 | [TIERED_AGENTS_V2.md](./TIERED_AGENTS_V2.md) | 分层 agent 与模型路由设计 |
 | [CLAUDE_CODE_GOAL_ADAPTER.md](./CLAUDE_CODE_GOAL_ADAPTER.md) | `/goal` 适配器契约 |

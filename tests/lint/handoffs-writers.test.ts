@@ -119,7 +119,7 @@ describe('handoffs-writers lint (Wave G)', () => {
       const msg = [
         '',
         'GOVERNANCE VIOLATION: Only src/team/** and src/hooks/team-pipeline/** may reference .wise/handoffs/.',
-        'See docs/REFERENCE.md § ".wise/handoffs/ shared contract" for the policy.',
+        'See docs/参考.md § ".wise/handoffs/ shared contract" for the policy.',
         '',
         'Offending lines:',
         ...violations.map(v => `  ${v}`),

@@ -130,7 +130,7 @@ Any configurable options.
 3. Add to skill registry (auto-detected from frontmatter)
 4. Optionally add activation triggers
 5. Create corresponding plugin-scoped skill/slash surface via `skills/new-skill/SKILL.md` (and generated artifacts when the build requires them)
-6. Update `docs/REFERENCE.md` (Skills section, count)
+6. Update `docs/参考.md` (Skills section, count)
 7. If execution mode skill, also create `src/hooks/new-skill/` hook
 
 ### Common Patterns

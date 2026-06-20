@@ -351,7 +351,7 @@ wise uses the `.wise/` directory for persistent state:
 - `.wise/logs/` -- Audit logs
 - `.wise/ultragoal/plans/{planId}/` -- Multi-plan ultragoal artifacts when `--plan-id` / `--auto-plan-id` is used.
 
-Multi-repo workspaces: drop a `.wise-workspace` marker file (JSON, can be `{}` or `{"id":"name"}`) in the parent directory when it is not itself a git repo. WISE will anchor `.wise/` at the marker from any sub-directory. This lets parallel Claude sessions in sibling repos share one `.wise/`. The session-start hook uses PID-aware liveness — a dead owner no longer blocks state restore. See `docs/REFERENCE.md#multi-repo-workspaces-with-wise-workspace` for full details.
+Multi-repo workspaces: drop a `.wise-workspace` marker file (JSON, can be `{}` or `{"id":"name"}`) in the parent directory when it is not itself a git repo. WISE will anchor `.wise/` at the marker from any sub-directory. This lets parallel Claude sessions in sibling repos share one `.wise/`. The session-start hook uses PID-aware liveness — a dead owner no longer blocks state restore. See `docs/参考.md#multi-repo-workspaces-with-wise-workspace` for full details.
 
 Tools are available via MCP when configured (`wise setup` registers all servers):
 
