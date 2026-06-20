@@ -1,8 +1,8 @@
 /**
- * Teleport Command - Quick worktree creation for development
+ * Teleport 命令 - 快速创建开发用 worktree
  *
- * Creates a git worktree for working on issues/PRs/features in isolation.
- * Default worktree location: ~/Workspace/wise-worktrees/
+ * 为在隔离环境中处理 issue/PR/feature 创建 git worktree。
+ * 默认 worktree 位置：~/Workspace/wise-worktrees/
  */
 
 import chalk from 'chalk';
@@ -30,7 +30,7 @@ export interface TeleportResult {
   error?: string;
 }
 
-// Default worktree root directory
+// 默认 worktree 根目录
 const DEFAULT_WORKTREE_ROOT = join(homedir(), 'Workspace', 'wise-worktrees');
 const PACKAGE_JSON_NAME = 'package.json';
 const PACKAGE_MANAGER_LOCKFILES = {
@@ -66,7 +66,7 @@ function detectPackageManager(parentRepoRoot: string, worktreePath: string): Sup
         return packageManager;
       }
     } catch {
-      // Ignore and fall back to npm.
+      // 忽略并兜底回退到 npm。
     }
   }
 
@@ -149,8 +149,8 @@ function bootstrapTeleportDependencies(
 }
 
 /**
- * Parse a reference string into components
- * Supports: wise#123, owner/repo#123, #123, URLs, feature names
+ * 将引用字符串解析为各组成部分
+ * 支持：wise#123、owner/repo#123、#123、URL、feature 名称
  */
 function parseRef(ref: string): {
   type: 'issue' | 'pr' | 'feature';
@@ -160,7 +160,7 @@ function parseRef(ref: string): {
   name?: string;
   provider?: ProviderName;
 } {
-  // GitHub PR URL: github.com/owner/repo/pull/N
+  // GitHub PR URL：github.com/owner/repo/pull/N
   const ghPrUrlMatch = ref.match(/^https?:\/\/[^/]*github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)(?:[?#].*)?$/);
   if (ghPrUrlMatch) {
     return {
@@ -172,7 +172,7 @@ function parseRef(ref: string): {
     };
   }
 
-  // GitHub Issue URL: github.com/owner/repo/issues/N
+  // GitHub Issue URL：github.com/owner/repo/issues/N
   const ghIssueUrlMatch = ref.match(/^https?:\/\/[^/]*github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)(?:[?#].*)?$/);
   if (ghIssueUrlMatch) {
     return {
@@ -184,7 +184,7 @@ function parseRef(ref: string): {
     };
   }
 
-  // GitLab MR URL: gitlab.*/namespace/-/merge_requests/N (supports nested groups and self-hosted)
+  // GitLab MR URL：gitlab.*/namespace/-/merge_requests/N（支持嵌套组和自托管）
   const glMrUrlMatch = ref.match(/^https?:\/\/[^/]*gitlab[^/]*\/(.+)\/-\/merge_requests\/(\d+)(?:[?#].*)?$/);
   if (glMrUrlMatch) {
     const namespaceParts = glMrUrlMatch[1].split('/');
@@ -199,7 +199,7 @@ function parseRef(ref: string): {
     };
   }
 
-  // GitLab Issue URL: gitlab.*/namespace/-/issues/N (supports nested groups and self-hosted)
+  // GitLab Issue URL：gitlab.*/namespace/-/issues/N（支持嵌套组和自托管）
   const glIssueUrlMatch = ref.match(/^https?:\/\/[^/]*gitlab[^/]*\/(.+)\/-\/issues\/(\d+)(?:[?#].*)?$/);
   if (glIssueUrlMatch) {
     const namespaceParts = glIssueUrlMatch[1].split('/');
@@ -214,7 +214,7 @@ function parseRef(ref: string): {
     };
   }
 
-  // Bitbucket PR URL: bitbucket.org/workspace/repo/pull-requests/N
+  // Bitbucket PR URL：bitbucket.org/workspace/repo/pull-requests/N
   const bbPrUrlMatch = ref.match(/^https?:\/\/[^/]*bitbucket\.org\/([^/]+)\/([^/]+)\/pull-requests\/(\d+)(?:[?#].*)?$/);
   if (bbPrUrlMatch) {
     return {
@@ -226,7 +226,7 @@ function parseRef(ref: string): {
     };
   }
 
-  // Bitbucket Issue URL: bitbucket.org/workspace/repo/issues/N
+  // Bitbucket Issue URL：bitbucket.org/workspace/repo/issues/N
   const bbIssueUrlMatch = ref.match(/^https?:\/\/[^/]*bitbucket\.org\/([^/]+)\/([^/]+)\/issues\/(\d+)(?:[?#].*)?$/);
   if (bbIssueUrlMatch) {
     return {
@@ -238,7 +238,7 @@ function parseRef(ref: string): {
     };
   }
 
-  // Azure DevOps PR URL: dev.azure.com/org/project/_git/repo/pullrequest/N
+  // Azure DevOps PR URL：dev.azure.com/org/project/_git/repo/pullrequest/N
   const azPrUrlMatch = ref.match(/^https?:\/\/[^/]*dev\.azure\.com\/([^/]+)\/([^/]+)\/_git\/([^/]+)\/pullrequest\/(\d+)(?:[?#].*)?$/);
   if (azPrUrlMatch) {
     return {
@@ -250,7 +250,7 @@ function parseRef(ref: string): {
     };
   }
 
-  // Azure DevOps legacy: https://{org}.visualstudio.com/{project}/_git/{repo}/pullrequest/{id}
+  // Azure DevOps 旧版：https://{org}.visualstudio.com/{project}/_git/{repo}/pullrequest/{id}
   const azureLegacyPrMatch = ref.match(
     /^https?:\/\/([^.]+)\.visualstudio\.com\/([^/]+)\/_git\/([^/]+)\/pullrequest\/(\d+)/i
   );
@@ -264,7 +264,7 @@ function parseRef(ref: string): {
     };
   }
 
-  // owner/repo!123 format (GitLab MR shorthand, supports nested groups)
+  // owner/repo!123 格式（GitLab MR 简写，支持嵌套组）
   const gitlabShorthand = ref.match(/^(.+?)\/([^!/]+)!(\d+)$/);
   if (gitlabShorthand) {
     return {
@@ -276,28 +276,28 @@ function parseRef(ref: string): {
     };
   }
 
-  // owner/repo#123 format (provider-agnostic, supports nested groups)
+  // owner/repo#123 格式（与 provider 无关，支持嵌套组）
   const fullRefMatch = ref.match(/^(.+)\/([^/#]+)#(\d+)$/);
   if (fullRefMatch) {
     return {
-      type: 'issue', // Will be refined by provider CLI
+      type: 'issue', // 将由 provider CLI 进一步细化
       owner: fullRefMatch[1],
       repo: fullRefMatch[2],
       number: parseInt(fullRefMatch[3], 10),
     };
   }
 
-  // alias#123 format (e.g., wise#123)
+  // alias#123 格式（如 wise#123）
   const aliasMatch = ref.match(/^([a-zA-Z][a-zA-Z0-9_-]*)#(\d+)$/);
   if (aliasMatch) {
     return {
       type: 'issue',
-      name: aliasMatch[1], // Alias to resolve
+      name: aliasMatch[1], // 待解析的别名
       number: parseInt(aliasMatch[2], 10),
     };
   }
 
-  // #123 format (current repo)
+  // #123 格式（当前仓库）
   const numberMatch = ref.match(/^#?(\d+)$/);
   if (numberMatch) {
     return {
@@ -306,7 +306,7 @@ function parseRef(ref: string): {
     };
   }
 
-  // Feature name (anything else)
+  // Feature 名称（其他情况）
   return {
     type: 'feature',
     name: ref,
@@ -314,7 +314,7 @@ function parseRef(ref: string): {
 }
 
 /**
- * Sanitize a string for use in branch/directory names
+ * 对字符串进行清洗，以便用于分支/目录名
  */
 function sanitize(str: string, maxLen: number = 30): string {
   return str
@@ -325,7 +325,7 @@ function sanitize(str: string, maxLen: number = 30): string {
 }
 
 /**
- * Get current git repo info
+ * 获取当前 git 仓库信息
  */
 function getCurrentRepo(): { owner: string; repo: string; root: string; provider: ProviderName } | null {
   try {
@@ -336,13 +336,13 @@ function getCurrentRepo(): { owner: string; repo: string; root: string; provider
       return { owner: parsed.owner, repo: parsed.repo, root, provider: parsed.provider };
     }
   } catch {
-    // Not in a git repo or no origin
+    // 不在 git 仓库中，或没有 origin
   }
   return null;
 }
 
 /**
- * Fetch issue/PR info via provider abstraction
+ * 通过 provider 抽象获取 issue/PR 信息
  */
 async function fetchProviderInfo(
   type: 'issue' | 'pr',
@@ -360,7 +360,7 @@ async function fetchProviderInfo(
 }
 
 /**
- * Create a git worktree
+ * 创建 git worktree
  */
 function createWorktree(
   repoRoot: string,
@@ -369,34 +369,34 @@ function createWorktree(
   baseBranch: string
 ): { success: boolean; error?: string } {
   try {
-    // Ensure worktree parent directory exists
+    // 确保 worktree 父目录存在
     const parentDir = join(worktreePath, '..');
     if (!existsSync(parentDir)) {
       mkdirSync(parentDir, { recursive: true });
     }
 
-    // Check if worktree already exists
+    // 检查 worktree 是否已存在
     if (existsSync(worktreePath)) {
       return { success: false, error: `Worktree already exists at ${worktreePath}` };
     }
 
-    // Fetch latest from origin
+    // 从 origin 拉取最新内容
     execFileSync('git', ['fetch', 'origin', baseBranch], {
       cwd: repoRoot,
       stdio: 'pipe',
     });
 
-    // Create branch from base if it doesn't exist
+    // 若分支不存在，则基于 base 分支创建
     try {
       execFileSync('git', ['branch', branchName, `origin/${baseBranch}`], {
         cwd: repoRoot,
         stdio: 'pipe',
       });
     } catch {
-      // Branch might already exist, that's OK
+      // 分支可能已存在，没关系
     }
 
-    // Create the worktree
+    // 创建 worktree
     execFileSync('git', ['worktree', 'add', worktreePath, branchName], {
       cwd: repoRoot,
       stdio: 'pipe',
@@ -410,7 +410,7 @@ function createWorktree(
 }
 
 /**
- * Main teleport command
+ * teleport 主命令
  */
 export async function teleportCommand(
   ref: string,
@@ -420,7 +420,7 @@ export async function teleportCommand(
   const baseBranch = options.base || 'main';
   const worktreeRoot = options.worktreePath || DEFAULT_WORKTREE_ROOT;
 
-  // Get current repo info
+  // 获取当前仓库信息
   const currentRepo = getCurrentRepo();
   if (!currentRepo) {
     const error = 'Not in a git repository. Run this command from within a git repo.';
@@ -434,7 +434,7 @@ export async function teleportCommand(
   const repoName = basename(repoRoot);
   const config = loadConfig();
   const shouldSymlinkNodeModules = config.teleport?.symlinkNodeModules ?? true;
-  // Use provider from parsed ref if available, otherwise fall back to current repo
+  // 若解析出的 ref 带 provider 则使用之，否则兜底回退到当前仓库的 provider
   const effectiveProviderName = parsed.provider || currentRepo.provider;
   const provider = getProvider(effectiveProviderName);
 
@@ -443,7 +443,7 @@ export async function teleportCommand(
   let title: string | undefined;
 
   if (parsed.type === 'feature') {
-    // Feature branch
+    // Feature 分支
     const safeName = sanitize(parsed.name || 'feature');
     branchName = `feat/${safeName}`;
     worktreeDirName = `feat/${repoName}-${safeName}`;
@@ -453,7 +453,7 @@ export async function teleportCommand(
       console.log(chalk.blue(`Creating feature worktree: ${parsed.name}`));
     }
   } else {
-    // Issue or PR
+    // Issue 或 PR
     const resolvedOwner = parsed.owner || owner;
     const resolvedRepo = parsed.repo || repo;
 
@@ -473,7 +473,7 @@ export async function teleportCommand(
       return { success: false, error };
     }
 
-    // Try to detect if it's a PR or issue
+    // 尝试检测其是 PR 还是 issue
     const prInfo = await fetchProviderInfo('pr', parsed.number, provider, resolvedOwner, resolvedRepo);
     const issueInfo = !prInfo
       ? await fetchProviderInfo('issue', parsed.number, provider, resolvedOwner, resolvedRepo)
@@ -495,7 +495,7 @@ export async function teleportCommand(
     const slug = sanitize(title, 20);
 
     if (isPR) {
-      // For PRs, use the PR's branch
+      // 对于 PR，使用 PR 自身的分支
       branchName = info.branch || `pr-${parsed.number}-review`;
       worktreeDirName = `pr/${repoName}-${parsed.number}`;
 
@@ -503,7 +503,7 @@ export async function teleportCommand(
         console.log(chalk.blue(`Creating PR review worktree: #${parsed.number} - ${title}`));
       }
 
-      // Fetch the PR branch using provider-specific refspec or head branch
+      // 使用 provider 特定的 refspec 或 head 分支拉取 PR 分支
       if (provider.prRefspec) {
         try {
           const refspec = provider.prRefspec
@@ -514,22 +514,22 @@ export async function teleportCommand(
             { cwd: repoRoot, stdio: ['pipe', 'pipe', 'pipe'], timeout: 30000 }
           );
         } catch {
-          // Branch might already exist
+          // 分支可能已存在
         }
       } else if (info.branch) {
-        // For providers without prRefspec (Bitbucket, Azure, Gitea),
-        // fetch the PR's head branch from origin
+        // 对于没有 prRefspec 的 provider（Bitbucket、Azure、Gitea），
+        // 从 origin 拉取 PR 的 head 分支
         try {
           execFileSync(
             'git', ['fetch', 'origin', `${info.branch}:${branchName}`],
             { cwd: repoRoot, stdio: ['pipe', 'pipe', 'pipe'], timeout: 30000 }
           );
         } catch {
-          // Branch might already exist locally
+          // 分支可能在本地已存在
         }
       }
     } else {
-      // For issues, create a fix branch
+      // 对于 issue，创建修复分支
       branchName = `fix/${parsed.number}-${slug}`;
       worktreeDirName = `issue/${repoName}-${parsed.number}`;
 
@@ -539,7 +539,7 @@ export async function teleportCommand(
     }
   }
 
-  // Determine full worktree path
+  // 确定 worktree 的完整路径
   const worktreePath = join(worktreeRoot, worktreeDirName);
 
   if (!options.json) {
@@ -547,7 +547,7 @@ export async function teleportCommand(
     console.log(chalk.gray(`  Path: ${worktreePath}`));
   }
 
-  // Create the worktree
+  // 创建 worktree
   const result = createWorktree(repoRoot, worktreePath, branchName, baseBranch);
 
   if (!result.success) {
@@ -599,7 +599,7 @@ export async function teleportCommand(
 }
 
 /**
- * Find worktree directories by scanning for .git files (not directories)
+ * 通过扫描 .git 文件（而非目录）来查找 worktree 目录
  */
 function findWorktreeDirs(dir: string, maxDepth: number = 3, currentDepth: number = 0): string[] {
   if (currentDepth >= maxDepth) return [];
@@ -614,21 +614,21 @@ function findWorktreeDirs(dir: string, maxDepth: number = 3, currentDepth: numbe
         const stat = statSync(gitPath);
         if (stat.isFile()) {
           results.push(fullPath);
-          continue; // Don't recurse into worktrees
+          continue; // 不递归进入 worktree 内部
         }
       } catch {
-        // No .git file, recurse deeper
+        // 没有 .git 文件，继续向更深层递归
       }
       results.push(...findWorktreeDirs(fullPath, maxDepth, currentDepth + 1));
     }
   } catch {
-    // Directory not readable
+    // 目录不可读
   }
   return results;
 }
 
 /**
- * List existing worktrees in the default location
+ * 列出默认位置下已存在的 worktree
  */
 export async function teleportListCommand(options: { json?: boolean }): Promise<void> {
   const worktreeRoot = DEFAULT_WORKTREE_ROOT;
@@ -654,7 +654,7 @@ export async function teleportListCommand(options: { json?: boolean }): Promise<
         encoding: 'utf-8',
       }).trim();
     } catch {
-      // Ignore
+      // 忽略
     }
 
     return { path: worktreePath, relativePath, branch };
@@ -681,8 +681,8 @@ export async function teleportListCommand(options: { json?: boolean }): Promise<
 }
 
 /**
- * Remove a worktree
- * Returns 0 on success, 1 on failure.
+ * 移除一个 worktree
+ * 成功返回 0，失败返回 1。
  */
 export async function teleportRemoveCommand(
   pathOrName: string,
@@ -690,7 +690,7 @@ export async function teleportRemoveCommand(
 ): Promise<number> {
   const worktreeRoot = DEFAULT_WORKTREE_ROOT;
 
-  // Resolve path - could be relative name or full path
+  // 解析路径 - 可能是相对名称或完整路径
   let worktreePath = pathOrName;
   if (!isAbsolute(pathOrName)) {
     worktreePath = join(worktreeRoot, pathOrName);
@@ -715,7 +715,7 @@ export async function teleportRemoveCommand(
   }
 
   try {
-    // Check for uncommitted changes
+    // 检查是否有未提交的改动
     if (!options.force) {
       const status = execSync('git status --porcelain', {
         cwd: worktreePath,
@@ -733,15 +733,15 @@ export async function teleportRemoveCommand(
       }
     }
 
-    // Find the main repo to run git worktree remove
+    // 找到主仓库以执行 git worktree remove
     const gitDir = execSync('git rev-parse --git-dir', {
       cwd: worktreePath,
       encoding: 'utf-8',
     }).trim();
 
-    // A removable worktree reports a git-dir inside the main repo's .git/worktrees directory.
-    // Main repos report .git or <repo>/.git; any other shape is unexpected and must fail closed
-    // instead of deleting the target directory directly.
+    // 可移除的 worktree 其 git-dir 应位于主仓库的 .git/worktrees 目录内。
+    // 主仓库会报告 .git 或 <repo>/.git；任何其他形态都属于异常，必须以失败收尾，
+    // 而不是直接删除目标目录。
     const mainRepoMatch = gitDir.match(/(.+)[/\\]\.git[/\\]worktrees[/\\][^/\\]+$/);
     const mainRepo = mainRepoMatch ? mainRepoMatch[1] : null;
 

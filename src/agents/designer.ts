@@ -1,9 +1,9 @@
 /**
- * Frontend Engineer Agent
+ * 前端工程师代理
  *
- * Designer-turned-developer who crafts stunning UI/UX.
+ * 由设计师转身的开发者，打造出色的 UI/UX。
  *
- * Ported from oh-my-opencode's agent definitions.
+ * 从 oh-my-opencode 的 agent 定义移植。
  */
 
 import type { AgentConfig, AgentPromptMetadata } from './types.js';

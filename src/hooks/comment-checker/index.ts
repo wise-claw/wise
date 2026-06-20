@@ -1,12 +1,12 @@
 /**
- * Comment Checker Hook
+ * 注释检查器钩子
  *
- * Detects comments and docstrings in code changes and prompts Claude
- * to justify or remove unnecessary comments.
+ * 检测代码变更中的注释与文档字符串，并提示 Claude
+ * 说明理由或移除不必要的注释。
  *
- * Adapted from oh-my-opencode's comment-checker hook.
- * Instead of using an external CLI binary, this implementation does
- * comment detection directly in TypeScript.
+ * 改编自 oh-my-opencode 的 comment-checker 钩子。
+ * 该实现不再使用外部 CLI 二进制，而是直接在 TypeScript 中
+ * 进行注释检测。
  */
 
 import * as fs from 'fs';
@@ -33,7 +33,7 @@ function debugLog(...args: unknown[]): void {
 }
 
 /**
- * Get language from file extension
+ * 根据文件扩展名获取语言
  */
 function getLanguageFromPath(filePath: string): string | undefined {
   const ext = path.extname(filePath).toLowerCase();
@@ -41,7 +41,7 @@ function getLanguageFromPath(filePath: string): string | undefined {
 }
 
 /**
- * Detect comments in content using regex patterns
+ * 使用正则模式检测内容中的注释
  */
 function detectComments(content: string, filePath: string): CommentInfo[] {
   const language = getLanguageFromPath(filePath);
@@ -58,7 +58,7 @@ function detectComments(content: string, filePath: string): CommentInfo[] {
 
   const comments: CommentInfo[] = [];
 
-  // Reset regex state
+  // 重置正则状态
   pattern.lastIndex = 0;
 
   let match;
@@ -66,11 +66,11 @@ function detectComments(content: string, filePath: string): CommentInfo[] {
     const matchStart = match.index;
     const matchText = match[0];
 
-    // Calculate line number
+    // 计算行号
     const beforeMatch = content.substring(0, matchStart);
     const lineNumber = beforeMatch.split('\n').length;
 
-    // Determine comment type
+    // 确定注释类型
     let commentType: 'line' | 'block' | 'docstring' = 'line';
     let isDocstring = false;
 
@@ -98,7 +98,7 @@ function detectComments(content: string, filePath: string): CommentInfo[] {
 }
 
 /**
- * Extract comments from new content (for Write tool)
+ * 从新内容中提取注释（用于 Write 工具）
  */
 function extractCommentsFromContent(
   content: string,
@@ -108,21 +108,21 @@ function extractCommentsFromContent(
 }
 
 /**
- * Extract comments from new string (for Edit tool)
+ * 从新字符串中提取注释（用于 Edit 工具）
  */
 function extractCommentsFromEdit(
   newString: string,
   filePath: string,
   oldString?: string
 ): CommentInfo[] {
-  // Only check comments that are newly added
+  // 仅检查新增的注释
   const newComments = detectComments(newString, filePath);
 
   if (oldString) {
     const oldComments = detectComments(oldString, filePath);
     const oldTexts = new Set(oldComments.map((c) => c.text));
 
-    // Filter out comments that existed before
+    // 过滤掉之前已存在的注释
     return newComments.filter((c) => !oldTexts.has(c.text));
   }
 
@@ -130,7 +130,7 @@ function extractCommentsFromEdit(
 }
 
 /**
- * Format comments for output message
+ * 格式化注释以用于输出消息
  */
 function formatCommentMessage(comments: CommentInfo[]): string {
   if (comments.length === 0) {
@@ -158,7 +158,7 @@ function formatCommentMessage(comments: CommentInfo[]): string {
 }
 
 /**
- * Check content for comments
+ * 检查内容中的注释
  */
 export function checkForComments(
   filePath: string,
@@ -170,13 +170,13 @@ export function checkForComments(
   let allComments: CommentInfo[] = [];
 
   if (content) {
-    // Write tool - check entire content
+    // Write 工具——检查整个内容
     allComments = extractCommentsFromContent(content, filePath);
   } else if (newString) {
-    // Edit tool - check new content
+    // Edit 工具——检查新内容
     allComments = extractCommentsFromEdit(newString, filePath, oldString);
   } else if (edits && edits.length > 0) {
-    // MultiEdit tool - check all edits
+    // MultiEdit 工具——检查所有编辑
     for (const edit of edits) {
       const editComments = extractCommentsFromEdit(
         edit.new_string,
@@ -187,7 +187,7 @@ export function checkForComments(
     }
   }
 
-  // Apply filters to remove acceptable comments
+  // 应用过滤器以移除可接受的注释
   const flaggedComments = applyFilters(allComments);
 
   debugLog(
@@ -211,32 +211,32 @@ export function checkForComments(
 }
 
 /**
- * Configuration for comment checker hook
+ * 注释检查器钩子配置
  */
 export interface CommentCheckerConfig {
-  /** Custom prompt to append instead of default */
+  /** 追加的自定义 prompt，替代默认值 */
   customPrompt?: string;
-  /** Whether to enable the hook */
+  /** 是否启用该钩子 */
   enabled?: boolean;
 }
 
 /**
- * Pending calls tracking
+ * 待处理调用追踪
  */
 const pendingCalls = new Map<string, PendingCall>();
 
 /**
- * Create comment checker hook for Claude Code shell hooks
+ * 为 Claude Code shell 钩子创建注释检查器钩子
  *
- * This hook checks for comments in Write/Edit operations and injects
- * a message prompting Claude to justify or remove unnecessary comments.
+ * 该钩子检查 Write/Edit 操作中的注释，并注入
+ * 一条消息，提示 Claude 说明理由或移除不必要的注释。
  */
 export function createCommentCheckerHook(config?: CommentCheckerConfig) {
   debugLog('createCommentCheckerHook called', { config });
 
   return {
     /**
-     * PreToolUse - Track pending write/edit calls
+     * PreToolUse——追踪待处理的 write/edit 调用
      */
     preToolUse: (input: {
       tool_name: string;
@@ -269,7 +269,7 @@ export function createCommentCheckerHook(config?: CommentCheckerConfig) {
         return null;
       }
 
-      // Generate a call ID based on session and timestamp
+      // 基于会话与时间戳生成调用 ID
       const callId = `${input.session_id}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
       debugLog('registering pendingCall:', {
@@ -293,7 +293,7 @@ export function createCommentCheckerHook(config?: CommentCheckerConfig) {
     },
 
     /**
-     * PostToolUse - Check for comments after successful write/edit
+     * PostToolUse——在成功的 write/edit 之后检查注释
      */
     postToolUse: (input: {
       tool_name: string;
@@ -311,7 +311,7 @@ export function createCommentCheckerHook(config?: CommentCheckerConfig) {
         return null;
       }
 
-      // Find the pending call for this session
+      // 查找该会话的待处理调用
       let pendingCall: PendingCall | undefined;
       let callIdToDelete: string | undefined;
 
@@ -324,7 +324,7 @@ export function createCommentCheckerHook(config?: CommentCheckerConfig) {
       }
 
       if (!pendingCall) {
-        // Fall back to extracting from tool_input
+        // 兜底：从 tool_input 中提取
         const filePath = (input.tool_input.file_path ??
           input.tool_input.filePath ??
           input.tool_input.path) as string | undefined;
@@ -353,7 +353,7 @@ export function createCommentCheckerHook(config?: CommentCheckerConfig) {
         pendingCalls.delete(callIdToDelete);
       }
 
-      // Check if tool execution failed
+      // 检查工具执行是否失败
       if (input.tool_response) {
         const responseLower = input.tool_response.toLowerCase();
         const isToolFailure =
@@ -368,7 +368,7 @@ export function createCommentCheckerHook(config?: CommentCheckerConfig) {
         }
       }
 
-      // Check for comments
+      // 检查注释
       const result = checkForComments(
         pendingCall.filePath,
         pendingCall.content,
@@ -387,13 +387,13 @@ export function createCommentCheckerHook(config?: CommentCheckerConfig) {
   };
 }
 
-// Re-export types
+// 重新导出类型
 export type { CommentInfo, CommentCheckResult, PendingCall } from './types.js';
 
-// Re-export filters
+// 重新导出过滤器
 export { applyFilters } from './filters.js';
 
-// Re-export constants
+// 重新导出常量
 export {
   BDD_KEYWORDS,
   TYPE_CHECKER_PREFIXES,

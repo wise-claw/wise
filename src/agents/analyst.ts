@@ -1,9 +1,9 @@
 /**
- * Analyst Agent
+ * 分析师代理
  *
- * Pre-planning consultant for identifying hidden requirements.
+ * 计划前的顾问，用于识别隐藏需求。
  *
- * Ported from oh-my-opencode's agent definitions.
+ * 从 oh-my-opencode 的 agent 定义移植。
  */
 
 import type { AgentConfig, AgentPromptMetadata } from './types.js';

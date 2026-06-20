@@ -1,27 +1,27 @@
 /**
- * Rate Limit Monitor
+ * 速率限制监控
  *
- * Wraps the existing usage-api.ts to provide rate limit status monitoring.
- * Uses the OAuth API to check utilization percentages.
+ * 包装已有的 usage-api.ts 以提供速率限制状态监控。
+ * 使用 OAuth API 检查用量百分比。
  */
 
 import { getUsage } from '../../hud/usage-api.js';
 import type { RateLimitStatus } from './types.js';
 
-/** Threshold percentage for considering rate limited */
+/** 判定受到速率限制的阈值百分比 */
 const RATE_LIMIT_THRESHOLD = 100;
 
 /**
- * Check current rate limit status using the OAuth API
+ * 使用 OAuth API 检查当前速率限制状态
  *
- * @returns Rate limit status or null if API unavailable
+ * @returns 速率限制状态；API 不可用时返回 null
  */
 export async function checkRateLimitStatus(): Promise<RateLimitStatus | null> {
   try {
     const result = await getUsage();
 
     if (!result.rateLimits) {
-      // No OAuth credentials or API unavailable
+      // 无 OAuth 凭证或 API 不可用
       return null;
     }
 
@@ -32,7 +32,7 @@ export async function checkRateLimitStatus(): Promise<RateLimitStatus | null> {
     const isLimited = fiveHourLimited || weeklyLimited || monthlyLimited;
     const usingStaleData = result.error === 'rate_limited' && !!result.rateLimits;
 
-    // Determine next reset time
+    // 确定下次重置时间
     let nextResetAt: Date | null = null;
     let timeUntilResetMs: number | null = null;
 
@@ -51,7 +51,7 @@ export async function checkRateLimitStatus(): Promise<RateLimitStatus | null> {
       }
 
       if (resets.length > 0) {
-        // Find earliest reset
+        // 查找最早的重置时间
         nextResetAt = resets.reduce((earliest, current) =>
           current < earliest ? current : earliest
         );
@@ -77,14 +77,14 @@ export async function checkRateLimitStatus(): Promise<RateLimitStatus | null> {
       lastCheckedAt: new Date(),
     };
   } catch (error) {
-    // Log error but don't throw - return null to indicate unavailable
+    // 记录错误但不抛出 —— 返回 null 表示不可用
     console.error('[RateLimitMonitor] Error checking rate limit:', error);
     return null;
   }
 }
 
 /**
- * Format time until reset for display
+ * 格式化距离重置的时长以供显示
  */
 export function formatTimeUntilReset(ms: number): string {
   if (ms <= 0) return 'now';
@@ -104,7 +104,7 @@ export function formatTimeUntilReset(ms: number): string {
 }
 
 /**
- * Get a human-readable rate limit status message
+ * 获取可读的速率限制状态消息
  */
 export function formatRateLimitStatus(status: RateLimitStatus): string {
   if (status.apiErrorReason === 'rate_limited' && !status.isLimited) {
@@ -156,17 +156,17 @@ export function formatRateLimitStatus(status: RateLimitStatus): string {
 }
 
 /**
- * Whether the underlying usage API is currently degraded by 429/stale-cache behavior.
+ * 底层 usage API 当前是否因 429/陈旧缓存行为而降级。
  */
 export function isRateLimitStatusDegraded(status: RateLimitStatus | null): boolean {
   return status?.apiErrorReason === 'rate_limited';
 }
 
 /**
- * Whether the daemon should actively scan for blocked panes.
- * Only confirmed quota exhaustion should enter the pane wait/resume path.
- * Degraded usage-api 429/stale-cache states remain visible to the user, but
- * they are intentionally excluded from daemon pane blocking behavior.
+ * 守护进程是否应主动扫描被阻塞的面板。
+ * 只有确认的配额耗尽才进入面板等待/恢复路径。
+ * usage-api 429/陈旧缓存的降级状态对用户仍可见，但
+ * 刻意排除在守护进程面板阻塞行为之外。
  */
 export function shouldMonitorBlockedPanes(status: RateLimitStatus | null): boolean {
   return !!status?.isLimited;

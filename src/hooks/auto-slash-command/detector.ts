@@ -1,9 +1,9 @@
 /**
- * Auto Slash Command Detector
+ * 自动斜杠命令检测器
  *
- * Detects slash commands in user prompts.
+ * 在用户 prompt 中检测斜杠命令。
  *
- * Adapted from oh-my-opencode's auto-slash-command hook.
+ * 改编自 oh-my-opencode 的 auto-slash-command 钩子。
  */
 
 import {
@@ -12,18 +12,18 @@ import {
 } from './constants.js';
 import type { ParsedSlashCommand } from './types.js';
 
-/** Pattern to match code blocks */
+/** 匹配代码块的正则 */
 const CODE_BLOCK_PATTERN = /```[\s\S]*?```/g;
 
 /**
- * Remove code blocks from text to prevent false positives
+ * 从文本中移除代码块以避免误报
  */
 export function removeCodeBlocks(text: string): string {
   return text.replace(CODE_BLOCK_PATTERN, '');
 }
 
 /**
- * Parse a slash command from text
+ * 从文本中解析斜杠命令
  */
 export function parseSlashCommand(text: string): ParsedSlashCommand | null {
   const trimmed = text.trim();
@@ -46,22 +46,22 @@ export function parseSlashCommand(text: string): ParsedSlashCommand | null {
 }
 
 /**
- * Check if a command should be excluded from auto-expansion
+ * 检查命令是否应被排除在自动展开之外
  */
 export function isExcludedCommand(command: string): boolean {
   return EXCLUDED_COMMANDS.has(command.toLowerCase());
 }
 
 /**
- * Detect a slash command in user input text
- * Returns null if no command detected or if command is excluded
+ * 检测用户输入文本中的斜杠命令
+ * 若未检测到命令或命令被排除，则返回 null
  */
 export function detectSlashCommand(text: string): ParsedSlashCommand | null {
-  // Remove code blocks first
+  // 先移除代码块
   const textWithoutCodeBlocks = removeCodeBlocks(text);
   const trimmed = textWithoutCodeBlocks.trim();
 
-  // Must start with slash
+  // 必须以斜杠开头
   if (!trimmed.startsWith('/')) {
     return null;
   }
@@ -72,7 +72,7 @@ export function detectSlashCommand(text: string): ParsedSlashCommand | null {
     return null;
   }
 
-  // Check exclusion list
+  // 检查排除列表
   if (isExcludedCommand(parsed.command)) {
     return null;
   }
@@ -81,7 +81,7 @@ export function detectSlashCommand(text: string): ParsedSlashCommand | null {
 }
 
 /**
- * Extract text content from message parts array
+ * 从消息分块数组中提取文本内容
  */
 export function extractPromptText(
   parts: Array<{ type: string; text?: string }>

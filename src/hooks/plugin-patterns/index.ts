@@ -1,12 +1,12 @@
 /**
- * Popular Plugin Patterns
+ * 常用插件模式
  *
- * Common hook patterns from the Claude Code community:
- * - Auto-format on file save
- * - Lint validation before commit
- * - Commit message validation
- * - Test runner before commit
- * - Type checking enforcement
+ * 来自 Claude Code 社区的常见钩子模式：
+ * - 文件保存时自动格式化
+ * - 提交前 lint 校验
+ * - 提交信息校验
+ * - 提交前运行测试
+ * - 类型检查强制
  */
 
 import { existsSync, readFileSync } from 'fs';
@@ -14,38 +14,38 @@ import { join, extname, normalize } from 'path';
 import { execFileSync, spawnSync } from 'child_process';
 
 // =============================================================================
-// SECURITY UTILITIES
+// 安全工具
 // =============================================================================
 
 /**
- * Validate file path for security
- * Blocks shell metacharacters and path traversal attempts
+ * 出于安全考虑校验文件路径
+ * 拦截 shell 元字符与路径穿越尝试
  */
 export function isValidFilePath(filePath: string): boolean {
-  // Normalize Windows path separators to forward slashes before checking.
-  // Backslashes are valid path separators on Windows (e.g. src\file.ts,
-  // C:\repo\file.ts) and must not be treated as shell metacharacters.
+  // 检查前先将 Windows 路径分隔符规范化为正斜杠。
+  // 反斜杠在 Windows 上是合法的路径分隔符（如 src\file.ts、
+  // C:\repo\file.ts），不能当作 shell 元字符处理。
   const normalized = filePath.replace(/\\/g, '/');
 
-  // Block shell metacharacters
+  // 拦截 shell 元字符
   if (/[;&|`$()<>{}[\]*?~!#\n\r\t\0]/.test(normalized)) return false;
 
-  // Block path traversal
+  // 拦截路径穿越
   if (normalize(normalized).includes('..')) return false;
 
   return true;
 }
 
 // =============================================================================
-// AUTO-FORMAT PATTERN
+// 自动格式化模式
 // =============================================================================
 
 export interface FormatConfig {
-  /** File extensions to format */
+  /** 待格式化的文件扩展名 */
   extensions: string[];
-  /** Formatter command (e.g., 'prettier --write', 'black') */
+  /** 格式化命令（如 'prettier --write'、'black'） */
   command: string;
-  /** Whether to run on file save */
+  /** 是否在文件保存时运行 */
   enabled: boolean;
 }
 
@@ -64,14 +64,14 @@ const DEFAULT_FORMATTERS: Record<string, string> = {
 };
 
 /**
- * Get formatter command for a file extension
+ * 获取某文件扩展名对应的格式化命令
  */
 export function getFormatter(ext: string): string | null {
   return DEFAULT_FORMATTERS[ext] || null;
 }
 
 /**
- * Check if a formatter is available
+ * 检查格式化器是否可用
  */
 export function isFormatterAvailable(command: string): boolean {
   const binary = command.split(' ')[0];
@@ -81,10 +81,10 @@ export function isFormatterAvailable(command: string): boolean {
 }
 
 /**
- * Format a file using the appropriate formatter
+ * 使用合适的格式化器格式化文件
  */
 export function formatFile(filePath: string): { success: boolean; message: string } {
-  // Validate file path for security
+  // 出于安全考虑校验文件路径
   if (!isValidFilePath(filePath)) {
     return { success: false, message: 'Invalid file path: contains unsafe characters or path traversal' };
   }
@@ -110,15 +110,15 @@ export function formatFile(filePath: string): { success: boolean; message: strin
 }
 
 // =============================================================================
-// LINT VALIDATION PATTERN
+// LINT 校验模式
 // =============================================================================
 
 export interface LintConfig {
-  /** Lint command to run */
+  /** 待运行的 lint 命令 */
   command: string;
-  /** File patterns to lint */
+  /** 待 lint 的文件模式 */
   patterns: string[];
-  /** Whether to block on lint errors */
+  /** 是否在 lint 出错时阻断 */
   blocking: boolean;
 }
 
@@ -133,17 +133,17 @@ const DEFAULT_LINTERS: Record<string, string> = {
 };
 
 /**
- * Get linter command for a file extension
+ * 获取某文件扩展名对应的 linter 命令
  */
 export function getLinter(ext: string): string | null {
   return DEFAULT_LINTERS[ext] || null;
 }
 
 /**
- * Run linter on a file
+ * 对单个文件运行 linter
  */
 export function lintFile(filePath: string): { success: boolean; message: string } {
-  // Validate file path for security
+  // 出于安全考虑校验文件路径
   if (!isValidFilePath(filePath)) {
     return { success: false, message: 'Invalid file path: contains unsafe characters or path traversal' };
   }
@@ -172,38 +172,38 @@ export function lintFile(filePath: string): { success: boolean; message: string 
 }
 
 // =============================================================================
-// COMMIT MESSAGE VALIDATION PATTERN
+// 提交信息校验模式
 // =============================================================================
 
 export interface CommitConfig {
-  /** Conventional commit types allowed */
+  /** 允许的约定式提交类型 */
   types: string[];
-  /** Maximum subject length */
+  /** 主题行最大长度 */
   maxSubjectLength: number;
-  /** Require scope */
+  /** 是否要求 scope */
   requireScope: boolean;
-  /** Require body */
+  /** 是否要求正文 */
   requireBody: boolean;
 }
 
 const DEFAULT_COMMIT_TYPES = [
-  'feat',     // New feature
-  'fix',      // Bug fix
-  'docs',     // Documentation
-  'style',    // Formatting, no code change
-  'refactor', // Refactoring
-  'perf',     // Performance improvement
-  'test',     // Adding tests
-  'build',    // Build system changes
-  'ci',       // CI configuration
-  'chore',    // Maintenance
-  'revert'    // Revert previous commit
+  'feat',     // 新功能
+  'fix',      // Bug 修复
+  'docs',     // 文档
+  'style',    // 格式化，无代码变更
+  'refactor', // 重构
+  'perf',     // 性能改进
+  'test',     // 新增测试
+  'build',    // 构建系统变更
+  'ci',       // CI 配置
+  'chore',    // 日常维护
+  'revert'    // 回退之前的提交
 ];
 
 const CONVENTIONAL_COMMIT_REGEX = /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9-]+\))?(!)?:\s.+$/;
 
 /**
- * Validate a commit message against conventional commit format
+ * 按约定式提交格式校验提交信息
  */
 export function validateCommitMessage(
   message: string,
@@ -213,19 +213,19 @@ export function validateCommitMessage(
   const lines = message.trim().split('\n');
   const subject = lines[0];
 
-  // Check subject line
+  // 检查主题行
   if (!subject) {
     errors.push('Commit message cannot be empty');
     return { valid: false, errors };
   }
 
-  // Determine effective types: prefer config.types when non-empty
+  // 确定生效类型：config.types 非空时优先使用
   const effectiveTypes = config?.types?.length ? config.types : DEFAULT_COMMIT_TYPES;
   const commitRegex = effectiveTypes === DEFAULT_COMMIT_TYPES
     ? CONVENTIONAL_COMMIT_REGEX
     : new RegExp(`^(${effectiveTypes.join('|')})(\\([a-z0-9-]+\\))?(!)?:\\s.+$`);
 
-  // Check conventional commit format
+  // 检查约定式提交格式
   if (!commitRegex.test(subject)) {
     errors.push(
       'Subject must follow conventional commit format: type(scope?): description'
@@ -233,13 +233,13 @@ export function validateCommitMessage(
     errors.push(`Allowed types: ${effectiveTypes.join(', ')}`);
   }
 
-  // Check subject length
+  // 检查主题长度
   const maxLength = config?.maxSubjectLength || 72;
   if (subject.length > maxLength) {
     errors.push(`Subject line exceeds ${maxLength} characters`);
   }
 
-  // Check for scope if required
+  // 如有要求则检查 scope
   if (config?.requireScope) {
     const hasScope = /\([a-z0-9-]+\)/.test(subject);
     if (!hasScope) {
@@ -247,7 +247,7 @@ export function validateCommitMessage(
     }
   }
 
-  // Check for body if required
+  // 如有要求则检查正文
   if (config?.requireBody) {
     if (lines.length < 3 || !lines[2]) {
       errors.push('Commit body is required');
@@ -258,11 +258,11 @@ export function validateCommitMessage(
 }
 
 // =============================================================================
-// TYPE CHECKING PATTERN
+// 类型检查模式
 // =============================================================================
 
 /**
- * Run TypeScript type checking
+ * 运行 TypeScript 类型检查
  */
 export function runTypeCheck(directory: string): { success: boolean; message: string } {
   const tsconfigPath = join(directory, 'tsconfig.json');
@@ -277,7 +277,7 @@ export function runTypeCheck(directory: string): { success: boolean; message: st
     return { success: true, message: 'TypeScript not installed' };
   }
 
-  // shell:true on Windows avoids Node 20.12+ EINVAL when spawning npx.cmd (CVE-2024-27980). #2721
+  // Windows 下 shell:true 可避免在派生 npx.cmd 时触发 Node 20.12+ EINVAL（CVE-2024-27980）。#2721
   const tscResult = spawnSync('npx', ['tsc', '--noEmit'], {
     cwd: directory,
     stdio: 'pipe',
@@ -290,11 +290,11 @@ export function runTypeCheck(directory: string): { success: boolean; message: st
 }
 
 // =============================================================================
-// TEST RUNNER PATTERN
+// 测试运行器模式
 // =============================================================================
 
 /**
- * Detect and run tests for a project
+ * 检测并运行项目的测试
  */
 export function runTests(directory: string): { success: boolean; message: string } {
   const packageJsonPath = join(directory, 'package.json');
@@ -307,7 +307,7 @@ export function runTests(directory: string): { success: boolean; message: string
           cwd: directory,
           encoding: 'utf-8',
           stdio: 'pipe',
-          // shell:true on Windows avoids Node 20.12+ EINVAL when spawning npm.cmd (CVE-2024-27980). #2721
+          // Windows 下 shell:true 可避免在派生 npm.cmd 时触发 Node 20.12+ EINVAL（CVE-2024-27980）。#2721
           shell: process.platform === 'win32',
         });
         return { success: true, message: 'Tests passed' };
@@ -317,7 +317,7 @@ export function runTests(directory: string): { success: boolean; message: string
     }
   }
 
-  // Check for pytest
+  // 检查 pytest
   if (existsSync(join(directory, 'pytest.ini')) || existsSync(join(directory, 'pyproject.toml'))) {
     try {
       execFileSync('pytest', [], { cwd: directory, encoding: 'utf-8', stdio: 'pipe' });
@@ -331,11 +331,11 @@ export function runTests(directory: string): { success: boolean; message: string
 }
 
 // =============================================================================
-// PROJECT-LEVEL LINT RUNNER PATTERN
+// 项目级 LINT 运行器模式
 // =============================================================================
 
 /**
- * Run project-level lint checks
+ * 运行项目级 lint 检查
  */
 export function runLint(directory: string): { success: boolean; message: string } {
   const packageJsonPath = join(directory, 'package.json');
@@ -349,7 +349,7 @@ export function runLint(directory: string): { success: boolean; message: string 
             cwd: directory,
             encoding: 'utf-8',
             stdio: 'pipe',
-            // shell:true on Windows avoids Node 20.12+ EINVAL when spawning npm.cmd (CVE-2024-27980). #2721
+            // Windows 下 shell:true 可避免在派生 npm.cmd 时触发 Node 20.12+ EINVAL（CVE-2024-27980）。#2721
             shell: process.platform === 'win32',
           });
           return { success: true, message: 'Lint passed' };
@@ -358,7 +358,7 @@ export function runLint(directory: string): { success: boolean; message: string 
         }
       }
     } catch {
-      // Could not read package.json
+      // 无法读取 package.json
     }
   }
 
@@ -366,7 +366,7 @@ export function runLint(directory: string): { success: boolean; message: string 
 }
 
 // =============================================================================
-// PRE-COMMIT VALIDATION HOOK
+// 提交前校验钩子
 // =============================================================================
 
 export interface PreCommitResult {
@@ -379,7 +379,7 @@ export interface PreCommitResult {
 }
 
 /**
- * Run all pre-commit checks
+ * 运行所有提交前检查
  */
 export function runPreCommitChecks(
   directory: string,
@@ -387,7 +387,7 @@ export function runPreCommitChecks(
 ): PreCommitResult {
   const checks: PreCommitResult['checks'] = [];
 
-  // Type checking
+  // 类型检查
   const typeCheck = runTypeCheck(directory);
   checks.push({
     name: 'Type Check',
@@ -395,7 +395,7 @@ export function runPreCommitChecks(
     message: typeCheck.message
   });
 
-  // Test runner
+  // 测试运行器
   const testCheck = runTests(directory);
   checks.push({
     name: 'Tests',
@@ -411,7 +411,7 @@ export function runPreCommitChecks(
     message: lintCheck.message
   });
 
-  // Commit message validation
+  // 提交信息校验
   if (commitMessage) {
     const commitCheck = validateCommitMessage(commitMessage);
     checks.push({
@@ -421,18 +421,18 @@ export function runPreCommitChecks(
     });
   }
 
-  // All checks must pass
+  // 所有检查必须通过
   const canCommit = checks.every(c => c.passed);
 
   return { canCommit, checks };
 }
 
 // =============================================================================
-// HOOK MESSAGE GENERATORS
+// 钩子消息生成器
 // =============================================================================
 
 /**
- * Generate pre-commit check reminder message
+ * 生成提交前检查提醒消息
  */
 export function getPreCommitReminderMessage(result: PreCommitResult): string {
   if (result.canCommit) {
@@ -458,7 +458,7 @@ Please fix these issues before committing.
 }
 
 /**
- * Generate auto-format reminder message
+ * 生成自动格式化提醒消息
  */
 export function getAutoFormatMessage(filePath: string, result: { success: boolean; message: string }): string {
   if (result.success) {

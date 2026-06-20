@@ -1,8 +1,7 @@
 /**
- * Task Decomposition Engine
+ * 任务分解引擎
  *
- * Analyzes tasks and splits them into parallelizable components
- * with non-overlapping file ownership.
+ * 分析任务并将其拆分为可并行的组件，各组件拥有不重叠的文件所有权。
  */
 
 import type {
@@ -17,7 +16,7 @@ import type {
   DecompositionStrategy
 } from './types.js';
 
-// Re-export types
+// 重新导出类型
 export type {
   TaskAnalysis,
   Component,
@@ -32,31 +31,31 @@ export type {
 } from './types.js';
 
 /**
- * Main entry point: decompose a task into parallelizable subtasks
+ * 主入口：将任务分解为可并行的子任务
  */
 export async function decomposeTask(
   task: string,
   projectContext: ProjectContext = { rootDir: process.cwd() }
 ): Promise<DecompositionResult> {
-  // Step 1: Analyze the task
+  // 步骤 1：分析任务
   const analysis = analyzeTask(task, projectContext);
 
-  // Step 2: Identify parallelizable components
+  // 步骤 2：识别可并行的组件
   const components = identifyComponents(analysis, projectContext);
 
-  // Step 3: Identify shared files
+  // 步骤 3：识别共享文件
   const sharedFiles = identifySharedFiles(components, projectContext);
 
-  // Step 4: Generate subtasks with file ownership
+  // 步骤 4：生成带文件所有权的子任务
   const subtasks = generateSubtasks(components, analysis, projectContext);
 
-  // Step 5: Assign non-overlapping file ownership
+  // 步骤 5：分配不重叠的文件所有权
   assignFileOwnership(subtasks, sharedFiles, projectContext);
 
-  // Step 6: Determine execution order
+  // 步骤 6：确定执行顺序
   const executionOrder = calculateExecutionOrder(subtasks);
 
-  // Step 7: Validate decomposition
+  // 步骤 7：校验分解结果
   const warnings = validateDecomposition(subtasks, sharedFiles);
 
   return {
@@ -71,7 +70,7 @@ export async function decomposeTask(
 }
 
 /**
- * Analyze task to understand structure and requirements
+ * 分析任务以理解其结构和需求
  */
 export function analyzeTask(
   task: string,
@@ -79,21 +78,21 @@ export function analyzeTask(
 ): TaskAnalysis {
   const lower = task.toLowerCase();
 
-  // Detect task type
+  // 检测任务类型
   const type = detectTaskType(lower);
 
-  // Detect complexity signals
+  // 检测复杂度信号
   const complexity = estimateComplexity(lower, type);
 
-  // Extract areas and technologies
+  // 提取领域和技术
   const areas = extractAreas(lower, type);
   const technologies = extractTechnologies(lower, context);
   const filePatterns = extractFilePatterns(lower, context);
 
-  // Detect dependencies
+  // 检测依赖关系
   const dependencies = analyzeDependencies(areas, type);
 
-  // Determine if parallelizable
+  // 判断是否可并行
   const isParallelizable = complexity > 0.3 && areas.length >= 2;
   const estimatedComponents = isParallelizable
     ? Math.max(2, Math.min(areas.length, 6))
@@ -113,14 +112,14 @@ export function analyzeTask(
 }
 
 /**
- * Identify parallelizable components from analysis
+ * 从分析结果中识别可并行的组件
  */
 export function identifyComponents(
   analysis: TaskAnalysis,
   context: ProjectContext
 ): Component[] {
   if (!analysis.isParallelizable) {
-    // Single component for non-parallelizable tasks
+    // 不可并行任务使用单一组件
     return [
       {
         id: 'main',
@@ -135,7 +134,7 @@ export function identifyComponents(
     ];
   }
 
-  // Select appropriate strategy
+  // 选择合适的策略
   const strategy = selectStrategy(analysis);
   const result = strategy.decompose(analysis, context);
 
@@ -143,7 +142,7 @@ export function identifyComponents(
 }
 
 /**
- * Generate subtasks from components
+ * 从组件生成子任务
  */
 export function generateSubtasks(
   components: Component[],
@@ -174,7 +173,7 @@ export function generateSubtasks(
 }
 
 /**
- * Assign non-overlapping file ownership to subtasks
+ * 为子任务分配不重叠的文件所有权
  */
 export function assignFileOwnership(
   subtasks: Subtask[],
@@ -190,7 +189,7 @@ export function assignFileOwnership(
     subtask.ownership.patterns = patterns;
     subtask.ownership.files = files;
 
-    // Track assignments for conflict detection
+    // 跟踪分配情况以检测冲突
     for (const pattern of patterns) {
       if (!assignments.has(pattern)) {
         assignments.set(pattern, new Set());
@@ -199,14 +198,14 @@ export function assignFileOwnership(
     }
   }
 
-  // Detect conflicts
+  // 检测冲突
   for (const subtask of subtasks) {
     const conflicts: string[] = [];
 
     for (const pattern of subtask.ownership.patterns) {
       const owners = assignments.get(pattern);
       if (owners && owners.size > 1) {
-        // Check if it's a shared file
+        // 检查是否为共享文件
         const isShared = sharedFiles.some((sf) => sf.pattern === pattern);
         if (!isShared) {
           conflicts.push(pattern);
@@ -219,7 +218,7 @@ export function assignFileOwnership(
 }
 
 /**
- * Identify files that require orchestration (shared across components)
+ * 识别需要协调的文件（跨组件共享）
  */
 export function identifySharedFiles(
   components: Component[],
@@ -227,7 +226,7 @@ export function identifySharedFiles(
 ): SharedFile[] {
   const sharedFiles: SharedFile[] = [];
 
-  // Common shared files
+  // 常见共享文件
   const commonShared = [
     'package.json',
     'tsconfig.json',
@@ -255,7 +254,7 @@ export function identifySharedFiles(
     }
   }
 
-  // Detect framework-specific shared files
+  // 检测框架特定的共享文件
   if (context.technologies?.includes('react') || context.technologies?.includes('next')) {
     sharedFiles.push({
       pattern: 'src/types/**',
@@ -269,7 +268,7 @@ export function identifySharedFiles(
 }
 
 // ============================================================================
-// Helper Functions
+// 辅助函数
 // ============================================================================
 
 function detectTaskType(task: string): TaskType {
@@ -285,8 +284,8 @@ function detectTaskType(task: string): TaskType {
     return 'refactoring';
   }
 
-  // Require 2+ distinct signals to classify as bug-fix, to avoid false positives
-  // (e.g. "resolve the performance issue" should not be classified as bug-fix)
+  // 需 2 个以上不同信号才归类为 bug-fix，以避免误报
+  // （例如 "resolve the performance issue" 不应被归类为 bug-fix）
   const bugFixSignals = [
     /\bfix\b/,
     /\bbug\b/,
@@ -338,9 +337,9 @@ function detectTaskType(task: string): TaskType {
 }
 
 function estimateComplexity(task: string, type: TaskType): number {
-  let score = 0.3; // Base complexity
+  let score = 0.3; // 基础复杂度
 
-  // Task type complexity
+  // 任务类型复杂度
   const typeComplexity: Record<TaskType, number> = {
     'fullstack-app': 0.9,
     refactoring: 0.7,
@@ -356,11 +355,11 @@ function estimateComplexity(task: string, type: TaskType): number {
 
   score = typeComplexity[type];
 
-  // Length factor
+  // 长度因子
   if (task.length > 200) score += 0.1;
   if (task.length > 500) score += 0.1;
 
-  // Complexity keywords
+  // 复杂度关键词
   const complexKeywords = [
     'multiple',
     'complex',
@@ -436,7 +435,7 @@ function extractTechnologies(
     }
   }
 
-  // Add from context
+  // 从上下文中补充
   if (context.technologies) {
     techs.push(...context.technologies);
   }
@@ -447,14 +446,14 @@ function extractTechnologies(
 function extractFilePatterns(task: string, _context: ProjectContext): string[] {
   const patterns: string[] = [];
 
-  // Look for explicit paths
+  // 查找显式路径
   const pathRegex = /(?:^|\s)([\w\-/]+\.[\w]+)/g;
   let match;
   while ((match = pathRegex.exec(task)) !== null) {
     patterns.push(match[1]);
   }
 
-  // Common directory patterns
+  // 常见目录模式
   if (task.includes('src')) patterns.push('src/**');
   if (task.includes('test')) patterns.push('**/*.test.ts');
   if (task.includes('component')) patterns.push('**/components/**');
@@ -468,7 +467,7 @@ function analyzeDependencies(
 ): Array<{ from: string; to: string }> {
   const deps: Array<{ from: string; to: string }> = [];
 
-  // Common dependencies
+  // 常见依赖关系
   if (areas.includes('frontend') && areas.includes('backend')) {
     deps.push({ from: 'frontend', to: 'backend' });
   }
@@ -478,7 +477,7 @@ function analyzeDependencies(
   }
 
   if (areas.includes('testing')) {
-    // Testing depends on everything else
+    // 测试依赖其他所有领域
     for (const area of areas) {
       if (area !== 'testing') {
         deps.push({ from: 'testing', to: area });
@@ -505,7 +504,7 @@ function selectStrategy(analysis: TaskAnalysis): DecompositionStrategy {
 }
 
 // ============================================================================
-// Decomposition Strategies
+// 分解策略
 // ============================================================================
 
 const fullstackStrategy: DecompositionStrategy = {
@@ -514,9 +513,9 @@ const fullstackStrategy: DecompositionStrategy = {
   decompose: (analysis, _context) => {
     const components: Component[] = [];
 
-    // Frontend component
+    // 前端组件
     if (analysis.areas.includes('frontend') || analysis.areas.includes('ui')) {
-      // Only depend on backend if a backend component is also being created
+      // 仅当同时创建后端组件时才依赖 backend
       const frontendDeps = (analysis.areas.includes('backend') || analysis.areas.includes('api')) ? ['backend'] : [];
       components.push({
         id: 'frontend',
@@ -532,7 +531,7 @@ const fullstackStrategy: DecompositionStrategy = {
       });
     }
 
-    // Backend component
+    // 后端组件
     if (analysis.areas.includes('backend') || analysis.areas.includes('api')) {
       components.push({
         id: 'backend',
@@ -548,7 +547,7 @@ const fullstackStrategy: DecompositionStrategy = {
       });
     }
 
-    // Database component
+    // 数据库组件
     if (analysis.areas.includes('database')) {
       components.push({
         id: 'database',
@@ -564,7 +563,7 @@ const fullstackStrategy: DecompositionStrategy = {
       });
     }
 
-    // Shared component
+    // 共享组件
     components.push({
       id: 'shared',
       name: 'Shared',
@@ -586,7 +585,7 @@ const refactoringStrategy: DecompositionStrategy = {
   decompose: (analysis, _context) => {
     const components: Component[] = [];
 
-    // Group by module/directory
+    // 按模块/目录分组
     for (const area of analysis.areas) {
       components.push({
         id: area,
@@ -608,7 +607,7 @@ const bugFixStrategy: DecompositionStrategy = {
   name: 'Bug Fix',
   applicableTypes: ['bug-fix'],
   decompose: (analysis, _context) => {
-    // Bug fixes usually not parallelizable
+    // bug 修复通常不可并行
     const components: Component[] = [
       {
         id: 'bugfix',
@@ -632,7 +631,7 @@ const featureStrategy: DecompositionStrategy = {
   decompose: (analysis, _context) => {
     const components: Component[] = [];
 
-    // Break down by feature area
+    // 按功能领域拆分
     for (const area of analysis.areas) {
       components.push({
         id: area,
@@ -672,7 +671,7 @@ const defaultStrategy: DecompositionStrategy = {
 };
 
 // ============================================================================
-// Subtask Generation Helpers
+// 子任务生成辅助函数
 // ============================================================================
 
 function generatePromptForComponent(
@@ -821,7 +820,7 @@ function inferSpecificFiles(
 ): string[] {
   const files: string[] = [];
 
-  // Component-specific files can be added here
+  // 可在此添加组件特定的文件
 
   return files;
 }
@@ -836,7 +835,7 @@ function calculateExecutionOrder(subtasks: Subtask[]): string[][] {
 
     for (const subtask of subtasks) {
       if (remaining.has(subtask.id)) {
-        // Check if all dependencies are completed
+        // 检查所有依赖是否已完成
         const canRun = subtask.blockedBy.every((dep) => completed.has(dep));
 
         if (canRun) {
@@ -846,7 +845,7 @@ function calculateExecutionOrder(subtasks: Subtask[]): string[][] {
     }
 
     if (batch.length === 0) {
-      // Circular dependency or error
+      // 循环依赖或错误
       order.push(Array.from(remaining));
       break;
     }
@@ -868,7 +867,7 @@ function validateDecomposition(
 ): string[] {
   const warnings: string[] = [];
 
-  // Check for ownership overlaps
+  // 检查所有权重叠
   const patternOwners = new Map<string, string[]>();
 
   for (const subtask of subtasks) {
@@ -891,7 +890,7 @@ function validateDecomposition(
     }
   }
 
-  // Check for subtasks with no file ownership
+  // 检查没有文件所有权的子任务
   for (const subtask of subtasks) {
     if (
       subtask.ownership.patterns.length === 0 &&

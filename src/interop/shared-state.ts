@@ -1,10 +1,10 @@
 /**
- * Shared State Management for Cross-Tool Interoperability
+ * 用于跨工具互操作的共享状态管理
  *
- * Manages shared state files at .wise/state/interop/ for communication
- * between WISE (Claude Code) and OMX (Codex CLI).
+ * 在 .wise/state/interop/ 下管理共享状态文件，用于
+ * WISE（Claude Code）与 OMX（Codex CLI）之间的通信。
  *
- * Uses atomic writes for safety and supports task/message passing.
+ * 使用原子写入保证安全，并支持 task/message 传递。
  */
 
 import { join } from 'path';

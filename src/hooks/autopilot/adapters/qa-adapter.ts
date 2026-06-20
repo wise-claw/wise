@@ -1,10 +1,10 @@
 /**
- * QA Stage Adapter
+ * QA 阶段适配器
  *
- * Wraps the existing UltraQA module into the pipeline stage adapter interface.
+ * 将已有的 UltraQA 模块封装到流水线阶段适配器接口中。
  *
- * The QA stage runs build/lint/test cycling until all checks pass
- * or the maximum number of cycles is reached.
+ * QA 阶段循环运行 build/lint/test，直到所有检查通过
+ * 或达到最大循环次数。
  */
 
 import type { PipelineStageAdapter, PipelineConfig, PipelineContext } from '../pipeline-types.js';

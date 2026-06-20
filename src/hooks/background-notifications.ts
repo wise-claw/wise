@@ -7,14 +7,13 @@ export type BackgroundNotificationData = Partial<NotificationPayload> & {
 };
 
 /**
- * Dispatch hook-triggered notifications from an isolated detached Node process.
+ * 在一个独立的 detached Node 进程中派发由钩子触发的通知。
  *
- * Hook foreground processes have a strict stdout JSON protocol, and some CI
- * checks fail on unexpected stderr. Running notification work in-process means
- * late console output from notification formatters, transport failures, custom
- * integrations, or transitive modules can pollute the foreground hook streams.
- * The detached child uses stdio: "ignore" so all notification stdout/stderr is
- * isolated while the foreground hook can return its protocol payload promptly.
+ * 钩子前台进程有严格的 stdout JSON 协议，某些 CI 检查会在出现非预期 stderr 时
+ * 失败。若在进程内执行通知工作，通知格式化器、传输失败、自定义集成或传递依赖
+ * 模块产生的延迟控制台输出会污染前台钩子流。detached 子进程使用
+ * stdio: "ignore"，使所有通知的 stdout/stderr 被隔离，同时前台钩子可迅速返回
+ * 其协议载荷。
  */
 export function dispatchNotificationInBackground(
   event: NotificationEvent,
@@ -52,6 +51,6 @@ export function dispatchNotificationInBackground(
     });
     child.unref();
   } catch {
-    // Best-effort only: notification dispatch must never break hook handling.
+    // 仅尽力而为：通知派发绝不能中断钩子处理。
   }
 }

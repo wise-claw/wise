@@ -25,19 +25,19 @@ describe("Claude Code /goal adapter docs contract", () => {
       "https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md",
     );
     expect(adapterDoc).toContain(
-      "they are not authority for Claude Code `/goal` facts",
+      "它们并非 Claude Code `/goal` 事实的权威来源",
     );
   });
 
   it("documents the hidden-state non-mutation boundary", () => {
     expect(adapterDoc).toContain(
-      "it does not mutate hidden Claude Code goal state",
+      "它不会变更隐藏的 Claude Code goal 状态",
     );
     expect(adapterDoc).toContain(
-      "instead of writing hidden Claude Code session state directly",
+      "而非直接写入隐藏的 Claude Code 会话状态",
     );
     expect(referenceDoc).toContain(
-      "it must not mutate hidden Claude Code session state directly",
+      "不得直接变更隐藏 Claude Code 会话 state",
     );
   });
 
@@ -46,17 +46,17 @@ describe("Claude Code /goal adapter docs contract", () => {
       expect(adapterDoc).toContain(policy);
     }
 
-    expect(adapterDoc).toContain("must never “warn and continue”");
-    expect(adapterDoc).toContain("Any unknown policy is invalid");
+    expect(adapterDoc).toContain("绝不可与竞争循环“警告并继续”");
+    expect(adapterDoc).toContain("任何未知策略均无效");
   });
 
   it("keeps evaluator success separate from WISE final completion", () => {
-    expect(adapterDoc).toContain("`evaluator_passed` is not `complete`");
+    expect(adapterDoc).toContain("`evaluator_passed` 不等于 `complete`");
     expect(adapterDoc).toContain(
-      "Direct `evaluator_passed -> complete` transitions are invalid",
+      "直接的 `evaluator_passed -> complete` 转换无效",
     );
     expect(adapterDoc).toContain(
-      "the `/goal` evaluator judges surfaced conversation evidence",
+      "`/goal` 评估器判定的是浮现的会话证据",
     );
     expect(adapterDoc).not.toContain(
       "the evaluator independently reads files and runs commands",
@@ -65,7 +65,7 @@ describe("Claude Code /goal adapter docs contract", () => {
 
   it("links the adapter design from 参考.md", () => {
     expect(referenceDoc).toContain(
-      "[Claude Code `/goal` Adapter Design](#claude-code-goal-adapter-design)",
+      "[Claude Code `/goal` 适配器设计](#claude-code-goal-adapter-design)",
     );
     expect(referenceDoc).toContain("./design/CLAUDE_CODE_GOAL_ADAPTER.md");
   });

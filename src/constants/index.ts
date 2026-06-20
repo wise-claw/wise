@@ -1,5 +1,5 @@
 /**
- * Constants Module Barrel Export
+ * 常量模块统一导出
  */
 export {
   MODES,

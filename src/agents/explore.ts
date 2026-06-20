@@ -1,10 +1,10 @@
 /**
- * Explore Agent - Fast Pattern Matching and Code Search
+ * Explore Agent - 快速模式匹配与代码搜索
  *
- * Optimized for quick searches and broad exploration of internal codebases.
- * Uses parallel search strategies for maximum speed.
+ * 针对内部代码库的快速搜索与广泛探索进行优化。
+ * 使用并行搜索策略以获得最高速度。
  *
- * Ported from oh-my-opencode's explore agent.
+ * 从 oh-my-opencode 的 explore agent 移植。
  */
 
 import type { AgentConfig, AgentPromptMetadata } from './types.js';

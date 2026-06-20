@@ -1,12 +1,12 @@
 /**
- * tmux Detector
+ * tmux 检测器
  *
- * Detects Claude Code sessions running in tmux panes and identifies
- * those that are blocked due to rate limiting.
+ * 检测运行在 tmux 面板中的 Claude Code 会话，并识别
+ * 因速率限制而被阻塞的会话。
  *
- * Security considerations:
- * - Pane IDs are validated before use in shell commands
- * - Text inputs are sanitized to prevent command injection
+ * 安全考量：
+ * - 面板 ID 在用于 shell 命令前会先校验
+ * - 文本输入经过净化以防命令注入
  */
 
 import { tmuxExec, tmuxSpawn } from '../../cli/tmux-utils.js';
@@ -14,23 +14,23 @@ import { getNewPaneTail } from './pane-fresh-capture.js';
 import type { TmuxPane, PaneAnalysisResult, BlockedPane } from './types.js';
 
 /**
- * Validate tmux pane ID format to prevent command injection
- * Valid formats: %0, %1, %123, etc.
+ * 校验 tmux 面板 ID 格式以防止命令注入
+ * 合法格式：%0、%1、%123 等
  */
 function isValidPaneId(paneId: string): boolean {
   return /^%\d+$/.test(paneId);
 }
 
 /**
- * Sanitize text for use in tmux send-keys command
- * Escapes single quotes to prevent command injection
+ * 净化用于 tmux send-keys 命令的文本
+ * 转义单引号以防止命令注入
  */
 function sanitizeForTmux(text: string): string {
-  // Escape single quotes by ending the quote, adding escaped quote, and reopening
+  // 转义单引号：结束引号、加入转义引号、再重新开启引号
   return text.replace(/'/g, "'\\''");
 }
 
-/** Rate limit message patterns to detect in pane content */
+/** 要在面板内容中检测的速率限制消息模式 */
 const RATE_LIMIT_PATTERNS = [
   /rate limit/i,
   /usage limit/i,
@@ -43,13 +43,13 @@ const RATE_LIMIT_PATTERNS = [
   /hit .+ limit/i,
   /resets? .+ at/i,
   /5[- ]?hour/i,
-  // Require adjacent rate-limit vocabulary to avoid false-positives from git commit
-  // messages or documentation that contain the bare word "weekly" (e.g. "fix weekly
-  // report generation", "update weekly standup notes").
+  // 要求紧邻速率限制相关词汇，以避免 git 提交信息或文档中
+  // 出现裸词 "weekly"（如 "fix weekly report generation"、"update weekly
+  // standup notes"）造成误报。
   /\bweekly\s+(?:usage\s+)?(?:limit|quota|cap|allowance|allocation)\b/i,
 ];
 
-/** Patterns that indicate Claude Code is running */
+/** 表明 Claude Code 正在运行的模式 */
 const CLAUDE_CODE_PATTERNS = [
   /claude/i,
   /anthropic/i,
@@ -60,31 +60,30 @@ const CLAUDE_CODE_PATTERNS = [
 ];
 
 /**
- * Tightened weekly rate-limit pattern, extracted so `analyzePaneContent` can
- * use the same predicate for `rateLimitType` classification.
+ * 收紧后的每周速率限制模式，提取出来以便 `analyzePaneContent` 在
+ * `rateLimitType` 分类时复用同一断言。
  */
 const WEEKLY_RATE_LIMIT_PATTERN =
   /\bweekly\s+(?:usage\s+)?(?:limit|quota|cap|allowance|allocation)\b/i;
 
 /**
- * Line-level patterns that identify `git log` / `git show` / `git diff` output.
- * These lines are stripped before rate-limit pattern matching to prevent commit
- * messages from producing false-positive "weekly / assistant / conversation" hits.
+ * 识别 `git log` / `git show` / `git diff` 输出的行级模式。
+ * 这些行会在速率限制模式匹配前被剥离，以防止提交信息
+ * 产生 "weekly / assistant / conversation" 的误报命中。
  */
 const GIT_OUTPUT_LINE_PATTERNS: RegExp[] = [
-  /^commit\s+[0-9a-f]{6,40}\b/,         // git log commit hash
-  /^Author:\s+\S/,                        // git log author
-  /^Date:\s+\S/,                          // git log date
-  /^Merge:\s+[0-9a-f]{6,}/,              // git log merge line
-  /^diff\s+--git\s+a\//,                 // git diff header
-  /^(?:---|\+\+\+)\s+[ab]\//,            // git diff file paths
-  /^@@\s+-\d+/,                           // git diff hunk header
+  /^commit\s+[0-9a-f]{6,40}\b/,         // git log 提交哈希
+  /^Author:\s+\S/,                        // git log 作者行
+  /^Date:\s+\S/,                          // git log 日期行
+  /^Merge:\s+[0-9a-f]{6,}/,              // git log 合并行
+  /^diff\s+--git\s+a\//,                 // git diff 头部
+  /^(?:---|\+\+\+)\s+[ab]\//,            // git diff 文件路径
+  /^@@\s+-\d+/,                           // git diff hunk 头部
 ];
 
 /**
- * Strip lines that are clearly `git log` / `git diff` output so that commit
- * message text (e.g. "Fix weekly report", "Update assistant config") cannot
- * trigger rate-limit keyword patterns.
+ * 剥离明显是 `git log` / `git diff` 输出的行，以防止提交信息文本
+ * （如 "Fix weekly report"、"Update assistant config"）触发速率限制关键词模式。
  */
 function stripGitOutputLines(content: string): string {
   return content
@@ -93,11 +92,11 @@ function stripGitOutputLines(content: string): string {
     .join('\n');
 }
 
-/** Patterns that indicate the pane is waiting for user input */
+/** 表明面板正在等待用户输入的模式 */
 const WAITING_PATTERNS = [
-  /\[\d+\]/,              // Menu selection prompt like [1], [2], [3]
-  /^\s*❯?\s*\d+\.\s/m,     // Menu selection prompt like "❯ 1. ..." or "  2. ..."
-  /continue\?/i,           // Continue prompt
+  /\[\d+\]/,              // 菜单选择提示，如 [1]、[2]、[3]
+  /^\s*❯?\s*\d+\.\s/m,     // 菜单选择提示，如 "❯ 1. ..." 或 "  2. ..."
+  /continue\?/i,           // 继续提示
   /press enter/i,
   /waiting for/i,
   /select an option/i,
@@ -106,8 +105,8 @@ const WAITING_PATTERNS = [
 ];
 
 /**
- * Check if tmux is installed and available.
- * On Windows, a tmux-compatible binary such as psmux may provide tmux.
+ * 检查 tmux 是否已安装且可用。
+ * 在 Windows 上，可由 psmux 之类兼容 tmux 的二进制提供 tmux。
  */
 export function isTmuxAvailable(): boolean {
   try {
@@ -119,14 +118,14 @@ export function isTmuxAvailable(): boolean {
 }
 
 /**
- * Check if currently running inside a tmux session
+ * 检查当前是否运行在 tmux 会话内
  */
 export function isInsideTmux(): boolean {
   return !!process.env.TMUX;
 }
 
 /**
- * List all tmux panes across all sessions
+ * 列出所有会话中的全部 tmux 面板
  */
 export function listTmuxPanes(): TmuxPane[] {
   if (!isTmuxAvailable()) {
@@ -134,7 +133,7 @@ export function listTmuxPanes(): TmuxPane[] {
   }
 
   try {
-    // Format: session_name:window_index.pane_index pane_id pane_active window_name pane_title
+    // 格式：session_name:window_index.pane_index pane_id pane_active window_name pane_title
     const format = '#{session_name}:#{window_index}.#{pane_index} #{pane_id} #{pane_active} #{window_name} #{pane_title}';
     const result = tmuxExec(['list-panes', '-a', '-F', format], {
       stripTmux: true,
@@ -172,15 +171,14 @@ export function listTmuxPanes(): TmuxPane[] {
 }
 
 /**
- * Check whether a tmux pane is alive (not in the dead/exited state).
+ * 检查 tmux 面板是否存活（未处于 dead/exited 状态）。
  *
- * tmux sets #{pane_dead} to "1" once the child process in the pane exits.
- * Capturing content from a dead pane returns stale scrollback and can
- * trigger spurious keyword alerts — callers should skip capture when this
- * returns false.
+ * 一旦面板中的子进程退出，tmux 就把 #{pane_dead} 置为 "1"。
+ * 从已死亡的面板捕获内容会返回陈旧回滚内容，可能
+ * 触发虚假关键词告警 —— 当本函数返回 false 时调用方应跳过捕获。
  *
- * Returns false for dead panes, invalid pane IDs, and when tmux is unavailable.
- * Intentionally synchronous so it can be used in fire-and-forget hook paths.
+ * 面板已死亡、面板 ID 非法以及 tmux 不可用时均返回 false。
+ * 刻意做成同步，以便用于即发即忘的钩子路径。
  */
 export function isPaneAlive(paneId: string): boolean {
   if (!isTmuxAvailable()) {
@@ -196,33 +194,33 @@ export function isPaneAlive(paneId: string): boolean {
     );
     return result.trim() === '0';
   } catch {
-    // pane gone or session dead — treat as not alive
+    // 面板消失或会话已死亡 —— 视为不存活
     return false;
   }
 }
 
 /**
- * Capture the content of a specific tmux pane
+ * 捕获指定 tmux 面板的内容
  *
- * @param paneId - The tmux pane ID (e.g., "%0")
- * @param lines - Number of lines to capture (default: 15)
+ * @param paneId - tmux 面板 ID（如 "%0"）
+ * @param lines - 捕获的行数（默认：15）
  */
 export function capturePaneContent(paneId: string, lines = 15): string {
   if (!isTmuxAvailable()) {
     return '';
   }
 
-  // Validate pane ID to prevent command injection
+  // 校验面板 ID 以防止命令注入
   if (!isValidPaneId(paneId)) {
     console.error(`[TmuxDetector] Invalid pane ID format: ${paneId}`);
     return '';
   }
 
-  // Validate lines is a reasonable positive integer
+  // 校验 lines 为合理的正整数
   const safeLines = Math.max(1, Math.min(100, Math.floor(lines)));
 
   try {
-    // Capture the last N lines from the pane
+    // 捕获面板最后 N 行
     const result = tmuxExec(['capture-pane', '-t', paneId, '-p', '-S', `-${safeLines}`], {
       stripTmux: true,
       timeout: 5000,
@@ -235,7 +233,7 @@ export function capturePaneContent(paneId: string, lines = 15): string {
 }
 
 /**
- * Analyze pane content to determine if it shows a rate-limited Claude Code session
+ * 分析面板内容，判断是否显示了被速率限制的 Claude Code 会话
  */
 export function analyzePaneContent(content: string): PaneAnalysisResult {
   if (!content.trim()) {
@@ -247,25 +245,25 @@ export function analyzePaneContent(content: string): PaneAnalysisResult {
     };
   }
 
-  // Strip git log / diff lines so commit message text (e.g. "Fix weekly report",
-  // "Update assistant config") cannot produce false-positive keyword matches.
+  // 剥离 git log / diff 行，以防止提交信息文本（如 "Fix weekly report"、
+  // "Update assistant config"）产生误报关键词匹配。
   const cleanedContent = stripGitOutputLines(content);
 
-  // Check for Claude Code indicators
+  // 检查 Claude Code 指示特征
   const hasClaudeCode = CLAUDE_CODE_PATTERNS.some((pattern) =>
     pattern.test(cleanedContent)
   );
 
-  // Check for rate limit messages
+  // 检查速率限制消息
   const rateLimitMatches = RATE_LIMIT_PATTERNS.filter((pattern) =>
     pattern.test(cleanedContent)
   );
   const hasRateLimitMessage = rateLimitMatches.length > 0;
 
-  // Check if waiting for user input
+  // 检查是否在等待用户输入
   const isWaiting = WAITING_PATTERNS.some((pattern) => pattern.test(cleanedContent));
 
-  // Determine rate limit type
+  // 确定速率限制类型
   let rateLimitType: 'five_hour' | 'weekly' | 'unknown' | undefined;
   if (hasRateLimitMessage) {
     if (/5[- ]?hour/i.test(cleanedContent)) {
@@ -277,14 +275,14 @@ export function analyzePaneContent(content: string): PaneAnalysisResult {
     }
   }
 
-  // Calculate confidence
+  // 计算置信度
   let confidence = 0;
   if (hasClaudeCode) confidence += 0.4;
   if (hasRateLimitMessage) confidence += 0.4;
   if (isWaiting) confidence += 0.2;
-  if (rateLimitMatches.length > 1) confidence += 0.1; // Multiple matches = higher confidence
+  if (rateLimitMatches.length > 1) confidence += 0.1; // 多个匹配 = 更高置信度
 
-  // Determine if blocked
+  // 判断是否被阻塞
   const isBlocked = hasClaudeCode && hasRateLimitMessage && confidence >= 0.6;
 
   return {
@@ -297,14 +295,14 @@ export function analyzePaneContent(content: string): PaneAnalysisResult {
 }
 
 /**
- * Scan all tmux panes for blocked Claude Code sessions.
+ * 扫描所有 tmux 面板，查找被阻塞的 Claude Code 会话。
  *
- * @param lines    - Number of lines to capture from each pane
- * @param stateDir - When provided, use cursor-tracked capture (getNewPaneTail) so
- *                   repeated daemon polls only surface lines written since the last
- *                   scan. Panes with no new output are skipped, preventing stale
- *                   rate-limit messages from re-alerting after blockers are resolved.
- *                   When omitted, falls back to a plain capturePaneContent call.
+ * @param lines    - 每个面板捕获的行数
+ * @param stateDir - 提供时使用游标跟踪捕获（getNewPaneTail），使
+ *                   守护进程的重复轮询只输出自上次扫描以来写入的行。
+ *                   无新输出的面板会被跳过，防止陈旧速率限制消息
+ *                   在阻塞解除后重复告警。
+ *                   省略时回退为普通的 capturePaneContent 调用。
  */
 export function scanForBlockedPanes(lines = 15, stateDir?: string): BlockedPane[] {
   const panes = listTmuxPanes();
@@ -313,8 +311,8 @@ export function scanForBlockedPanes(lines = 15, stateDir?: string): BlockedPane[
   for (const pane of panes) {
     let content: string;
     if (stateDir) {
-      // Cursor-tracked: only lines appended since the last scan are returned.
-      // An empty result means nothing new — skip to avoid stale re-alerts.
+      // 游标跟踪：仅返回自上次扫描以来新增的行。
+      // 结果为空表示没有新内容 —— 跳过以避免陈旧重复告警。
       content = getNewPaneTail(pane.id, stateDir, lines);
       if (!content) continue;
     } else {
@@ -336,34 +334,34 @@ export function scanForBlockedPanes(lines = 15, stateDir?: string): BlockedPane[
 }
 
 /**
- * Send resume sequence to a tmux pane
+ * 向 tmux 面板发送恢复序列
  *
- * This sends "1" followed by Enter to select the first option (usually "Continue"),
- * then waits briefly and sends "continue" if needed.
+ * 先发送 "1" 加回车以选择第一项（通常是 "Continue"），
+ * 然后短暂等待，必要时再发送 "continue"。
  *
- * @param paneId - The tmux pane ID
- * @returns Whether the command was sent successfully
+ * @param paneId - tmux 面板 ID
+ * @returns 命令是否发送成功
  */
 export function sendResumeSequence(paneId: string): boolean {
   if (!isTmuxAvailable()) {
     return false;
   }
 
-  // Validate pane ID to prevent command injection
+  // 校验面板 ID 以防止命令注入
   if (!isValidPaneId(paneId)) {
     console.error(`[TmuxDetector] Invalid pane ID format: ${paneId}`);
     return false;
   }
 
   try {
-    // Send "1" to select the first option (typically "Continue" or similar)
+    // 发送 "1" 以选择第一项（通常是 "Continue" 或类似选项）
     tmuxExec(['send-keys', '-t', paneId, '1', 'Enter'], {
       stripTmux: true,
       timeout: 2000,
     });
 
-    // Wait a moment for the response
-    // Note: In real usage, we should verify the pane state changed
+    // 稍作等待以接收响应
+    // 注意：实际使用中应校验面板状态是否已改变
     return true;
   } catch (error) {
     console.error(`[TmuxDetector] Error sending resume to pane ${paneId}:`, error);
@@ -372,14 +370,14 @@ export function sendResumeSequence(paneId: string): boolean {
 }
 
 /**
- * Send custom text to a tmux pane
+ * 向 tmux 面板发送自定义文本
  */
 export function sendToPane(paneId: string, text: string, pressEnter = true): boolean {
   if (!isTmuxAvailable()) {
     return false;
   }
 
-  // Validate pane ID to prevent command injection
+  // 校验面板 ID 以防止命令注入
   if (!isValidPaneId(paneId)) {
     console.error(`[TmuxDetector] Invalid pane ID format: ${paneId}`);
     return false;
@@ -387,12 +385,12 @@ export function sendToPane(paneId: string, text: string, pressEnter = true): boo
 
   try {
     const sanitizedText = sanitizeForTmux(text);
-    // Send text with -l flag (literal) to avoid key interpretation issues in TUI apps
+    // 用 -l 标志（字面量）发送文本，以避免 TUI 应用中的按键解析问题
     tmuxExec(['send-keys', '-t', paneId, '-l', sanitizedText], {
       stripTmux: true,
       timeout: 2000,
     });
-    // Send Enter as a separate command so it is interpreted as a key press
+    // 将回车作为独立命令发送，使其被解析为一次按键
     if (pressEnter) {
       tmuxExec(['send-keys', '-t', paneId, 'Enter'], {
         stripTmux: true,
@@ -407,7 +405,7 @@ export function sendToPane(paneId: string, text: string, pressEnter = true): boo
 }
 
 /**
- * Get a summary of blocked panes for display
+ * 获取被阻塞面板的汇总信息以供显示
  */
 export function formatBlockedPanesSummary(blockedPanes: BlockedPane[]): string {
   if (blockedPanes.length === 0) {

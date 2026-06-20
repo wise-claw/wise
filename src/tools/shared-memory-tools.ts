@@ -1,13 +1,12 @@
 /**
- * Shared Memory MCP Tools
+ * 共享内存 MCP 工具
  *
- * Provides tools for cross-session memory sync between agents
- * in /team and /pipeline workflows. Agents can write, read, list,
- * delete, and clean up shared key-value entries namespaced by
- * session group or pipeline run.
+ * 为 /team 与 /pipeline 工作流中的跨会话内存同步提供工具。
+ * 智能体可按会话组或 pipeline run 划分的命名空间，对共享键值条目进行
+ * 写入、读取、列出、删除与清理。
  *
- * Storage: .wise/state/shared-memory/{namespace}/{key}.json
- * Config gate: agents.sharedMemory.enabled in ~/.claude/.wise-config.json
+ * 存储：.wise/state/shared-memory/{namespace}/{key}.json
+ * 配置开关：~/.claude/.wise-config.json 中的 agents.sharedMemory.enabled
  *
  * @see https://github.com/anthropics/wise/issues/1119
  */
@@ -27,7 +26,7 @@ import {
 import type { ToolDefinition } from './types.js';
 
 // ---------------------------------------------------------------------------
-// Helpers
+// 辅助函数
 // ---------------------------------------------------------------------------
 
 const DISABLED_MSG = `Shared memory is disabled. Set agents.sharedMemory.enabled = true in ${getClaudeConfigDir()}/.wise-config.json to enable.`;
@@ -160,7 +159,7 @@ export const sharedMemoryListTool: ToolDefinition<{
       const root = validateWorkingDirectory(args.workingDirectory);
 
       if (!args.namespace) {
-        // List all namespaces
+        // 列出所有命名空间
         const namespaces = listNamespaces(root);
         if (namespaces.length === 0) {
           return {
@@ -175,7 +174,7 @@ export const sharedMemoryListTool: ToolDefinition<{
         };
       }
 
-      // List keys in namespace
+      // 列出命名空间内的键
       const items = listEntries(args.namespace, root);
       if (items.length === 0) {
         return {
@@ -291,7 +290,7 @@ export const sharedMemoryCleanupTool: ToolDefinition<{
 };
 
 // ---------------------------------------------------------------------------
-// Export all tools
+// 导出全部工具
 // ---------------------------------------------------------------------------
 
 export const sharedMemoryTools = [

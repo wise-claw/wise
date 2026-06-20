@@ -1,22 +1,22 @@
 /**
- * Agent Usage Reminder Constants
+ * Agent Usage Reminder 常量
  *
- * Constants for tracking tool usage and encouraging agent delegation.
+ * 用于跟踪工具使用并鼓励委派给代理的常量。
  *
- * Ported from oh-my-opencode's agent-usage-reminder hook.
+ * 移植自 oh-my-opencode 的 agent-usage-reminder 钩子。
  */
 
 import { join } from 'path';
 import { homedir } from 'os';
 
-/** Storage directory for agent usage reminder state */
+/** agent 使用提醒状态的存储目录 */
 export const WISE_STORAGE_DIR = join(homedir(), '.wise');
 export const AGENT_USAGE_REMINDER_STORAGE = join(
   WISE_STORAGE_DIR,
   'agent-usage-reminder',
 );
 
-/** All tool names normalized to lowercase for case-insensitive matching */
+/** 所有工具名归一化为小写，以支持大小写不敏感匹配 */
 export const TARGET_TOOLS = new Set([
   'grep',
   'safe_grep',
@@ -29,14 +29,14 @@ export const TARGET_TOOLS = new Set([
   'context7_get-library-docs',
 ]);
 
-/** Agent tools that indicate agent usage */
+/** 表示已使用代理的代理工具 */
 export const AGENT_TOOLS = new Set([
   'task',
   'call_omo_agent',
   'wise_task',
 ]);
 
-/** Reminder message shown to users */
+/** 展示给用户的提醒消息 */
 export const REMINDER_MESSAGE = `
 [Agent Usage Reminder]
 

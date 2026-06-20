@@ -1,5 +1,5 @@
 /**
- * Configuration Module Exports
+ * 配置模块导出
  */
 
 export {

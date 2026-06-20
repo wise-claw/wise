@@ -1,34 +1,34 @@
 /**
- * Background Task Management
+ * Background Task 管理
  *
- * Provides utilities for managing background task execution,
- * similar to oh-my-opencode's Background Task Manager.
+ * 提供后台任务执行的管理工具，
+ * 类似于 oh-my-opencode 的 Background Task Manager。
  *
- * In Claude Code, background execution is controlled via:
- * - Bash tool's `run_in_background` parameter
- * - Task tool's `run_in_background` parameter
- * - TaskOutput tool for retrieving results
+ * 在 Claude Code 中，后台执行通过以下方式控制：
+ * - Bash 工具的 `run_in_background` 参数
+ * - Task 工具的 `run_in_background` 参数
+ * - TaskOutput 工具用于获取结果
  *
- * This module provides:
- * - Decision heuristics for when to use background execution
- * - Task lifecycle management
- * - Concurrency limit enforcement
- * - System prompt guidance for agents
+ * 本模块提供：
+ * - 何时使用后台执行的决策启发式
+ * - 任务生命周期管理
+ * - 并发上限强制执行
+ * - 面向智能体的系统 prompt 指引
  */
 
 import type { BackgroundTask, SessionState, PluginConfig } from '../shared/types.js';
 
 /**
- * Default maximum concurrent background tasks
+ * 默认最大并发后台任务数
  */
 export const DEFAULT_MAX_BACKGROUND_TASKS = 5;
 
 /**
- * Patterns that indicate long-running operations
- * These should typically run in background
+ * 标识长耗时操作的模式
+ * 这些通常应在后台运行
  */
 export const LONG_RUNNING_PATTERNS = [
-  // Package managers
+  // 包管理器
   /\b(npm|yarn|pnpm|bun)\s+(install|ci|update|upgrade)\b/i,
   /\b(pip|pip3)\s+install\b/i,
   /\bcargo\s+(build|install|test)\b/i,
@@ -39,7 +39,7 @@ export const LONG_RUNNING_PATTERNS = [
   /\bmaven|mvn\s+(install|package|test)\b/i,
   /\bgradle\s+(build|test)\b/i,
 
-  // Build commands
+  // 构建命令
   /\b(npm|yarn|pnpm|bun)\s+run\s+(build|compile|bundle)\b/i,
   /\bmake\s*(all|build|install)?\s*$/i,
   /\bcmake\s+--build\b/i,
@@ -49,31 +49,31 @@ export const LONG_RUNNING_PATTERNS = [
   /\besbuild\b/i,
   /\bvite\s+build\b/i,
 
-  // Test suites
+  // 测试套件
   /\b(npm|yarn|pnpm|bun)\s+run\s+test\b/i,
   /\b(jest|mocha|vitest|pytest|cargo\s+test)\b/i,
   /\bgo\s+test\b/i,
 
-  // Docker operations
+  // Docker 操作
   /\bdocker\s+(build|pull|push)\b/i,
   /\bdocker-compose\s+(up|build)\b/i,
 
-  // Database operations
+  // 数据库操作
   /\b(prisma|typeorm|sequelize)\s+(migrate|generate|push)\b/i,
 
-  // Linting large codebases
+  // 大型代码库的 lint
   /\b(eslint|prettier)\s+[^|]*\.\s*$/i,
 
-  // Git operations on large repos
+  // 大型仓库的 git 操作
   /\bgit\s+(clone|fetch|pull)\b/i,
 ];
 
 /**
- * Patterns that should always run blocking (foreground)
- * These are quick operations or need immediate feedback
+ * 始终应阻塞（前台）运行的模式
+ * 这些是快速操作或需要即时反馈
  */
 export const BLOCKING_PATTERNS = [
-  // Quick status checks
+  // 快速状态检查
   /\bgit\s+(status|diff|log|branch)\b/i,
   /\bls\b/i,
   /\bpwd\b/i,
@@ -85,14 +85,14 @@ export const BLOCKING_PATTERNS = [
   /\bwhich\b/i,
   /\btype\b/i,
 
-  // File operations
+  // 文件操作
   /\bcp\b/i,
   /\bmv\b/i,
   /\brm\b/i,
   /\bmkdir\b/i,
   /\btouch\b/i,
 
-  // Environment checks
+  // 环境检查
   /\benv\b/i,
   /\bprintenv\b/i,
   /\bnode\s+-[vpe]\b/i,
@@ -101,36 +101,36 @@ export const BLOCKING_PATTERNS = [
 ];
 
 /**
- * Result of background execution decision
+ * 后台执行决策的结果
  */
 export interface TaskExecutionDecision {
-  /** Whether to run in background */
+  /** 是否在后台运行 */
   runInBackground: boolean;
-  /** Human-readable reason for the decision */
+  /** 人类可读的决策原因 */
   reason: string;
-  /** Estimated duration category */
+  /** 预估耗时类别 */
   estimatedDuration: 'quick' | 'medium' | 'long' | 'unknown';
-  /** Confidence level of the decision */
+  /** 决策的置信度等级 */
   confidence: 'high' | 'medium' | 'low';
 }
 
 /**
- * Determine if a command should run in background
+ * 判断某条命令是否应在后台运行
  *
- * This is the core heuristic function that decides whether a command
- * should be executed with `run_in_background: true`.
+ * 这是核心启发式函数，决定某条命令
+ * 是否应使用 `run_in_background: true` 执行。
  *
- * @param command - The command to analyze
- * @param currentBackgroundCount - Number of currently running background tasks
- * @param maxBackgroundTasks - Maximum allowed concurrent background tasks
- * @returns Decision object with recommendation and reasoning
+ * @param command - 待分析的命令
+ * @param currentBackgroundCount - 当前正在运行的后台任务数
+ * @param maxBackgroundTasks - 允许的最大并发后台任务数
+ * @returns 包含建议与理由的决策对象
  */
 export function shouldRunInBackground(
   command: string,
   currentBackgroundCount: number = 0,
   maxBackgroundTasks: number = DEFAULT_MAX_BACKGROUND_TASKS
 ): TaskExecutionDecision {
-  // Check if at capacity
+  // 检查是否已达上限
   if (currentBackgroundCount >= maxBackgroundTasks) {
     return {
       runInBackground: false,
@@ -140,7 +140,7 @@ export function shouldRunInBackground(
     };
   }
 
-  // Check for explicit blocking patterns first
+  // 先检查显式的阻塞模式
   for (const pattern of BLOCKING_PATTERNS) {
     if (pattern.test(command)) {
       return {
@@ -152,7 +152,7 @@ export function shouldRunInBackground(
     }
   }
 
-  // Check for long-running patterns
+  // 检查长耗时模式
   for (const pattern of LONG_RUNNING_PATTERNS) {
     if (pattern.test(command)) {
       return {
@@ -164,7 +164,7 @@ export function shouldRunInBackground(
     }
   }
 
-  // Heuristic: commands with multiple operations (piped or chained)
+  // 启发式：包含多个操作（管道或链式）的命令
   if ((command.match(/\|/g) || []).length > 2 || (command.match(/&&/g) || []).length > 2) {
     return {
       runInBackground: true,
@@ -174,7 +174,7 @@ export function shouldRunInBackground(
     };
   }
 
-  // Default: run blocking for unknown commands
+  // 默认：未知命令阻塞运行
   return {
     runInBackground: false,
     reason: 'Unknown command type. Running blocking for immediate feedback.',
@@ -184,48 +184,48 @@ export function shouldRunInBackground(
 }
 
 /**
- * BackgroundTaskManager interface
+ * BackgroundTaskManager 接口
  *
- * Manages background task lifecycle, enforces concurrency limits,
- * and provides utilities for tracking task status.
+ * 管理后台任务生命周期、强制执行并发上限，
+ * 并提供跟踪任务状态的工具。
  */
 export interface BackgroundTaskManager {
-  /** Register a new background task */
+  /** 注册一个新的后台任务 */
   registerTask(agentName: string, prompt: string): BackgroundTask;
 
-  /** Get all background tasks */
+  /** 获取全部后台任务 */
   getTasks(): BackgroundTask[];
 
-  /** Get tasks by status */
+  /** 按状态获取任务 */
   getTasksByStatus(status: BackgroundTask['status']): BackgroundTask[];
 
-  /** Get count of running tasks */
+  /** 获取正在运行的任务数 */
   getRunningCount(): number;
 
-  /** Check if we can start a new background task */
+  /** 检查能否启动新的后台任务 */
   canStartNewTask(): boolean;
 
-  /** Update task status */
+  /** 更新任务状态 */
   updateTaskStatus(taskId: string, status: BackgroundTask['status'], result?: string, error?: string): void;
 
-  /** Mark task as completed */
+  /** 标记任务为已完成 */
   completeTask(taskId: string, result: string): void;
 
-  /** Mark task as failed */
+  /** 标记任务为失败 */
   failTask(taskId: string, error: string): void;
 
-  /** Remove completed tasks older than specified age (ms) */
+  /** 移除超过指定时长（毫秒）的已完成任务 */
   pruneCompletedTasks(maxAge?: number): number;
 
-  /** Get the maximum allowed background tasks */
+  /** 获取允许的最大后台任务数 */
   getMaxTasks(): number;
 
-  /** Check if a command should run in background */
+  /** 检查某条命令是否应在后台运行 */
   shouldRunInBackground(command: string): TaskExecutionDecision;
 }
 
 /**
- * Create a BackgroundTaskManager instance
+ * 创建一个 BackgroundTaskManager 实例
  */
 export function createBackgroundTaskManager(
   state: SessionState,
@@ -279,8 +279,8 @@ export function createBackgroundTaskManager(
     },
 
     pruneCompletedTasks(_maxAge: number = 5 * 60 * 1000): number {
-      // Note: maxAge-based pruning would require tracking task completion timestamps
-      // For now, just prune all completed/errored tasks
+      // 注意：基于 maxAge 的清理需要跟踪任务完成时间戳
+      // 暂时只清理所有已完成/出错的任务
       const before = state.backgroundTasks.length;
       state.backgroundTasks = state.backgroundTasks.filter(t =>
         t.status !== 'completed' && t.status !== 'error'
@@ -299,10 +299,10 @@ export function createBackgroundTaskManager(
 }
 
 /**
- * System prompt guidance for background task execution
+ * 后台任务执行的系统 prompt 指引
  *
- * This text should be appended to the system prompt to guide agents
- * on when and how to use background execution.
+ * 此文本应附加到系统 prompt 中，以指引智能体
+ * 何时以及如何使用后台执行。
  */
 export function getBackgroundTaskGuidance(maxBackgroundTasks: number = DEFAULT_MAX_BACKGROUND_TASKS): string {
   return `

@@ -1,14 +1,14 @@
 /**
- * LSP (Language Server Protocol) Tools
+ * LSP（Language Server Protocol）工具
  *
- * Provides IDE-like capabilities to agents via real LSP server integration:
- * - Hover information
- * - Go to definition
- * - Find references
- * - Document/workspace symbols
- * - Diagnostics
- * - Rename
- * - Code actions
+ * 通过真实 LSP 服务器集成为 agent 提供 IDE 式能力：
+ * - 悬停信息
+ * - 跳转到定义
+ * - 查找引用
+ * - 文档/工作区符号
+ * - 诊断
+ * - 重命名
+ * - 代码操作
  */
 
 import { z } from 'zod';
@@ -29,9 +29,9 @@ import { runDirectoryDiagnostics } from './diagnostics/index.js';
 import { ToolDefinition } from './types.js';
 
 /**
- * Helper to handle LSP errors gracefully.
- * Uses runWithClientLease to protect the client from idle eviction
- * while the operation is in flight.
+ * 优雅处理 LSP 错误的辅助函数。
+ * 使用 runWithClientLease 保护客户端，使其在操作进行中
+ * 不会被空闲驱逐。
  */
 async function withLspClient<T>(
   filePath: string,
@@ -39,7 +39,7 @@ async function withLspClient<T>(
   fn: (client: NonNullable<Awaited<ReturnType<typeof lspClientManager.getClientForFile>>>) => Promise<T>
 ): Promise<{ isError?: true; content: Array<{ type: 'text'; text: string }> }> {
   try {
-    // Pre-check: is there a server for this file type?
+    // 预检查：此文件类型是否有对应的服务器？
     const serverConfig = getServerForFile(filePath);
     if (!serverConfig) {
       return {
@@ -62,7 +62,7 @@ async function withLspClient<T>(
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    // Surface install hints for missing servers
+    // 为缺失的服务器暴露安装提示
     if (message.includes('not found')) {
       return {
         isError: true as const,
@@ -83,7 +83,7 @@ async function withLspClient<T>(
 }
 
 /**
- * LSP Hover Tool - Get type information and documentation at a position
+ * LSP Hover 工具 - 获取指定位置的类型信息和文档
  */
 export const lspHoverTool: ToolDefinition<{
   file: z.ZodString;
@@ -107,7 +107,7 @@ export const lspHoverTool: ToolDefinition<{
 };
 
 /**
- * LSP Go to Definition Tool - Jump to where a symbol is defined
+ * LSP 跳转到定义工具 - 跳转到符号的定义位置
  */
 export const lspGotoDefinitionTool: ToolDefinition<{
   file: z.ZodString;
@@ -131,7 +131,7 @@ export const lspGotoDefinitionTool: ToolDefinition<{
 };
 
 /**
- * LSP Find References Tool - Find all usages of a symbol
+ * LSP 查找引用工具 - 查找符号的全部用法
  */
 export const lspFindReferencesTool: ToolDefinition<{
   file: z.ZodString;

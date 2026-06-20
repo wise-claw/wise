@@ -1,7 +1,7 @@
 /**
- * Wisdom Extractor
+ * Wisdom 提取器
  *
- * Parses agent completion responses to extract wisdom entries.
+ * 解析 agent 完成响应，提取 wisdom 条目。
  */
 
 import type { WisdomCategory } from './types.js';
@@ -12,9 +12,9 @@ export interface ExtractedWisdom {
 }
 
 /**
- * Extract wisdom from agent completion response
+ * 从 agent 完成响应中提取 wisdom
  *
- * Looks for wisdom blocks in formats like:
+ * 查找如下格式的 wisdom 块：
  * - <wisdom category="learnings">content</wisdom>
  * - <learning>content</learning>
  * - <decision>content</decision>
@@ -24,7 +24,7 @@ export interface ExtractedWisdom {
 export function extractWisdomFromCompletion(response: string): ExtractedWisdom[] {
   const extracted: ExtractedWisdom[] = [];
 
-  // Pattern 1: <wisdom category="...">content</wisdom>
+  // 模式 1：<wisdom category="...">content</wisdom>
   const wisdomTagRegex = /<wisdom\s+category=["'](\w+)["']>([\s\S]*?)<\/wisdom>/gi;
   let match;
 
@@ -37,7 +37,7 @@ export function extractWisdomFromCompletion(response: string): ExtractedWisdom[]
     }
   }
 
-  // Pattern 2: <learning>, <decision>, <issue>, <problem> tags
+  // 模式 2：<learning>、<decision>、<issue>、<problem> 标签
   const _categories: WisdomCategory[] = ['learnings', 'decisions', 'issues', 'problems'];
   const singularMap: Record<string, WisdomCategory> = {
     learning: 'learnings',
@@ -61,14 +61,14 @@ export function extractWisdomFromCompletion(response: string): ExtractedWisdom[]
 }
 
 /**
- * Validate wisdom category
+ * 校验 wisdom 类别
  */
 function isValidCategory(category: string): category is WisdomCategory {
   return ['learnings', 'decisions', 'issues', 'problems'].includes(category);
 }
 
 /**
- * Extract wisdom by category
+ * 按类别提取 wisdom
  */
 export function extractWisdomByCategory(
   response: string,
@@ -81,7 +81,7 @@ export function extractWisdomByCategory(
 }
 
 /**
- * Check if response contains wisdom
+ * 检查响应是否包含 wisdom
  */
 export function hasWisdom(response: string): boolean {
   return extractWisdomFromCompletion(response).length > 0;

@@ -1,38 +1,38 @@
 /**
- * Preemptive Compaction Constants
+ * 预防性压缩常量
  *
- * Thresholds and messages for context usage monitoring.
+ * 用于上下文用量监控的阈值与消息。
  *
- * Adapted from oh-my-opencode's preemptive-compaction hook.
+ * 改编自 oh-my-opencode 的 preemptive-compaction 钩子。
  */
 
 /**
- * Default threshold ratio to trigger warning (85%)
+ * 触发告警的默认阈值比例（85%）
  */
 export const DEFAULT_THRESHOLD = 0.85;
 
 /**
- * Critical threshold ratio (95%)
+ * 临界阈值比例（95%）
  */
 export const CRITICAL_THRESHOLD = 0.95;
 
 /**
- * Minimum tokens before considering compaction
+ * 考虑压缩前的最小 token 数
  */
 export const MIN_TOKENS_FOR_COMPACTION = 50_000;
 
 /**
- * Cooldown period between compaction warnings (1 minute)
+ * 压缩告警之间的冷却期（1 分钟）
  */
 export const COMPACTION_COOLDOWN_MS = 60_000;
 
 /**
- * Maximum warnings per session before stopping
+ * 每个会话停止前的最大告警次数
  */
 export const MAX_WARNINGS = 3;
 
 /**
- * Default context limits for Claude models
+ * Claude 模型的默认上下文上限
  */
 export const CLAUDE_DEFAULT_CONTEXT_LIMIT =
   process.env.ANTHROPIC_1M_CONTEXT === 'true' ||
@@ -41,12 +41,12 @@ export const CLAUDE_DEFAULT_CONTEXT_LIMIT =
     : 200_000;
 
 /**
- * Average characters per token estimate
+ * 每 token 平均字符数估算
  */
 export const CHARS_PER_TOKEN = 4;
 
 /**
- * Warning message when context usage is high
+ * 上下文用量较高时的告警消息
  */
 export const CONTEXT_WARNING_MESSAGE = `CONTEXT WINDOW WARNING - APPROACHING LIMIT
 
@@ -71,7 +71,7 @@ Action recommended: Use /compact when convenient.
 `;
 
 /**
- * Critical warning message when context is almost full
+ * 上下文即将占满时的临界告警消息
  */
 export const CONTEXT_CRITICAL_MESSAGE = `CRITICAL: CONTEXT WINDOW ALMOST FULL
 
@@ -95,6 +95,6 @@ Action required: Run /compact now.
 `;
 
 /**
- * Message when compaction was successful
+ * 压缩成功时的消息
  */
 export const COMPACTION_SUCCESS_MESSAGE = `Context compacted successfully. Session can continue normally.`;

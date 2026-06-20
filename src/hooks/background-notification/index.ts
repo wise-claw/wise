@@ -1,11 +1,11 @@
 /**
- * Background Notification Hook
+ * 后台通知钩子
  *
- * Handles notifications for background tasks completing.
- * Integrates with the BackgroundManager to show task completion status.
+ * 处理后台任务完成时的通知。
+ * 与 BackgroundManager 集成以展示任务完成状态。
  *
- * Adapted from oh-my-opencode's background-notification hook for Claude Code's
- * shell hooks system.
+ * 改编自 oh-my-opencode 的 background-notification 钩子，适配 Claude Code 的
+ * shell 钩子系统。
  */
 
 import { getBackgroundManager } from '../../features/background-agent/index.js';
@@ -17,7 +17,7 @@ import type {
   NotificationCheckResult,
 } from './types.js';
 
-// Re-export types
+// 重新导出类型
 export type {
   BackgroundNotificationHookConfig,
   BackgroundNotificationHookInput,
@@ -25,11 +25,11 @@ export type {
   NotificationCheckResult,
 } from './types.js';
 
-/** Hook name identifier */
+/** 钩子名称标识 */
 export const HOOK_NAME = 'background-notification';
 
 /**
- * Format a single task notification
+ * 格式化单个任务通知
  */
 function formatTaskNotification(task: BackgroundTask): string {
   const status = task.status.toUpperCase();
@@ -60,7 +60,7 @@ function formatTaskNotification(task: BackgroundTask): string {
 }
 
 /**
- * Format duration between two dates
+ * 格式化两个日期之间的时长
  */
 function formatDuration(start: Date, end?: Date): string {
   const duration = (end ?? new Date()).getTime() - start.getTime();
@@ -77,7 +77,7 @@ function formatDuration(start: Date, end?: Date): string {
 }
 
 /**
- * Default formatter for notification messages
+ * 通知消息的默认格式化器
  */
 function defaultFormatNotification(tasks: BackgroundTask[]): string {
   if (tasks.length === 0) {
@@ -96,14 +96,14 @@ function defaultFormatNotification(tasks: BackgroundTask[]): string {
 }
 
 /**
- * Check for pending background notifications
+ * 检查待处理的后台通知
  */
 export function checkBackgroundNotifications(
   sessionId: string,
   manager: BackgroundManager,
   config?: BackgroundNotificationHookConfig
 ): NotificationCheckResult {
-  // Get pending notifications for this session
+  // 获取本会话的待处理通知
   const tasks = manager.getPendingNotifications(sessionId);
 
   if (tasks.length === 0) {
@@ -113,7 +113,7 @@ export function checkBackgroundNotifications(
     };
   }
 
-  // Format notification message
+  // 格式化通知消息
   const formatter = config?.formatNotification ?? defaultFormatNotification;
   const message = formatter(tasks);
 
@@ -125,7 +125,7 @@ export function checkBackgroundNotifications(
 }
 
 /**
- * Process background notification event
+ * 处理后台通知事件
  */
 export function processBackgroundNotification(
   input: BackgroundNotificationHookInput,
@@ -137,17 +137,17 @@ export function processBackgroundNotification(
     return { continue: true };
   }
 
-  // Get background manager
+  // 获取后台管理器
   const manager = getBackgroundManager();
 
-  // Check for notifications
+  // 检查通知
   const result = checkBackgroundNotifications(sessionId, manager, config);
 
   if (!result.hasNotifications) {
     return { continue: true };
   }
 
-  // Clear notifications if auto-clear is enabled (default: true)
+  // 若启用了自动清除则清除通知（默认：true）
   const autoClear = config?.autoClear ?? true;
   if (autoClear) {
     manager.clearNotifications(sessionId);
@@ -161,14 +161,14 @@ export function processBackgroundNotification(
 }
 
 /**
- * Handle event from BackgroundManager
- * This is called by the BackgroundManager when tasks complete
+ * 处理来自 BackgroundManager 的事件
+ * 当任务完成时由 BackgroundManager 调用
  */
 export function handleBackgroundEvent(
   event: { type: string; properties?: Record<string, unknown> },
   manager: BackgroundManager
 ): void {
-  // Handle task completion events
+  // 处理任务完成事件
   if (event.type === 'task.completed' || event.type === 'task.failed') {
     const taskId = event.properties?.taskId as string;
     if (taskId) {
@@ -181,7 +181,7 @@ export function handleBackgroundEvent(
 }
 
 /**
- * Create background notification hook handlers
+ * 创建后台通知钩子处理器
  */
 export function createBackgroundNotificationHook(
   manager: BackgroundManager,
@@ -189,39 +189,39 @@ export function createBackgroundNotificationHook(
 ) {
   return {
     /**
-     * Hook name identifier
+     * 钩子名称标识
      */
     name: HOOK_NAME,
 
     /**
-     * Process an event (for shell hook compatibility)
+     * 处理事件（用于 shell 钩子兼容）
      */
     event: async (input: BackgroundNotificationHookInput): Promise<BackgroundNotificationHookOutput> => {
-      // Handle event if provided
+      // 若提供了事件则处理
       if (input.event) {
         handleBackgroundEvent(input.event, manager);
       }
 
-      // Process notifications
+      // 处理通知
       return processBackgroundNotification(input, config);
     },
 
     /**
-     * Check for pending notifications without clearing them
+     * 检查待处理通知但不清除
      */
     check: (sessionId: string): NotificationCheckResult => {
       return checkBackgroundNotifications(sessionId, manager, config);
     },
 
     /**
-     * Manually clear notifications for a session
+     * 手动清除某会话的通知
      */
     clear: (sessionId: string): void => {
       manager.clearNotifications(sessionId);
     },
 
     /**
-     * Get all pending notifications without clearing
+     * 获取所有待处理通知但不清除
      */
     getPending: (sessionId: string): BackgroundTask[] => {
       return manager.getPendingNotifications(sessionId);
@@ -230,7 +230,7 @@ export function createBackgroundNotificationHook(
 }
 
 /**
- * Simple utility function for shell hook integration
+ * 用于 shell 钩子集成的简单工具函数
  */
 export async function processBackgroundNotificationHook(
   input: BackgroundNotificationHookInput,

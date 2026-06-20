@@ -1,8 +1,8 @@
 /**
- * Routing Rules
+ * 路由规则
  *
- * Defines the rules engine for model routing decisions.
- * Rules are evaluated in priority order, and the first matching rule wins.
+ * 定义模型路由决策的规则引擎。
+ * 规则按优先级顺序评估，首个匹配的规则生效。
  */
 
 import type {
@@ -13,10 +13,10 @@ import type {
 } from './types.js';
 
 /**
- * Default routing rules, ordered by priority (highest first)
+ * 默认路由规则，按优先级排序（最高优先在前）
  */
 export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
-  // ============ Override Rules (Highest Priority) ============
+  // ============ 覆盖规则（最高优先级）============
 
   {
     name: 'explicit-model-specified',
@@ -25,13 +25,13 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     priority: 100,
   },
 
-  // NOTE: ALL agents are now ADAPTIVE based on task complexity
-  // This includes: architect, planner, critic, analyst, explore, writer, etc.
+  // 注意：所有代理现在都根据任务复杂度自适应
+  // 包括：architect、planner、critic、analyst、explore、writer 等
 
-  // ============ Advisory Agent Adaptive Rules ============
+  // ============ 建议类代理自适应规则 ============
 
-  // Architect: Simple lookups → LOW, tracing → MEDIUM, debugging/architecture → HIGH
-  // Higher priority (85) to override generic rules like short-local-change
+  // Architect：简单查询 → LOW，追踪 → MEDIUM，调试/架构 → HIGH
+  // 优先级更高（85），以覆盖 short-local-change 等通用规则
   {
     name: 'architect-complex-debugging',
     condition: (ctx, signals) =>
@@ -55,7 +55,7 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     priority: 80,
   },
 
-  // Planner: Simple breakdown → LOW, moderate planning → MEDIUM, cross-domain → HIGH
+  // Planner：简单拆分 → LOW，中等规划 → MEDIUM，跨领域 → HIGH
   {
     name: 'planner-simple-breakdown',
     condition: (ctx, signals) =>
@@ -78,7 +78,7 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     priority: 75,
   },
 
-  // Critic: Checklist → LOW, gap analysis → MEDIUM, adversarial review → HIGH
+  // Critic：清单检查 → LOW，差距分析 → MEDIUM，对抗性评审 → HIGH
   {
     name: 'critic-checklist-review',
     condition: (ctx, signals) =>
@@ -98,7 +98,7 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     priority: 75,
   },
 
-  // Analyst: Simple impact → LOW, dependency mapping → MEDIUM, risk analysis → HIGH
+  // Analyst：简单影响分析 → LOW，依赖梳理 → MEDIUM，风险分析 → HIGH
   {
     name: 'analyst-simple-impact',
     condition: (ctx, signals) =>
@@ -118,7 +118,7 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     priority: 75,
   },
 
-  // ============ Task-Based Rules ============
+  // ============ 基于任务的规则 ============
 
   {
     name: 'architecture-system-wide',
@@ -204,7 +204,7 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     priority: 45,
   },
 
-  // ============ Default Rule ============
+  // ============ 默认规则 ============
 
   {
     name: 'default-medium',
@@ -215,14 +215,14 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
 ];
 
 /**
- * Evaluate routing rules and return the first matching rule's action
+ * 评估路由规则，返回首个匹配规则的动作
  */
 export function evaluateRules(
   context: RoutingContext,
   signals: ComplexitySignals,
   rules: RoutingRule[] = DEFAULT_ROUTING_RULES
 ): { tier: ComplexityTier | 'EXPLICIT'; reason: string; ruleName: string } {
-  // Sort rules by priority (highest first)
+  // 按优先级排序规则（最高优先在前）
   const sortedRules = [...rules].sort((a, b) => b.priority - a.priority);
 
   for (const rule of sortedRules) {
@@ -235,7 +235,7 @@ export function evaluateRules(
     }
   }
 
-  // Should never reach here due to default rule, but just in case
+  // 由于存在默认规则，理论上不会到达此处，但以防万一
   return {
     tier: 'MEDIUM',
     reason: 'Fallback to medium tier',
@@ -244,7 +244,7 @@ export function evaluateRules(
 }
 
 /**
- * Get all rules that would match for a given context (for debugging)
+ * 获取给定上下文下所有会匹配的规则（用于调试）
  */
 export function getMatchingRules(
   context: RoutingContext,
@@ -255,7 +255,7 @@ export function getMatchingRules(
 }
 
 /**
- * Create a custom routing rule
+ * 创建自定义路由规则
  */
 export function createRule(
   name: string,
@@ -273,10 +273,10 @@ export function createRule(
 }
 
 /**
- * Merge custom rules with default rules
+ * 将自定义规则与默认规则合并
  */
 export function mergeRules(customRules: RoutingRule[]): RoutingRule[] {
-  // Custom rules override defaults with the same name
+  // 同名自定义规则覆盖默认规则
   const customNames = new Set(customRules.map(r => r.name));
   const filteredDefaults = DEFAULT_ROUTING_RULES.filter(
     r => !customNames.has(r.name)

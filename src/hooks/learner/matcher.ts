@@ -1,5 +1,5 @@
-// Smart skill matcher with fuzzy matching, pattern detection, and confidence scoring
-// No external dependencies - uses built-in only
+// 智能技能匹配器：支持模糊匹配、模式检测与置信度评分
+// 无外部依赖——仅使用内置功能
 
 export interface MatchResult {
   skillId: string;
@@ -10,9 +10,9 @@ export interface MatchResult {
 }
 
 export interface MatchContext {
-  detectedErrors: string[]; // e.g., ["TypeError", "ENOENT"]
-  detectedFiles: string[]; // e.g., ["src/foo.ts"]
-  detectedPatterns: string[]; // e.g., ["async/await", "promise"]
+  detectedErrors: string[]; // 例如 ["TypeError", "ENOENT"]
+  detectedFiles: string[]; // 例如 ["src/foo.ts"]
+  detectedPatterns: string[]; // 例如 ["async/await", "promise"]
 }
 
 interface SkillInput {
@@ -22,12 +22,12 @@ interface SkillInput {
 }
 
 interface MatchOptions {
-  threshold?: number; // Minimum confidence score (default: 30)
-  maxResults?: number; // Maximum results to return (default: 10)
+  threshold?: number; // 最小置信度分数（默认：30）
+  maxResults?: number; // 返回结果的最大数量（默认：10）
 }
 
 /**
- * Match skills against a prompt using multiple matching strategies
+ * 使用多种匹配策略将技能与提示词进行匹配
  */
 export function matchSkills(
   prompt: string,
@@ -37,7 +37,7 @@ export function matchSkills(
   const { threshold = 30, maxResults = 10 } = options;
   const trimmedPrompt = prompt.trim();
 
-  // Early return for empty or whitespace-only prompts
+  // 对空或仅含空白字符的提示词提前返回
   if (!trimmedPrompt) {
     return [];
   }
@@ -57,20 +57,20 @@ export function matchSkills(
     for (const trigger of allTriggers) {
       const normalizedTrigger = trigger.toLowerCase();
 
-      // 1. Exact match (highest confidence)
+      // 1. 精确匹配（置信度最高）
       if (normalizedPrompt.includes(normalizedTrigger)) {
         matches.push({ trigger, score: 100, type: 'exact' });
         continue;
       }
 
-      // 2. Pattern match (regex/glob-like patterns)
+      // 2. 模式匹配（正则/glob 风格模式）
       const patternScore = patternMatch(normalizedPrompt, normalizedTrigger);
       if (patternScore > 0) {
         matches.push({ trigger, score: patternScore, type: 'pattern' });
         continue;
       }
 
-      // 3. Fuzzy match (Levenshtein distance)
+      // 3. 模糊匹配（Levenshtein 距离）
       const fuzzyScore = fuzzyMatch(normalizedPrompt, normalizedTrigger);
       if (fuzzyScore >= 60) {
         matches.push({ trigger, score: fuzzyScore, type: 'fuzzy' });
@@ -78,7 +78,7 @@ export function matchSkills(
     }
 
     if (matches.length > 0) {
-      // Calculate overall confidence based on best matches
+      // 基于最佳匹配计算综合置信度
       const bestMatch = matches.reduce((a, b) => (a.score > b.score ? a : b));
       const avgScore =
         matches.reduce((sum, m) => sum + m.score, 0) / matches.length;
@@ -96,20 +96,20 @@ export function matchSkills(
     }
   }
 
-  // Sort by confidence (descending) and limit results
+  // 按置信度降序排序并限制结果数量
   return results
     .sort((a, b) => b.confidence - a.confidence)
     .slice(0, maxResults);
 }
 
 /**
- * Fuzzy string matching using Levenshtein distance
- * Returns confidence score 0-100
+ * 使用 Levenshtein 距离进行模糊字符串匹配
+ * 返回 0-100 的置信度分数
  */
 export function fuzzyMatch(text: string, pattern: string): number {
   if (!text.trim() || !pattern.trim()) return 0;
 
-  // Check if pattern is a substring first (partial match bonus)
+  // 先检查模式是否为子串（部分匹配加成）
   const words = text.split(/\s+/).filter(w => w.length > 0);
   for (const word of words) {
     if (word === pattern) return 100;
@@ -119,7 +119,7 @@ export function fuzzyMatch(text: string, pattern: string): number {
     }
   }
 
-  // Calculate Levenshtein distance for each word
+  // 为每个词计算 Levenshtein 距离
   let bestScore = 0;
   for (const word of words) {
     const distance = levenshteinDistance(word, pattern);
@@ -132,22 +132,22 @@ export function fuzzyMatch(text: string, pattern: string): number {
 }
 
 /**
- * Calculate Levenshtein distance between two strings
+ * 计算两个字符串之间的 Levenshtein 距离
  */
 function levenshteinDistance(str1: string, str2: string): number {
   const m = str1.length;
   const n = str2.length;
 
-  // Create distance matrix
+  // 创建距离矩阵
   const dp: number[][] = Array(m + 1)
     .fill(null)
     .map(() => Array(n + 1).fill(0));
 
-  // Initialize first row and column
+  // 初始化首行与首列
   for (let i = 0; i <= m; i++) dp[i][0] = i;
   for (let j = 0; j <= n; j++) dp[0][j] = j;
 
-  // Fill the matrix
+  // 填充矩阵
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
       if (str1[i - 1] === str2[j - 1]) {
@@ -156,9 +156,9 @@ function levenshteinDistance(str1: string, str2: string): number {
         dp[i][j] =
           1 +
           Math.min(
-            dp[i - 1][j], // deletion
-            dp[i][j - 1], // insertion
-            dp[i - 1][j - 1] // substitution
+            dp[i - 1][j], // 删除
+            dp[i][j - 1], // 插入
+            dp[i - 1][j - 1] // 替换
           );
       }
     }
@@ -168,35 +168,35 @@ function levenshteinDistance(str1: string, str2: string): number {
 }
 
 /**
- * Pattern-based matching for regex-like triggers
- * Returns confidence score 0-100
+ * 针对类正则触发器的基于模式的匹配
+ * 返回 0-100 的置信度分数
  */
 function patternMatch(text: string, pattern: string): number {
-  // Check for glob-like patterns
+  // 检查 glob 风格模式
   if (pattern.includes('*')) {
     const regexPattern = pattern.replace(/\*/g, '.*');
     try {
       const regex = new RegExp(regexPattern, 'i');
       if (regex.test(text)) {
-        return 85; // High confidence for pattern match
+        return 85; // 模式匹配的置信度较高
       }
     } catch {
-      // Invalid regex, skip
+      // 无效正则，跳过
     }
   }
 
-  // Check for regex-like patterns (starts with / and has / somewhere after, with optional flags)
-  // Supports: /pattern/ or /pattern/flags (e.g., /error/i)
+  // 检查类正则模式（以 / 开头，其后某处有 /，可带可选标志）
+  // 支持：/pattern/ 或 /pattern/flags（例如 /error/i）
   const regexMatch = pattern.match(/^\/(.+)\/([gimsuy]*)$/);
   if (regexMatch) {
     try {
       const [, regexPattern, flags] = regexMatch;
       const regex = new RegExp(regexPattern, flags || 'i');
       if (regex.test(text)) {
-        return 90; // Very high confidence for explicit regex match
+        return 90; // 显式正则匹配的置信度极高
       }
     } catch {
-      // Invalid regex, skip
+      // 无效正则，跳过
     }
   }
 
@@ -204,19 +204,19 @@ function patternMatch(text: string, pattern: string): number {
 }
 
 /**
- * Extract contextual information from the prompt
+ * 从提示词中提取上下文信息
  */
 export function extractContext(prompt: string): MatchContext {
   const detectedErrors: string[] = [];
   const detectedFiles: string[] = [];
   const detectedPatterns: string[] = [];
 
-  // Error detection
+  // 错误检测
   const errorPatterns = [
     /\b(error|exception|failed|failure|crash|bug)\b/gi,
-    /\b([A-Z][a-z]+Error)\b/g, // TypeError, ReferenceError, etc.
-    /\b(ENOENT|EACCES|ECONNREFUSED)\b/g, // Node.js error codes
-    /at\s+.*\(.*:\d+:\d+\)/g, // Stack trace lines
+    /\b([A-Z][a-z]+Error)\b/g, // TypeError、ReferenceError 等
+    /\b(ENOENT|EACCES|ECONNREFUSED)\b/g, // Node.js 错误码
+    /at\s+.*\(.*:\d+:\d+\)/g, // 堆栈跟踪行
   ];
 
   for (const pattern of errorPatterns) {
@@ -228,11 +228,11 @@ export function extractContext(prompt: string): MatchContext {
     }
   }
 
-  // File detection
+  // 文件检测
   const filePatterns = [
-    /\b([a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+\.[a-z]{2,4}\b/g, // Relative paths
-    /\b\/[a-zA-Z0-9_\/-]+\.[a-z]{2,4}\b/g, // Absolute paths
-    /\bsrc\/[a-zA-Z0-9_\/-]+/g, // src/ paths
+    /\b([a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+\.[a-z]{2,4}\b/g, // 相对路径
+    /\b\/[a-zA-Z0-9_\/-]+\.[a-z]{2,4}\b/g, // 绝对路径
+    /\bsrc\/[a-zA-Z0-9_\/-]+/g, // src/ 路径
   ];
 
   for (const pattern of filePatterns) {
@@ -244,7 +244,7 @@ export function extractContext(prompt: string): MatchContext {
     }
   }
 
-  // Pattern detection
+  // 模式检测
   const codePatterns = [
     { pattern: /\basync\b.*\bawait\b/gi, name: 'async/await' },
     { pattern: /\bpromise\b/gi, name: 'promise' },
@@ -264,7 +264,7 @@ export function extractContext(prompt: string): MatchContext {
     }
   }
 
-  // Deduplicate and normalize
+  // 去重并归一化
   return {
     detectedErrors: [...new Set(detectedErrors)],
     detectedFiles: [...new Set(detectedFiles)],
@@ -273,7 +273,7 @@ export function extractContext(prompt: string): MatchContext {
 }
 
 /**
- * Calculate confidence score based on match metrics
+ * 基于匹配指标计算置信度分数
  */
 export function calculateConfidence(
   matches: number,
@@ -285,7 +285,7 @@ export function calculateConfidence(
   const matchRatio = matches / total;
   const baseScore = matchRatio * 100;
 
-  // Apply multiplier based on match type
+  // 根据匹配类型应用乘数
   const multipliers: Record<string, number> = {
     exact: 1.0,
     pattern: 0.9,

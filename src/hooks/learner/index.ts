@@ -1,8 +1,7 @@
 /**
- * Learned Skills Hook
+ * 已学习技能钩子
  *
- * Automatically injects relevant learned skills into context
- * based on message content triggers.
+ * 根据消息内容触发器，自动将相关已学习技能注入上下文。
  */
 
 import { contextCollector } from "../../features/context-injector/index.js";
@@ -11,7 +10,7 @@ import { MAX_SKILLS_PER_SESSION } from "./constants.js";
 import { loadConfig } from "./config.js";
 import type { LearnedSkill } from "./types.js";
 
-// Re-export submodules
+// 重新导出子模块
 export * from "./types.js";
 export * from "./constants.js";
 export * from "./finder.js";
@@ -25,7 +24,7 @@ export * from "./promotion.js";
 export * from "./config.js";
 export * from "./matcher.js";
 export * from "./auto-invoke.js";
-// Note: auto-learner exports are renamed to avoid collision with ralph's recordPattern
+// 注意：auto-learner 的导出已重命名，以避免与 ralph 的 recordPattern 冲突
 export {
   type PatternDetection,
   type AutoLearnerState,
@@ -38,13 +37,13 @@ export {
 } from "./auto-learner.js";
 
 /**
- * Session cache for tracking injected skills.
+ * 用于跟踪已注入技能的会话缓存。
  */
 const sessionCaches = new Map<string, Set<string>>();
 const MAX_SESSIONS = 100;
 
 /**
- * Check if feature is enabled.
+ * 检查该功能是否启用。
  */
 export function isLearnerEnabled(): boolean {
   return loadConfig().enabled;
@@ -84,7 +83,7 @@ function formatSkillDescriptor(skill: LearnedSkill): string {
 }
 
 /**
- * Format skills for context injection.
+ * 将技能格式化为可注入上下文的形式。
  */
 function formatSkillsForContext(skills: LearnedSkill[]): string {
   if (skills.length === 0) return "";
@@ -121,7 +120,7 @@ function formatSkillsForContext(skills: LearnedSkill[]): string {
 }
 
 /**
- * Process a user message and inject matching skills.
+ * 处理用户消息并注入匹配的技能。
  */
 export function processMessageForSkills(
   message: string,
@@ -132,7 +131,7 @@ export function processMessageForSkills(
     return { injected: 0, skills: [] };
   }
 
-  // Get or create session cache
+  // 获取或创建会话缓存
   if (!sessionCaches.has(sessionId)) {
     if (sessionCaches.size >= MAX_SESSIONS) {
       const firstKey = sessionCaches.keys().next().value;
@@ -142,7 +141,7 @@ export function processMessageForSkills(
   }
   const injectedHashes = sessionCaches.get(sessionId)!;
 
-  // Find matching skills not already injected
+  // 查找尚未注入的匹配技能
   const matchingSkills = findMatchingSkills(
     message,
     projectRoot,
@@ -156,12 +155,12 @@ export function processMessageForSkills(
     return { injected: 0, skills: [] };
   }
 
-  // Mark as injected
+  // 标记为已注入
   for (const skill of newSkills) {
     injectedHashes.add(skill.contentHash);
   }
 
-  // Register with context collector
+  // 注册到上下文收集器
   const content = formatSkillsForContext(newSkills);
   contextCollector.register(sessionId, {
     id: "learner",
@@ -178,45 +177,45 @@ export function processMessageForSkills(
 }
 
 /**
- * Clear session cache.
+ * 清理会话缓存。
  */
 export function clearSkillSession(sessionId: string): void {
   sessionCaches.delete(sessionId);
 }
 
 /**
- * Get all loaded skills (for debugging/display).
+ * 获取所有已加载的技能（用于调试/展示）。
  */
 export function getAllSkills(projectRoot: string | null): LearnedSkill[] {
   return loadAllSkills(projectRoot);
 }
 
 /**
- * Create the learned skills hook for Claude Code.
+ * 为 Claude Code 创建已学习技能钩子。
  */
 export function createLearnedSkillsHook(projectRoot: string | null) {
   return {
     /**
-     * Process user message for skill injection.
+     * 处理用户消息以注入技能。
      */
     processMessage: (message: string, sessionId: string) => {
       return processMessageForSkills(message, sessionId, projectRoot);
     },
 
     /**
-     * Clear session when done.
+     * 完成后清理会话。
      */
     clearSession: (sessionId: string) => {
       clearSkillSession(sessionId);
     },
 
     /**
-     * Get all skills for display.
+     * 获取所有技能用于展示。
      */
     getAllSkills: () => getAllSkills(projectRoot),
 
     /**
-     * Check if feature enabled.
+     * 检查功能是否启用。
      */
     isEnabled: isLearnerEnabled,
   };

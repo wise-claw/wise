@@ -1,134 +1,134 @@
 /**
- * Rate Limit Wait - Type Definitions
+ * 速率限制等待 - 类型定义
  *
- * Types for the rate limit auto-resume daemon.
- * Reference: https://github.com/EvanOman/cc-wait
+ * 速率限制自动恢复守护进程的类型。
+ * 参考：https://github.com/EvanOman/cc-wait
  */
 
 import type { UsageErrorReason } from '../../hud/types.js';
 
 export interface RateLimitStatus {
-  /** Whether rate limited on 5-hour window */
+  /** 是否在 5 小时窗口内受到速率限制 */
   fiveHourLimited: boolean;
-  /** Whether rate limited on weekly window */
+  /** 是否在每周窗口内受到速率限制 */
   weeklyLimited: boolean;
-  /** Whether rate limited on monthly window (if available from API) */
+  /** 是否在每月窗口内受到速率限制（如 API 可提供） */
   monthlyLimited: boolean;
-  /** Combined: true if any limit is hit */
+  /** 综合：任一限制触发即为 true */
   isLimited: boolean;
-  /** When 5-hour limit resets */
+  /** 5 小时限制的重置时间 */
   fiveHourResetsAt: Date | null;
-  /** When weekly limit resets */
+  /** 每周限制的重置时间 */
   weeklyResetsAt: Date | null;
-  /** When monthly limit resets (if available from API) */
+  /** 每月限制的重置时间（如 API 可提供） */
   monthlyResetsAt: Date | null;
-  /** Earliest reset time */
+  /** 最早的重置时间 */
   nextResetAt: Date | null;
-  /** Time until reset in milliseconds */
+  /** 距离重置的毫秒数 */
   timeUntilResetMs: number | null;
-  /** Latest 5-hour usage percentage if available */
+  /** 最新的 5 小时用量百分比（如可用） */
   fiveHourPercent?: number;
-  /** Latest weekly usage percentage if available */
+  /** 最新的每周用量百分比（如可用） */
   weeklyPercent?: number;
-  /** Latest monthly usage percentage if available */
+  /** 最新的每月用量百分比（如可用） */
   monthlyPercent?: number;
-  /** Error reason from the underlying usage API call, if any */
+  /** 底层 usage API 调用的错误原因（如有） */
   apiErrorReason?: UsageErrorReason;
-  /** Whether the returned usage data came from stale cache */
+  /** 返回的用量数据是否来自陈旧缓存 */
   usingStaleData?: boolean;
-  /** Last check timestamp */
+  /** 上次检查的时间戳 */
   lastCheckedAt: Date;
 }
 
 export interface TmuxPane {
-  /** Pane ID (e.g., "%0") */
+  /** 面板 ID（如 "%0"） */
   id: string;
-  /** Session name */
+  /** 会话名 */
   session: string;
-  /** Window index */
+  /** 窗口索引 */
   windowIndex: number;
-  /** Window name */
+  /** 窗口名 */
   windowName: string;
-  /** Pane index within window */
+  /** 窗口内的面板索引 */
   paneIndex: number;
-  /** Pane title (if set) */
+  /** 面板标题（如已设置） */
   title?: string;
-  /** Whether this pane is currently active */
+  /** 该面板当前是否处于活动状态 */
   isActive: boolean;
 }
 
 export interface PaneAnalysisResult {
-  /** Whether this pane appears to have Claude Code */
+  /** 该面板是否疑似运行 Claude Code */
   hasClaudeCode: boolean;
-  /** Whether rate limit message is visible */
+  /** 是否可见速率限制消息 */
   hasRateLimitMessage: boolean;
-  /** Whether the pane appears blocked (waiting for input) */
+  /** 该面板是否疑似被阻塞（等待输入） */
   isBlocked: boolean;
-  /** Detected rate limit type if any */
+  /** 检测到的速率限制类型（如有） */
   rateLimitType?: 'five_hour' | 'weekly' | 'unknown';
-  /** Confidence level (0-1) */
+  /** 置信度（0-1） */
   confidence: number;
 }
 
 export interface BlockedPane extends TmuxPane {
-  /** Analysis result for this pane */
+  /** 该面板的分析结果 */
   analysis: PaneAnalysisResult;
-  /** When this pane was first detected as blocked */
+  /** 该面板首次被检测为阻塞的时间 */
   firstDetectedAt: Date;
-  /** Whether resume has been attempted */
+  /** 是否已尝试恢复 */
   resumeAttempted: boolean;
-  /** Whether resume was successful */
+  /** 恢复是否成功 */
   resumeSuccessful?: boolean;
 }
 
 export interface DaemonState {
-  /** Whether daemon is running */
+  /** 守护进程是否运行中 */
   isRunning: boolean;
-  /** Process ID if running */
+  /** 运行时的进程 ID */
   pid: number | null;
-  /** When daemon started */
+  /** 守护进程启动时间 */
   startedAt: Date | null;
-  /** Last poll timestamp */
+  /** 上次轮询的时间戳 */
   lastPollAt: Date | null;
-  /** Current rate limit status */
+  /** 当前速率限制状态 */
   rateLimitStatus: RateLimitStatus | null;
-  /** Currently tracked blocked panes */
+  /** 当前跟踪的被阻塞面板 */
   blockedPanes: BlockedPane[];
-  /** Panes that have been resumed (to avoid re-sending) */
+  /** 已恢复的面板（避免重复发送） */
   resumedPaneIds: string[];
-  /** Total resume attempts */
+  /** 总恢复尝试次数 */
   totalResumeAttempts: number;
-  /** Successful resume count */
+  /** 成功恢复次数 */
   successfulResumes: number;
-  /** Error count */
+  /** 错误次数 */
   errorCount: number;
-  /** Last error message */
+  /** 上次的错误消息 */
   lastError?: string;
 }
 
 export interface DaemonConfig {
-  /** Polling interval in milliseconds (default: 60000 = 1 minute) */
+  /** 轮询间隔毫秒数（默认：60000 = 1 分钟） */
   pollIntervalMs?: number;
-  /** Number of pane lines to capture for analysis (default: 15) */
+  /** 用于分析的面板捕获行数（默认：15） */
   paneLinesToCapture?: number;
-  /** Whether to log verbose output (default: false) */
+  /** 是否记录详细输出（默认：false） */
   verbose?: boolean;
-  /** State file path (default: XDG-aware global WISE state path) */
+  /** 状态文件路径（默认：XDG 感知的全局 WISE 状态路径） */
   stateFilePath?: string;
-  /** PID file path (default: XDG-aware global WISE state path) */
+  /** PID 文件路径（默认：XDG 感知的全局 WISE 状态路径） */
   pidFilePath?: string;
-  /** Log file path (default: XDG-aware global WISE state path) */
+  /** 日志文件路径（默认：XDG 感知的全局 WISE 状态路径） */
   logFilePath?: string;
 }
 
 export interface ResumeResult {
-  /** Pane ID */
+  /** 面板 ID */
   paneId: string;
-  /** Whether resume was successful */
+  /** 恢复是否成功 */
   success: boolean;
-  /** Error message if failed */
+  /** 失败时的错误消息 */
   error?: string;
-  /** Timestamp */
+  /** 时间戳 */
   timestamp: Date;
 }
 

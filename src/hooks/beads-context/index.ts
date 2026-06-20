@@ -7,7 +7,7 @@ export type { TaskTool, BeadsContextConfig } from './types.js';
 export { BEADS_INSTRUCTIONS, BEADS_RUST_INSTRUCTIONS } from './constants.js';
 
 /**
- * Instructions map for each task tool variant.
+ * 每个 task tool 变体对应的指令映射。
  */
 const INSTRUCTIONS_MAP: Record<Exclude<TaskTool, 'builtin'>, string> = {
   'beads': BEADS_INSTRUCTIONS,
@@ -15,7 +15,7 @@ const INSTRUCTIONS_MAP: Record<Exclude<TaskTool, 'builtin'>, string> = {
 };
 
 /**
- * Get beads instructions for the given tool variant.
+ * 获取指定 tool 变体的 beads 指令。
  */
 export function getBeadsInstructions(tool: Exclude<TaskTool, 'builtin'>): string {
   const instructions = INSTRUCTIONS_MAP[tool];
@@ -26,7 +26,7 @@ export function getBeadsInstructions(tool: Exclude<TaskTool, 'builtin'>): string
 }
 
 /**
- * Read beads context config from wise-config.json.
+ * 从 wise-config.json 读取 beads 上下文配置。
  */
 export function getBeadsContextConfig(): BeadsContextConfig {
   const config = getWiseConfig();
@@ -38,8 +38,8 @@ export function getBeadsContextConfig(): BeadsContextConfig {
 }
 
 /**
- * Register beads context for a session.
- * Called from setup hook on session init.
+ * 为某会话注册 beads 上下文。
+ * 在会话初始化时由 setup 钩子调用。
  */
 export function registerBeadsContext(sessionId: string): boolean {
   const config = getBeadsContextConfig();
@@ -48,9 +48,9 @@ export function registerBeadsContext(sessionId: string): boolean {
     return false;
   }
 
-  // Validate taskTool is a known value
+  // 校验 taskTool 是否为已知值
   if (!['beads', 'beads-rust'].includes(config.taskTool)) {
-    // Unknown tool value - don't inject wrong instructions
+    // 未知的 tool 值 - 不注入错误的指令
     return false;
   }
 
@@ -67,7 +67,7 @@ export function registerBeadsContext(sessionId: string): boolean {
 }
 
 /**
- * Clear beads context for a session.
+ * 清除某会话的 beads 上下文。
  */
 export function clearBeadsContext(sessionId: string): void {
   contextCollector.removeEntry(sessionId, 'beads', 'beads-instructions');

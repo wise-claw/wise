@@ -1,13 +1,13 @@
 /**
- * Auto-Update System
+ * 自动更新系统
  *
- * Provides version checking and auto-update functionality for wise.
+ * 为 wise 提供版本检查与自动更新功能。
  *
- * Features:
- * - Check for new versions from GitHub releases
- * - Download and install updates automatically
- * - Store version metadata for installed components
- * - Configurable update notifications
+ * 功能：
+ * - 检查 GitHub release 的新版本
+ * - 自动下载并安装更新
+ * - 存储已安装组件的版本元数据
+ * - 可配置的更新通知
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync, rmSync } from 'fs';
@@ -28,7 +28,7 @@ import type { NotificationConfig } from '../notifications/types.js';
 import { isAutoUpdateDisabled } from '../lib/security-config.js';
 import { WISE_CONFIG_FILE_REL } from '../lib/paths.js';
 
-/** GitHub repository information */
+/** GitHub 仓库信息 */
 export const REPO_OWNER = 'wise-claw';
 export const REPO_NAME = 'wise';
 export const GITHUB_API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`;
@@ -233,10 +233,10 @@ function restoreGlobalClaudeCodeIfNeeded(
 }
 
 /**
- * Best-effort sync of the Claude Code marketplace clone.
- * The marketplace clone at ~/.claude/plugins/marketplaces/wise/ is used by
- * Claude Code to populate the plugin cache. If it's stale, `/plugin install`
- * and cache rebuilds reinstall old versions. (See #506)
+ * 尽力同步 Claude Code marketplace 克隆。
+ * 位于 ~/.claude/plugins/marketplaces/wise/ 的 marketplace 克隆被 Claude Code
+ * 用于填充插件缓存。若其过期，`/plugin install` 及缓存重建会重新安装旧版本。
+ * （见 #506）
  */
 function syncMarketplaceClone(verbose: boolean = false): { ok: boolean; message: string } {
   const marketplacePath = join(getClaudeConfigDir(), 'plugins', 'marketplaces', 'wise');
@@ -257,7 +257,7 @@ function syncMarketplaceClone(verbose: boolean = false): { ok: boolean; message:
   try {
     execFileSync('git', ['-C', marketplacePath, 'checkout', 'main'], { ...execOpts, timeout: 15000 });
   } catch {
-    // Fall through to explicit branch verification below.
+    // 落入下方显式分支校验。
   }
 
   let currentBranch = '';
@@ -366,7 +366,7 @@ function writeJsonAtomically(path: string, value: unknown): void {
     try {
       rmSync(tempPath, { force: true });
     } catch {
-      // Best-effort cleanup only; preserve the original registry on failure.
+      // 仅尽力清理；失败时保留原始注册表。
     }
     throw error;
   }
@@ -498,9 +498,9 @@ export function syncPluginCache(verbose: boolean = false): { synced: boolean; sk
     }
 
     if (result.synced && result.errors.length === 0) {
-      // Keep Claude Code's plugin registry update after a successful cache copy.
-      // If copying fails, installed_plugins.json is left untouched so sessions do
-      // not point at a partially refreshed version directory.
+      // 在缓存拷贝成功后保留 Claude Code 的插件注册表更新。
+      // 若拷贝失败，installed_plugins.json 保持不变，以免会话指向仅部分刷新的
+      // 版本目录。
       const registryResult = syncInstalledPluginRegistryVersion(version, versionedPluginCacheRoot);
       result.errors.push(...registryResult.errors);
       if (registryResult.updated && verbose) {
@@ -524,59 +524,59 @@ export function syncPluginCache(verbose: boolean = false): { synced: boolean; sk
   }
 }
 
-/** Installation paths (respects CLAUDE_CONFIG_DIR env var) */
+/** 安装路径（遵循 CLAUDE_CONFIG_DIR 环境变量） */
 export const CLAUDE_CONFIG_DIR = getClaudeConfigDir();
 export const VERSION_FILE = join(CLAUDE_CONFIG_DIR, '.wise-version.json');
 export const CONFIG_FILE = join(CLAUDE_CONFIG_DIR, WISE_CONFIG_FILE_REL);
 
 /**
- * Stop hook callback configuration for file logging
+ * 用于文件日志的 Stop hook 回调配置
  */
 export interface StopCallbackFileConfig {
   enabled: boolean;
-  /** File path with placeholders: {session_id}, {date}, {time} */
+  /** 带占位符的文件路径：{session_id}、{date}、{time} */
   path: string;
-  /** Output format */
+  /** 输出格式 */
   format?: 'markdown' | 'json';
 }
 
 /**
- * Stop hook callback configuration for Telegram
+ * 用于 Telegram 的 Stop hook 回调配置
  */
 export interface StopCallbackTelegramConfig {
   enabled: boolean;
   /** Telegram bot token */
   botToken?: string;
-  /** Chat ID to send messages to */
+  /** 发送消息的目标 Chat ID */
   chatId?: string;
-  /** Optional tags/usernames to prefix in notifications */
+  /** 可选的标签/用户名，作为通知前缀 */
   tagList?: string[];
 }
 
 /**
- * Stop hook callback configuration for Discord
+ * 用于 Discord 的 Stop hook 回调配置
  */
 export interface StopCallbackDiscordConfig {
   enabled: boolean;
   /** Discord webhook URL */
   webhookUrl?: string;
-  /** Optional tags/user IDs/roles to prefix in notifications */
+  /** 可选的标签/用户 ID/角色，作为通知前缀 */
   tagList?: string[];
 }
 
 /**
- * Stop hook callback configuration for Slack
+ * 用于 Slack 的 Stop hook 回调配置
  */
 export interface StopCallbackSlackConfig {
   enabled: boolean;
   /** Slack incoming webhook URL */
   webhookUrl?: string;
-  /** Optional tags/mentions to include in notifications */
+  /** 可选的标签/提及，包含在通知中 */
   tagList?: string[];
 }
 
 /**
- * Stop hook callbacks configuration
+ * Stop hook 回调配置
  */
 export interface StopHookCallbacksConfig {
   file?: StopCallbackFileConfig;
@@ -586,50 +586,50 @@ export interface StopHookCallbacksConfig {
 }
 
 /**
- * WISE configuration (stored in .wise-config.json)
+ * WISE 配置（存储于 .wise-config.json）
  */
 export interface WiseConfig {
-  /** Whether silent auto-updates are enabled (opt-in for security) */
+  /** 是否启用静默自动更新（出于安全需显式启用） */
   silentAutoUpdate: boolean;
-  /** When the configuration was set */
+  /** 配置设置时间 */
   configuredAt?: string;
-  /** Configuration schema version */
+  /** 配置 schema 版本 */
   configVersion?: number;
-  /** Preferred task management tool */
+  /** 首选任务管理工具 */
   taskTool?: TaskTool;
-  /** Configuration for the selected task tool */
+  /** 所选任务工具的配置 */
   taskToolConfig?: {
-    /** Use beads-mcp instead of CLI */
+    /** 使用 beads-mcp 替代 CLI */
     useMcp?: boolean;
-    /** Inject usage instructions at session start (default: true) */
+    /** 在会话开始时注入使用说明（默认：true） */
     injectInstructions?: boolean;
   };
-  /** Whether initial setup has been completed (ISO timestamp) */
+  /** 初始设置是否已完成（ISO 时间戳） */
   setupCompleted?: string;
-  /** Version of setup wizard that was completed */
+  /** 已完成的设置向导版本 */
   setupVersion?: string;
-  /** Stop hook callback configuration (legacy, use notifications instead) */
+  /** Stop hook 回调配置（旧版，请改用 notifications） */
   stopHookCallbacks?: StopHookCallbacksConfig;
-  /** Multi-platform lifecycle notification configuration */
+  /** 多平台生命周期通知配置 */
   notifications?: NotificationConfig;
-  /** Named notification profiles (keyed by profile name) */
+  /** 命名的通知配置档案（以档案名作键） */
   notificationProfiles?: Record<string, NotificationConfig>;
-  /** Whether HUD statusline is enabled (default: true). Set to false to skip HUD installation. */
+  /** 是否启用 HUD statusline（默认：true）。设为 false 则跳过 HUD 安装。 */
   hudEnabled?: boolean;
-  /** Whether to prompt for upgrade at session start when a new version is available (default: true).
-   *  Set to false to show a passive notification instead of an interactive prompt. */
+  /** 会话开始且新版本可用时是否提示升级（默认：true）。
+   *  设为 false 则显示被动通知而非交互式提示。 */
   autoUpgradePrompt?: boolean;
-  /** Absolute path to the Node.js binary detected at setup time.
-   *  Used by find-node.sh so hooks work for nvm/fnm users where node is not on PATH. */
+  /** 设置时检测到的 Node.js 二进制绝对路径。
+   *  供 find-node.sh 使用，以便 node 不在 PATH 中的 nvm/fnm 用户也能正常运行 hook。 */
   nodeBinary?: string;
 }
 
 /**
- * Read the WISE configuration
+ * 读取 WISE 配置
  */
 export function getWiseConfig(): WiseConfig {
   if (!existsSync(CONFIG_FILE)) {
-    // No config file = disabled by default for security
+    // 无配置文件 = 出于安全默认禁用
     return { silentAutoUpdate: false };
   }
 
@@ -652,13 +652,13 @@ export function getWiseConfig(): WiseConfig {
       nodeBinary: config.nodeBinary,
     };
   } catch {
-    // If config file is invalid, default to disabled for security
+    // 若配置文件非法，出于安全默认禁用
     return { silentAutoUpdate: false };
   }
 }
 
 /**
- * Check if silent auto-updates are enabled
+ * 检查是否启用静默自动更新
  */
 export function isSilentAutoUpdateEnabled(): boolean {
   if (isAutoUpdateDisabled()) return false;
@@ -666,17 +666,17 @@ export function isSilentAutoUpdateEnabled(): boolean {
 }
 
 /**
- * Check if auto-upgrade prompt is enabled at session start
- * Returns true by default - users must explicitly opt out
+ * 检查会话开始时是否启用自动升级提示
+ * 默认返回 true——用户必须显式关闭
  */
 export function isAutoUpgradePromptEnabled(): boolean {
   return getWiseConfig().autoUpgradePrompt !== false;
 }
 
 /**
- * Check if team feature is enabled
- * Returns false by default - requires explicit opt-in
- * Checks ~/.claude/settings.json first, then env var fallback
+ * 检查是否启用 team 功能
+ * 默认返回 false——需显式启用
+ * 先检查 ~/.claude/settings.json，再回退到环境变量
  */
 export function isTeamEnabled(): boolean {
   try {
@@ -689,30 +689,30 @@ export function isTeamEnabled(): boolean {
       }
     }
   } catch {
-    // Fall through to env check
+    // 落入下方环境变量检查
   }
   const envVal = process.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS;
   return envVal === '1' || envVal === 'true';
 }
 
 /**
- * Version metadata stored after installation
+ * 安装后存储的版本元数据
  */
 export interface VersionMetadata {
-  /** Currently installed version */
+  /** 当前已安装版本 */
   version: string;
-  /** Installation timestamp */
+  /** 安装时间戳 */
   installedAt: string;
-  /** Last update check timestamp */
+  /** 上次更新检查的时间戳 */
   lastCheckAt?: string;
-  /** Git commit hash if installed from source */
+  /** 若从源码安装，对应的 Git commit hash */
   commitHash?: string;
-  /** Installation method: 'script' | 'npm' | 'source' */
+  /** 安装方式：'script' | 'npm' | 'source' */
   installMethod: 'script' | 'npm' | 'source';
 }
 
 /**
- * GitHub release information
+ * GitHub release 信息
  */
 export interface ReleaseInfo {
   tag_name: string;
@@ -725,7 +725,7 @@ export interface ReleaseInfo {
 }
 
 /**
- * Update check result
+ * 更新检查结果
  */
 export interface UpdateCheckResult {
   currentVersion: string | null;
@@ -736,7 +736,7 @@ export interface UpdateCheckResult {
 }
 
 /**
- * Update result
+ * 更新结果
  */
 export interface UpdateResult {
   success: boolean;
@@ -753,13 +753,13 @@ export interface UpdateReconcileResult {
 }
 
 /**
- * Read the current version metadata
+ * 读取当前版本元数据
  */
 export function getInstalledVersion(): VersionMetadata | null {
   if (!existsSync(VERSION_FILE)) {
-    // Try to detect version from package.json if installed via npm
+    // 若经 npm 安装，尝试从 package.json 检测版本
     try {
-      // Check if we can find the package in node_modules
+      // 检查能否在 node_modules 中找到该包
       const result = execSync('npm list -g wise --json', {
         encoding: 'utf-8',
         timeout: 5000,
@@ -774,7 +774,7 @@ export function getInstalledVersion(): VersionMetadata | null {
         };
       }
     } catch {
-      // Not installed via npm or command failed
+      // 未通过 npm 安装，或命令执行失败
     }
     return null;
   }
@@ -789,7 +789,7 @@ export function getInstalledVersion(): VersionMetadata | null {
 }
 
 /**
- * Save version metadata after installation/update
+ * 安装/更新后保存版本元数据
  */
 export function saveVersionMetadata(metadata: VersionMetadata): void {
   const dir = dirname(VERSION_FILE);
@@ -800,7 +800,7 @@ export function saveVersionMetadata(metadata: VersionMetadata): void {
 }
 
 /**
- * Update the last check timestamp
+ * 更新上次检查的时间戳
  */
 export function updateLastCheckTime(): void {
   const current = getInstalledVersion();
@@ -874,7 +874,7 @@ async function formatGitHubReleaseFetchError(response: Response, usedToken: bool
 }
 
 /**
- * Fetch the latest release from GitHub
+ * 从 GitHub 获取最新 release
  */
 export async function fetchLatestRelease(): Promise<ReleaseInfo> {
   const usedToken = getGitHubUpdateToken() !== null;
@@ -883,7 +883,7 @@ export async function fetchLatestRelease(): Promise<ReleaseInfo> {
   });
 
   if (response.status === 404) {
-    // No releases found - try to get version from package.json in repo
+    // 未找到 release——尝试从仓库中的 package.json 获取版本
     const pkgResponse = await fetch(`${GITHUB_RAW_URL}/main/package.json`, {
       headers: {
         'User-Agent': 'wise-updater'
@@ -914,11 +914,11 @@ export async function fetchLatestRelease(): Promise<ReleaseInfo> {
 }
 
 /**
- * Compare semantic versions
- * Returns: -1 if a < b, 0 if a == b, 1 if a > b
+ * 比较语义化版本
+ * 返回：a < b 为 -1，a == b 为 0，a > b 为 1
  */
 export function compareVersions(a: string, b: string): number {
-  // Remove 'v' prefix if present
+  // 若存在 'v' 前缀则移除
   const cleanA = a.replace(/^v/, '');
   const cleanB = b.replace(/^v/, '');
 
@@ -939,7 +939,7 @@ export function compareVersions(a: string, b: string): number {
 }
 
 /**
- * Check for available updates
+ * 检查可用更新
  */
 export async function checkForUpdates(): Promise<UpdateCheckResult> {
   const installed = getInstalledVersion();
@@ -950,7 +950,7 @@ export async function checkForUpdates(): Promise<UpdateCheckResult> {
 
   const updateAvailable = currentVersion === null || compareVersions(currentVersion, latestVersion) < 0;
 
-  // Update last check time
+  // 更新上次检查时间
   updateLastCheckTime();
 
   return {
@@ -963,23 +963,21 @@ export async function checkForUpdates(): Promise<UpdateCheckResult> {
 }
 
 /**
- * Reconcile runtime state after update
+ * 更新后对账运行时状态
  *
- * This is safe to run repeatedly and refreshes local runtime artifacts that may
- * lag behind an updated package or plugin cache.
+ * 可安全重复执行，刷新可能落后于已更新包或插件缓存的本地运行时产物。
  */
 export function reconcileUpdateRuntime(options?: { verbose?: boolean; skipGracePeriod?: boolean }): UpdateReconcileResult {
   const errors: string[] = [];
 
   const projectScopedPlugin = isProjectScopedPlugin();
-  // Plugin installs execute hooks from <pluginRoot>/hooks/hooks.json. Re-running
-  // the standalone settings.json hook merge during `wise update` re-injects the
-  // legacy ~/.claude/hooks/* entries and causes duplicate hook execution.
+  // 插件安装会执行 <pluginRoot>/hooks/hooks.json 中的 hook。在 `wise update` 时
+  // 重新运行独立的 settings.json hook 合并，会重新注入旧版 ~/.claude/hooks/*
+  // 条目，导致 hook 重复执行。
   //
-  // Reconciliation should still refresh shared installer artifacts (CLAUDE.md,
-  // HUD, MCP registry, statusLine, etc.), but it must leave settings.json hook
-  // ownership alone for plugin installs so the plugin hook manifest remains the
-  // single source of truth.
+  // 对账仍应刷新共享安装器产物（CLAUDE.md、HUD、MCP 注册表、statusLine 等），
+  // 但对于插件安装，必须保持 settings.json 的 hook 所有权不变，使插件 hook
+  // 清单仍是唯一事实来源。
   const shouldRefreshPluginHooks = false;
 
   if (!projectScopedPlugin) {
@@ -1028,7 +1026,7 @@ export function reconcileUpdateRuntime(options?: { verbose?: boolean; skipGraceP
     }
   }
 
-  // Purge stale plugin cache versions (non-fatal)
+  // 清理过期插件缓存版本（非致命）
   try {
     const purgeResult = purgeStalePluginCacheVersions({ skipGracePeriod: options?.skipGracePeriod });
     if (purgeResult.removed > 0 && options?.verbose) {
@@ -1040,7 +1038,7 @@ export function reconcileUpdateRuntime(options?: { verbose?: boolean; skipGraceP
       }
     }
   } catch {
-    // Cache purge is best-effort; never block reconciliation
+    // 缓存清理为尽力而为；绝不阻塞对账
   }
 
   if (errors.length > 0) {
@@ -1075,7 +1073,7 @@ function resolveWiseBinaryPath(): string {
 }
 
 /**
- * Download and execute the install script to perform an update
+ * 下载并执行安装脚本以完成更新
  */
 export async function performUpdate(options?: {
   skipConfirmation?: boolean;
@@ -1087,8 +1085,8 @@ export async function performUpdate(options?: {
   const previousVersion = installed?.version ?? null;
 
   try {
-    // Block npm update only from active Claude Code/plugin sessions.
-    // Standalone terminals may inherit CLAUDE_PLUGIN_ROOT and should still update.
+    // 仅在活动的 Claude Code/插件会话中阻止 npm 更新。
+    // 独立终端可能继承了 CLAUDE_PLUGIN_ROOT，仍应允许更新。
     if (shouldBlockStandaloneUpdateInCurrentSession() && !options?.standalone) {
       return {
         success: false,
@@ -1098,12 +1096,12 @@ export async function performUpdate(options?: {
       };
     }
 
-    // Fetch the latest release to get the version
+    // 获取最新 release 以取得版本号
     const release = await fetchLatestRelease();
     const newVersion = release.tag_name.replace(/^v/, '');
     const claudeCodeBeforeUpdate = detectGlobalClaudeCodeInstall();
 
-    // Use npm for updates on all platforms (install.sh was removed)
+    // 所有平台均使用 npm 进行更新（install.sh 已移除）
     try {
       execSync('npm install -g wise@latest', npmExecOptions(options?.verbose ?? false));
 
@@ -1119,7 +1117,7 @@ export async function performUpdate(options?: {
         };
       }
 
-      // Sync Claude Code marketplace clone so plugin cache picks up new version (#506)
+      // 同步 Claude Code marketplace 克隆，使插件缓存获取新版本（#506）
       const marketplaceSync = syncMarketplaceClone(options?.verbose ?? false);
       if (!marketplaceSync.ok && options?.verbose) {
         console.warn(`[wise update] ${marketplaceSync.message}`);
@@ -1132,17 +1130,16 @@ export async function performUpdate(options?: {
         }
       }
 
-      // CRITICAL FIX: After npm updates the global package, the current process
-      // still has OLD code loaded in memory. We must re-exec to run reconciliation
-      // with the NEW code. Otherwise, installWise() runs OLD logic against NEW files.
+      // 关键修复：npm 更新全局包后，当前进程内存中仍加载着旧代码。必须
+      // re-exec 以用新代码运行对账。否则 installWise() 会用旧逻辑处理新文件。
       if (!process.env.WISE_UPDATE_RECONCILE) {
-        // Set flag to prevent infinite loop
+        // 设置标志以防止无限循环
         process.env.WISE_UPDATE_RECONCILE = '1';
 
-        // Find the wise binary path
+        // 查找 wise 二进制路径
         const wisePath = resolveWiseBinaryPath();
 
-        // Re-exec with reconcile subcommand
+        // 通过 reconcile 子命令重新执行
         try {
           execFileSync(wisePath, ['update-reconcile', ...(options?.clean ? ['--skip-grace-period'] : [])], {
             encoding: 'utf-8',
@@ -1161,7 +1158,7 @@ export async function performUpdate(options?: {
           };
         }
 
-        // Update version metadata after reconciliation succeeds
+        // 对账成功后更新版本元数据
         saveVersionMetadata({
           version: newVersion,
           installedAt: new Date().toISOString(),
@@ -1176,7 +1173,7 @@ export async function performUpdate(options?: {
           message: `Successfully updated from ${previousVersion ?? 'unknown'} to ${newVersion}`
         };
       } else {
-        // We're in the re-exec'd process - run reconciliation directly
+        // 已处于 re-exec 进程中——直接运行对账
         const reconcileResult = reconcileUpdateRuntime({ verbose: options?.verbose, skipGracePeriod: options?.clean });
         if (!reconcileResult.success) {
           return {
@@ -1215,7 +1212,7 @@ export async function performUpdate(options?: {
 }
 
 /**
- * Get a formatted update notification message
+ * 获取格式化的更新通知消息
  */
 export function formatUpdateNotification(checkResult: UpdateCheckResult): string {
   if (!checkResult.updateAvailable) {
@@ -1235,7 +1232,7 @@ export function formatUpdateNotification(checkResult: UpdateCheckResult): string
     ''
   ];
 
-  // Add truncated release notes if available
+  // 若有可用 release notes 则添加（截断显示）
   if (checkResult.releaseNotes && checkResult.releaseNotes !== 'No release notes available.') {
     lines.push('  Release notes:');
     const notes = checkResult.releaseNotes.split('\n').slice(0, 5);
@@ -1250,7 +1247,7 @@ export function formatUpdateNotification(checkResult: UpdateCheckResult): string
 }
 
 /**
- * Check if enough time has passed since the last update check
+ * 检查距上次更新检查是否已过足够时间
  */
 export function shouldCheckForUpdates(intervalHours: number = 24): boolean {
   const installed = getInstalledVersion();
@@ -1267,25 +1264,25 @@ export function shouldCheckForUpdates(intervalHours: number = 24): boolean {
 }
 
 /**
- * Perform a background update check (non-blocking)
+ * 执行后台更新检查（非阻塞）
  */
 export function backgroundUpdateCheck(callback?: (result: UpdateCheckResult) => void): void {
   if (!shouldCheckForUpdates()) {
     return;
   }
 
-  // Run the check asynchronously without blocking
+  // 异步执行检查，不阻塞
   checkForUpdates()
     .then(result => {
       if (callback) {
         callback(result);
       } else if (result.updateAvailable) {
-        // Default behavior: print notification to console
+        // 默认行为：将通知打印到控制台
         console.log('\n' + formatUpdateNotification(result));
       }
     })
     .catch(error => {
-      // Silently ignore errors in background checks
+      // 静默忽略后台检查中的错误
       if (process.env.WISE_DEBUG) {
         console.error('Background update check failed:', error);
       }
@@ -1293,7 +1290,7 @@ export function backgroundUpdateCheck(callback?: (result: UpdateCheckResult) => 
 }
 
 /**
- * CLI helper: perform interactive update
+ * CLI 辅助：执行交互式更新
  */
 export async function interactiveUpdate(): Promise<void> {
   console.log('Checking for updates...');
@@ -1328,20 +1325,20 @@ export async function interactiveUpdate(): Promise<void> {
 }
 
 /**
- * Silent auto-update configuration
+ * 静默自动更新配置
  */
 export interface SilentUpdateConfig {
-  /** Minimum hours between update checks (default: 24) */
+  /** 更新检查之间的最小间隔小时数（默认：24） */
   checkIntervalHours?: number;
-  /** Whether to auto-apply updates without confirmation (default: true) */
+  /** 是否无需确认自动应用更新（默认：true） */
   autoApply?: boolean;
-  /** Log file path for silent update activity (optional) */
+  /** 静默更新活动的日志文件路径（可选） */
   logFile?: string;
-  /** Maximum retries on failure (default: 3) */
+  /** 失败时的最大重试次数（默认：3） */
   maxRetries?: number;
 }
 
-/** State file for tracking silent update status */
+/** 用于跟踪静默更新状态的文件 */
 const SILENT_UPDATE_STATE_FILE = join(CLAUDE_CONFIG_DIR, '.wise-silent-update.json');
 
 interface SilentUpdateState {
@@ -1353,7 +1350,7 @@ interface SilentUpdateState {
 }
 
 /**
- * Read silent update state
+ * 读取静默更新状态
  */
 function getSilentUpdateState(): SilentUpdateState {
   if (!existsSync(SILENT_UPDATE_STATE_FILE)) {
@@ -1367,7 +1364,7 @@ function getSilentUpdateState(): SilentUpdateState {
 }
 
 /**
- * Save silent update state
+ * 保存静默更新状态
  */
 function saveSilentUpdateState(state: SilentUpdateState): void {
   const dir = dirname(SILENT_UPDATE_STATE_FILE);
@@ -1378,7 +1375,7 @@ function saveSilentUpdateState(state: SilentUpdateState): void {
 }
 
 /**
- * Log message to silent update log file (if configured)
+ * 将消息记录到静默更新日志文件（若已配置）
  */
 function silentLog(message: string, logFile?: string): void {
   const timestamp = new Date().toISOString();
@@ -1392,26 +1389,25 @@ function silentLog(message: string, logFile?: string): void {
       }
       writeFileSync(logFile, logMessage, { flag: 'a' });
     } catch {
-      // Silently ignore log errors
+      // 静默忽略日志错误
     }
   }
 }
 
 /**
- * Perform a completely silent update check and installation
+ * 执行完全静默的更新检查与安装
  *
- * This function runs without any user interaction or console output.
- * It's designed to be called from hooks or startup scripts to keep
- * the system updated automatically without user awareness.
+ * 此函数运行时无任何用户交互或控制台输出。
+ * 设计为从 hook 或启动脚本调用，以在用户无感知的情况下自动保持系统更新。
  *
- * Features:
- * - Rate-limited to prevent excessive checks
- * - Exponential backoff on failures
- * - Optional logging to file for debugging
- * - Tracks pending restart state
+ * 功能：
+ * - 限流以避免过度频繁检查
+ * - 失败时指数退避
+ * - 可选写入文件日志用于调试
+ * - 跟踪待重启状态
  *
- * @param config - Silent update configuration
- * @returns Promise resolving to update result or null if skipped
+ * @param config - 静默更新配置
+ * @returns Promise，解析为更新结果；若跳过则为 null
  */
 export async function silentAutoUpdate(config: SilentUpdateConfig = {}): Promise<UpdateResult | null> {
   const {
@@ -1421,8 +1417,8 @@ export async function silentAutoUpdate(config: SilentUpdateConfig = {}): Promise
     maxRetries = 3
   } = config;
 
-  // SECURITY: Check if silent auto-update is enabled in configuration
-  // Default is disabled - users must explicitly opt-in during installation
+  // 安全：检查配置中是否启用静默自动更新
+  // 默认禁用——用户须在安装期间显式启用
   if (!isSilentAutoUpdateEnabled()) {
     silentLog('Silent auto-update is disabled (run installer to enable, or use /update)', logFile);
     return null;
@@ -1430,14 +1426,14 @@ export async function silentAutoUpdate(config: SilentUpdateConfig = {}): Promise
 
   const state = getSilentUpdateState();
 
-  // Check rate limiting
+  // 检查限流
   if (!shouldCheckForUpdates(checkIntervalHours)) {
     return null;
   }
 
-  // Check for consecutive failures and apply exponential backoff
+  // 检查连续失败次数并应用指数退避
   if (state.consecutiveFailures >= maxRetries) {
-    const backoffHours = Math.min(24 * state.consecutiveFailures, 168); // Max 1 week
+    const backoffHours = Math.min(24 * state.consecutiveFailures, 168); // 最长 1 周
     const lastAttempt = state.lastAttempt ? new Date(state.lastAttempt).getTime() : 0;
     const hoursSinceLastAttempt = (Date.now() - lastAttempt) / (1000 * 60 * 60);
 
@@ -1451,7 +1447,7 @@ export async function silentAutoUpdate(config: SilentUpdateConfig = {}): Promise
   state.lastAttempt = new Date().toISOString();
 
   try {
-    // Check for updates
+    // 检查更新
     const checkResult = await checkForUpdates();
 
     if (!checkResult.updateAvailable) {
@@ -1469,7 +1465,7 @@ export async function silentAutoUpdate(config: SilentUpdateConfig = {}): Promise
       return null;
     }
 
-    // Perform the update silently
+    // 静默执行更新
     const result = await performUpdate({
       skipConfirmation: true,
       verbose: false
@@ -1505,7 +1501,7 @@ export async function silentAutoUpdate(config: SilentUpdateConfig = {}): Promise
 }
 
 /**
- * Check if there's a pending restart after a silent update
+ * 检查静默更新后是否存在待重启状态
  */
 export function hasPendingUpdateRestart(): boolean {
   const state = getSilentUpdateState();
@@ -1513,7 +1509,7 @@ export function hasPendingUpdateRestart(): boolean {
 }
 
 /**
- * Clear the pending restart flag (call after notifying user or restart)
+ * 清除待重启标志（在通知用户或重启后调用）
  */
 export function clearPendingUpdateRestart(): void {
   const state = getSilentUpdateState();
@@ -1522,7 +1518,7 @@ export function clearPendingUpdateRestart(): void {
 }
 
 /**
- * Get the version that was silently updated to (if pending restart)
+ * 获取静默更新到的版本（若处于待重启状态）
  */
 export function getPendingUpdateVersion(): string | null {
   const state = getSilentUpdateState();
@@ -1530,17 +1526,17 @@ export function getPendingUpdateVersion(): string | null {
 }
 
 /**
- * Initialize silent auto-update on startup
+ * 启动时初始化静默自动更新
  *
- * This is the main entry point for the silent update system.
- * Call this function once when the application starts or from a hook.
- * It runs the update check completely in the background without blocking.
+ * 这是静默更新系统的主入口。
+ * 在应用启动时或从 hook 中调用一次本函数。
+ * 它完全在后台运行更新检查，不阻塞。
  *
- * @param config - Silent update configuration
+ * @param config - 静默更新配置
  */
 export function initSilentAutoUpdate(config: SilentUpdateConfig = {}): void {
-  // Run update check in background without blocking
+  // 在后台运行更新检查，不阻塞
   silentAutoUpdate(config).catch(() => {
-    // Silently ignore any errors - they're already logged
+    // 静默忽略任何错误——它们已被记录
   });
 }

@@ -147,7 +147,7 @@ interface AutoresearchInstructionLedgerSummary {
 const AUTORESEARCH_RESULTS_HEADER = 'iteration\tcommit\tpass\tscore\tstatus\tdescription\n';
 const AUTORESEARCH_WORKTREE_EXCLUDES = ['results.tsv', 'run.log', 'node_modules', '.wise/'];
 
-// Exclusive modes that cannot run concurrently with autoresearch
+// 不能与 autoresearch 并发运行的互斥模式
 const EXCLUSIVE_MODES: ExecutionMode[] = ['ralph', 'ultrawork', 'autopilot', 'autoresearch'];
 
 function nowIso(): string {
@@ -399,8 +399,8 @@ async function assertAutoresearchLockAvailable(projectRoot: string): Promise<voi
 }
 
 /**
- * Assert no exclusive mode is already active (ralph, ultrawork, autopilot).
- * Mirrors OMX assertModeStartAllowed semantics using WISE mode-state-io.
+ * 断言没有其他互斥模式（ralph、ultrawork、autopilot）已处于活跃状态。
+ * 借助 WISE 的 mode-state-io 复刻 OMX 的 assertModeStartAllowed 语义。
  */
 export async function assertModeStartAllowed(mode: ExecutionMode, projectRoot: string): Promise<void> {
   for (const other of EXCLUSIVE_MODES) {
@@ -440,7 +440,7 @@ async function deactivateAutoresearchRun(manifest: AutoresearchRunManifest): Pro
 }
 
 /**
- * Start autoresearch mode state using WISE's writeModeState.
+ * 使用 WISE 的 writeModeState 启动 autoresearch 模式状态。
  */
 function startAutoresearchMode(taskDescription: string, projectRoot: string): void {
   writeModeState('autoresearch', {
@@ -455,7 +455,7 @@ function startAutoresearchMode(taskDescription: string, projectRoot: string): vo
 }
 
 /**
- * Update autoresearch mode state (merge semantics).
+ * 更新 autoresearch 模式状态（合并语义）。
  */
 function updateAutoresearchMode(updates: Record<string, unknown>, projectRoot: string): void {
   const current = readModeState<Record<string, unknown>>('autoresearch', projectRoot);
@@ -464,7 +464,7 @@ function updateAutoresearchMode(updates: Record<string, unknown>, projectRoot: s
 }
 
 /**
- * Cancel autoresearch mode state.
+ * 取消 autoresearch 模式状态。
  */
 function cancelAutoresearchMode(projectRoot: string): void {
   const state = readModeState<Record<string, unknown>>('autoresearch', projectRoot);
@@ -723,11 +723,10 @@ export function decideAutoresearchOutcome(
     };
   }
   if (!comparableScore(manifest.last_kept_score, evaluation.score)) {
-    // Bootstrap case: there is no prior comparable score to improve over (first
-    // pass in the run, or the first pass after a fail-only stretch left
-    // last_kept_score=null). The candidate's pass IS the new comparison anchor.
-    // Discarding it would lose the only validated signal the loop has produced
-    // and pin score_improvement to null forever.
+    // Bootstrap 场景：尚无可用于比较的前序分数（运行中的首次 pass，或经过
+    // 一段只有 fail 的区间后 last_kept_score 变为 null 后的首次 pass）。
+    // 当前候选的 pass 就是新的比较锚点。若将其丢弃，会丢掉循环到目前为止
+    // 产出的唯一已校验信号，并使 score_improvement 永远卡在 null。
     if (typeof evaluation.score === 'number') {
       return {
         decision: 'keep',

@@ -1,44 +1,44 @@
 /**
- * Background Notification Hook Types
+ * 后台通知钩子类型
  *
- * Type definitions for background task notification handling.
- * Adapted from oh-my-opencode's background-notification hook.
+ * 后台任务通知处理的类型定义。
+ * 改编自 oh-my-opencode 的 background-notification 钩子。
  */
 
 import type { BackgroundTask } from '../../features/background-agent/index.js';
 
 /**
- * Configuration for background notification hook
+ * 后台通知钩子的配置
  */
 export interface BackgroundNotificationHookConfig {
   /**
-   * Custom formatter for notification messages
-   * If not provided, uses default formatting
+   * 通知消息的自定义格式化器
+   * 未提供时使用默认格式化
    */
   formatNotification?: (tasks: BackgroundTask[]) => string;
 
   /**
-   * Whether to automatically clear notifications after they're shown
-   * Default: true
+   * 通知展示后是否自动清除
+   * 默认：true
    */
   autoClear?: boolean;
 
   /**
-   * Whether to show notifications only for the current session
-   * Default: true (only show notifications for tasks launched by current session)
+   * 是否仅展示当前会话的通知
+   * 默认：true（仅展示当前会话启动的任务的通知）
    */
   currentSessionOnly?: boolean;
 }
 
 /**
- * Input for background notification hook
+ * 后台通知钩子的输入
  */
 export interface BackgroundNotificationHookInput {
-  /** Current session ID */
+  /** 当前会话 ID */
   sessionId?: string;
-  /** Working directory */
+  /** 工作目录 */
   directory?: string;
-  /** Event type (for shell hook compatibility) */
+  /** 事件类型（用于 shell 钩子兼容） */
   event?: {
     type: string;
     properties?: Record<string, unknown>;
@@ -46,25 +46,25 @@ export interface BackgroundNotificationHookInput {
 }
 
 /**
- * Output from background notification hook
+ * 后台通知钩子的输出
  */
 export interface BackgroundNotificationHookOutput {
-  /** Whether to continue with the operation */
+  /** 是否继续该操作 */
   continue: boolean;
-  /** Notification message to inject into context */
+  /** 要注入到上下文中的通知消息 */
   message?: string;
-  /** Number of tasks with notifications */
+  /** 带有通知的任务数量 */
   notificationCount?: number;
 }
 
 /**
- * Result of checking for background notifications
+ * 检查后台通知的结果
  */
 export interface NotificationCheckResult {
-  /** Whether there are pending notifications */
+  /** 是否有待处理通知 */
   hasNotifications: boolean;
-  /** Completed tasks to notify about */
+  /** 需要通知的已完成任务 */
   tasks: BackgroundTask[];
-  /** Formatted notification message */
+  /** 格式化后的通知消息 */
   message?: string;
 }

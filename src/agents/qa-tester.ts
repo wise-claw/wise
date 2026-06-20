@@ -1,14 +1,13 @@
 /**
- * QA Tester Agent - Interactive CLI Testing with tmux
+ * QA Tester Agent - 基于 tmux 的交互式 CLI 测试
  *
- * Specialized agent for QA testing of CLI applications and services
- * using tmux for session management and interactive testing.
+ * 专用 agent，使用 tmux 管理会话并对 CLI 应用与服务进行交互式 QA 测试。
  *
- * Enables:
- * - Spinning up services in isolated tmux sessions
- * - Sending commands and capturing output
- * - Verifying CLI behavior and responses
- * - Clean teardown of test environments
+ * 支持：
+ * - 在隔离的 tmux 会话中启动服务
+ * - 发送命令并捕获输出
+ * - 校验 CLI 行为与响应
+ * - 测试环境的干净清理
  */
 
 import type { AgentConfig, AgentPromptMetadata } from './types.js';

@@ -15,21 +15,21 @@ export const ULTRAGOAL_LEDGER = 'ledger.jsonl';
 export const ULTRAGOAL_PLANS_SUBDIR = 'plans';
 
 /**
- * Multi-plan support (Wave 2 — multi-repo workspace parallelism).
+ * 多计划支持（Wave 2 —— 多仓库工作区并行）。
  *
- * Legacy layout (single plan per repo, default for backwards compatibility):
+ * 旧版布局（每个仓库单一计划，默认用于向后兼容）：
  *   .wise/ultragoal/{brief.md, goals.json, ledger.jsonl}
  *
- * Multi-plan layout (opt-in via planId argument or --plan-id / --auto-plan-id CLI flag):
+ * 多计划布局（通过 planId 参数或 --plan-id / --auto-plan-id CLI 开关启用）：
  *   .wise/ultragoal/plans/{planId}/{brief.md, goals.json, ledger.jsonl}
  *
- * planId is a stable string. Auto-generated form: "{ms}-{slug}" where slug is
- * derived from the first non-empty title in the brief.
+ * planId 是稳定字符串。自动生成格式为 "{ms}-{slug}"，其中 slug 取自
+ * brief 中第一个非空标题。
  *
- * Plan resolution order when planId is not passed:
- *   1. legacy goals.json if present (covers monorepo single-session)
- *   2. exactly one plan under plans/ → use it
- *   3. zero or many → caller must pass planId
+ * 未传入 planId 时的计划解析顺序：
+ *   1. 若存在旧版 goals.json（覆盖 monorepo 单会话场景）
+ *   2. plans/ 下恰好只有一个计划 → 使用它
+ *   3. 零个或多个 → 调用方必须显式传入 planId
  */
 
 export type UltragoalStatus = 'pending' | 'in_progress' | 'complete' | 'failed' | 'review_blocked';
@@ -62,9 +62,9 @@ export interface UltragoalAggregateCompletion {
 export interface UltragoalPlan {
   version: 1;
   /**
-   * Stable plan identifier. When undefined, the plan uses the legacy
-   * single-plan layout (.wise/ultragoal/{brief.md,goals.json,ledger.jsonl}).
-   * When set, artifacts live under .wise/ultragoal/plans/{planId}/.
+   * 稳定的计划标识。未定义时使用旧版单计划布局
+   *（.wise/ultragoal/{brief.md,goals.json,ledger.jsonl}）。
+   * 设置后产物存放于 .wise/ultragoal/plans/{planId}/。
    */
   planId?: string;
   createdAt: string;
@@ -108,14 +108,14 @@ export interface CreateUltragoalOptions {
   now?: Date;
   force?: boolean;
   /**
-   * Explicit plan id; writes to .wise/ultragoal/plans/{planId}/. Mutually
-   * exclusive with autoPlanId. When both omitted, plan uses legacy layout.
+   * 显式计划 id；写入 .wise/ultragoal/plans/{planId}/。与 autoPlanId
+   * 互斥。两者都省略时使用旧版布局。
    */
   planId?: string;
   /**
-   * Auto-generate a plan id from the brief title and current time.
-   * Format: "{epochMs}-{slug}". Enables safe parallel ultragoal runs in
-   * multi-repo workspaces sharing one .wise/.
+   * 基于 brief 标题与当前时间自动生成计划 id。
+   * 格式："{epochMs}-{slug}"。用于在共享同一 .wise/ 的多仓库工作区中
+   * 安全并行运行 ultragoal。
    */
   autoPlanId?: boolean;
 }
@@ -192,8 +192,8 @@ export function ultragoalLedgerPath(cwd: string, planId?: string): string {
 }
 
 /**
- * List all multi-plan IDs under .wise/ultragoal/plans/.
- * Returns an empty array when the plans/ subdir doesn't exist.
+ * 列出 .wise/ultragoal/plans/ 下所有多计划 ID。
+ * 当 plans/ 子目录不存在时返回空数组。
  */
 export async function listUltragoalPlanIds(cwd: string): Promise<string[]> {
   const dir = join(getWiseRoot(cwd), 'ultragoal', ULTRAGOAL_PLANS_SUBDIR);
@@ -210,12 +210,12 @@ export async function listUltragoalPlanIds(cwd: string): Promise<string[]> {
 }
 
 /**
- * Resolve which plan a CLI command should target.
+ * 解析 CLI 命令应针对哪个计划执行。
  *
- *  - explicitPlanId wins.
- *  - Legacy goals.json (no planId) wins next, for backwards compat.
- *  - If exactly one multi-plan exists, that one is selected.
- *  - Otherwise throws UltragoalError with the list of candidate planIds.
+ *  - explicitPlanId 优先级最高。
+ *  - 其次是旧版 goals.json（无 planId），用于向后兼容。
+ *  - 若多计划恰好只有一个，则选中它。
+ *  - 否则抛出 UltragoalError，并附候选 planId 列表。
  */
 export async function resolveActivePlanId(cwd: string, explicitPlanId?: string): Promise<string | undefined> {
   if (explicitPlanId) {
@@ -224,7 +224,7 @@ export async function resolveActivePlanId(cwd: string, explicitPlanId?: string):
     }
     return explicitPlanId;
   }
-  // Legacy single-plan takes precedence when present.
+  // 存在旧版单计划时优先采用。
   if (existsSync(join(getWiseRoot(cwd), 'ultragoal', ULTRAGOAL_GOALS))) return undefined;
   const plans = await listUltragoalPlanIds(cwd);
   if (plans.length === 1) return plans[0];
@@ -424,8 +424,8 @@ export async function readUltragoalPlan(cwd: string, planId?: string): Promise<U
   if (parsed.version !== 1 || !Array.isArray(parsed.goals)) {
     throw new UltragoalError(`Invalid ultragoal plan at ${repoRelative(cwd, path)}.`);
   }
-  // Hydrate planId on the plan from the resolved location for downstream
-  // path computations (so callers don't need to pass planId again).
+  // 根据解析出的位置把 planId 回填到计划对象，供后续路径计算使用
+  //（这样调用方无需再次传入 planId）。
   if (planId && !parsed.planId) parsed.planId = planId;
   return parsed;
 }

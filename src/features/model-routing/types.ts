@@ -1,30 +1,29 @@
 /**
- * Model Routing Types
+ * 模型路由类型
  *
- * Type definitions for the intelligent model routing system that routes
- * sub-agent tasks to appropriate models (Opus/Sonnet/Haiku) based on
- * task complexity.
+ * 智能模型路由系统的类型定义，该系统根据任务复杂度
+ * 将子代理任务路由到合适的模型（Opus/Sonnet/Haiku）。
  */
 
 import type { ModelType } from '../../shared/types.js';
 import { getDefaultTierModels } from '../../config/models.js';
 
 /**
- * Complexity tier for task routing
+ * 任务路由的复杂度档位
  */
 export type ComplexityTier = 'LOW' | 'MEDIUM' | 'HIGH';
 
 /**
- * Model tier mapping to actual Claude models.
+ * 模型档位到实际 Claude 模型的映射。
  *
- * Reads from environment variables (WISE_MODEL_HIGH, WISE_MODEL_MEDIUM,
- * WISE_MODEL_LOW) with built-in fallbacks. User/project config overrides
- * are applied later by the config loader.
+ * 从环境变量（WISE_MODEL_HIGH、WISE_MODEL_MEDIUM、
+ * WISE_MODEL_LOW）读取，并内置兜底值。用户/项目级配置覆盖
+ * 由配置加载器在后续阶段应用。
  */
 export const TIER_MODELS: Record<ComplexityTier, string> = getDefaultTierModels();
 
 /**
- * Model tier to simple model type mapping
+ * 模型档位到简单模型类型的映射
  */
 export const TIER_TO_MODEL_TYPE: Record<ComplexityTier, ModelType> = {
   LOW: 'haiku',
@@ -33,67 +32,67 @@ export const TIER_TO_MODEL_TYPE: Record<ComplexityTier, ModelType> = {
 };
 
 /**
- * Lexical/syntactic signals that can be extracted without model calls
+ * 词法/语法信号，无需调用模型即可提取
  */
 export interface LexicalSignals {
-  /** Word count of the task prompt */
+  /** 任务提示的词数 */
   wordCount: number;
-  /** Number of file paths mentioned */
+  /** 提及的文件路径数量 */
   filePathCount: number;
-  /** Number of code blocks in the prompt */
+  /** 提示中的代码块数量 */
   codeBlockCount: number;
-  /** Contains architecture-related keywords */
+  /** 是否包含架构相关关键词 */
   hasArchitectureKeywords: boolean;
-  /** Contains debugging-related keywords */
+  /** 是否包含调试相关关键词 */
   hasDebuggingKeywords: boolean;
-  /** Contains simple search keywords */
+  /** 是否包含简单搜索关键词 */
   hasSimpleKeywords: boolean;
-  /** Contains risk/critical keywords */
+  /** 是否包含风险/关键关键词 */
   hasRiskKeywords: boolean;
-  /** Question depth: 'why' > 'how' > 'what' > 'where' */
+  /** 问题深度：'why' > 'how' > 'what' > 'where' */
   questionDepth: 'why' | 'how' | 'what' | 'where' | 'none';
-  /** Has implicit requirements (statements without clear deliverables) */
+  /** 是否存在隐式需求（缺乏明确交付物的表述） */
   hasImplicitRequirements: boolean;
 }
 
 /**
- * Structural signals that require parsing
+ * 需要解析的结构信号
  */
 export interface StructuralSignals {
-  /** Estimated number of subtasks */
+  /** 估算的子任务数量 */
   estimatedSubtasks: number;
-  /** Whether changes span multiple files */
+  /** 改动是否跨多个文件 */
   crossFileDependencies: boolean;
-  /** Whether tests are required */
+  /** 是否需要测试 */
   hasTestRequirements: boolean;
-  /** Domain specificity of the task */
+  /** 任务的领域专属性 */
   domainSpecificity: 'generic' | 'frontend' | 'backend' | 'infrastructure' | 'security';
-  /** Whether external knowledge is needed */
+  /** 是否需要外部知识 */
   requiresExternalKnowledge: boolean;
-  /** How reversible the changes are */
+  /** 改动的可回滚程度 */
   reversibility: 'easy' | 'moderate' | 'difficult';
-  /** Scope of impact */
+  /** 影响范围 */
   impactScope: 'local' | 'module' | 'system-wide';
 }
 
 /**
- * Context signals from session state
+ * 来自会话状态的上下文信号
  */
 export interface ContextSignals {
-  /** Number of previous failures on this task */
+  /** 本任务的前序失败次数 */
   previousFailures: number;
-  /** Number of conversation turns */
+  /** 对话轮数 */
   conversationTurns: number;
-  /** Complexity of the active plan (number of tasks) */
+  /** 当前计划的复杂度（任务数量） */
   planComplexity: number;
-  /** Number of remaining tasks in plan */
+  /** 计划中剩余的任务数量 */
   remainingTasks: number;
-  /** Depth of agent delegation chain */
+  /** 代理委派链的深度 */
   agentChainDepth: number;
 }
 
 /**
- * Combined complexity signals
+ * 合并后的复杂度信号
  */
 export interface ComplexitySignals {
   lexical: LexicalSignals;
@@ -102,110 +101,110 @@ export interface ComplexitySignals {
 }
 
 /**
- * Routing decision result
+ * 路由决策结果
  */
 export interface RoutingDecision {
-  /** Selected model ID */
+  /** 选定的模型 ID */
   model: string;
-  /** Selected model type */
+  /** 选定的模型类型 */
   modelType: ModelType;
-  /** Complexity tier */
+  /** 复杂度档位 */
   tier: ComplexityTier;
-  /** Confidence score (0-1) */
+  /** 置信度分数（0-1） */
   confidence: number;
-  /** Reasons for the decision */
+  /** 决策理由 */
   reasons: string[];
-  /** Adapted prompt for the tier (optional) */
+  /** 针对该档位适配后的提示（可选） */
   adaptedPrompt?: string;
-  /** Whether escalation was triggered */
+  /** 是否触发了升级 */
   escalated: boolean;
-  /** Original tier before escalation (if escalated) */
+  /** 升级前的原始档位（若已升级） */
   originalTier?: ComplexityTier;
 }
 
 /**
- * Context for making routing decisions
+ * 用于做出路由决策的上下文
  */
 export interface RoutingContext {
-  /** The task prompt to route */
+  /** 待路由的任务提示 */
   taskPrompt: string;
-  /** Target agent type (if specified) */
+  /** 目标代理类型（若指定） */
   agentType?: string;
-  /** Parent session ID for context */
+  /** 用于上下文的父会话 ID */
   parentSession?: string;
-  /** Number of previous failures */
+  /** 前序失败次数 */
   previousFailures?: number;
-  /** Current conversation turn count */
+  /** 当前对话轮数 */
   conversationTurns?: number;
-  /** Active plan tasks count */
+  /** 当前计划的任务数量 */
   planTasks?: number;
-  /** Remaining plan tasks */
+  /** 计划中剩余的任务 */
   remainingTasks?: number;
-  /** Current agent chain depth */
+  /** 当前代理链深度 */
   agentChainDepth?: number;
-  /** Explicit model override (bypasses routing) */
+  /** 显式模型覆盖（绕过路由） */
   explicitModel?: ModelType;
 }
 
 /**
- * Routing rule definition
+ * 路由规则定义
  */
 export interface RoutingRule {
-  /** Rule name for logging/debugging */
+  /** 规则名称，用于日志/调试 */
   name: string;
-  /** Condition function to check if rule applies */
+  /** 判断规则是否适用的条件函数 */
   condition: (context: RoutingContext, signals: ComplexitySignals) => boolean;
-  /** Action to take if condition is true */
+  /** 条件为真时执行的动作 */
   action: {
     tier: ComplexityTier | 'EXPLICIT';
     reason: string;
   };
-  /** Priority (higher = evaluated first) */
+  /** 优先级（数值越大越先评估） */
   priority: number;
 }
 
 /**
- * Routing configuration
+ * 路由配置
  */
 export interface RoutingConfig {
-  /** Whether routing is enabled */
+  /** 是否启用路由 */
   enabled: boolean;
-  /** Default tier when no rules match */
+  /** 无规则匹配时的默认档位 */
   defaultTier: ComplexityTier;
   /**
-   * Force all agents to inherit the parent model, bypassing all routing.
-   * When true, routeTask returns 'inherit' model type so no model parameter
-   * is passed to Task/Agent calls.
+   * 强制所有代理继承父模型，绕过所有路由。
+   * 为 true 时，routeTask 返回 'inherit' 模型类型，从而在调用
+   * Task/Agent 时不传入 model 参数。
    */
   forceInherit?: boolean;
-  /** Minimum tier to allow (e.g. disable LOW tier by setting minTier to MEDIUM) */
+  /** 允许的最低档位（如将 minTier 设为 MEDIUM 以禁用 LOW 档） */
   minTier?: ComplexityTier;
-  /** Whether automatic escalation is enabled */
+  /** 是否启用自动升级 */
   escalationEnabled: boolean;
-  /** Maximum escalation attempts */
+  /** 最大升级次数 */
   maxEscalations: number;
-  /** Model mapping per tier */
+  /** 各档位的模型映射 */
   tierModels: Record<ComplexityTier, string>;
-  /** Agent-specific overrides */
+  /** 按代理类型的覆盖配置 */
   agentOverrides?: Record<string, {
     tier: ComplexityTier;
     reason: string;
   }>;
-  /** Keywords that force escalation */
+  /** 强制升级的关键词 */
   escalationKeywords?: string[];
-  /** Keywords that suggest lower tier */
+  /** 提示使用更低档位的关键词 */
   simplificationKeywords?: string[];
 }
 
 /**
- * Default routing configuration
+ * 默认路由配置
  *
- * ALL agents are adaptive based on task complexity.
+ * 所有代理均根据任务复杂度自适应。
  */
 export const DEFAULT_ROUTING_CONFIG: RoutingConfig = {
   enabled: true,
   defaultTier: 'MEDIUM',
-  escalationEnabled: false,  // Deprecated: orchestrator routes proactively
+  escalationEnabled: false,  // 已废弃：编排器主动路由
   maxEscalations: 0,
   tierModels: TIER_MODELS,
   agentOverrides: {},
@@ -219,7 +218,7 @@ export const DEFAULT_ROUTING_CONFIG: RoutingConfig = {
 };
 
 /**
- * Agent categories and their default complexity tiers
+ * 代理类别及其默认复杂度档位
  */
 export const AGENT_CATEGORY_TIERS: Record<string, ComplexityTier> = {
   exploration: 'LOW',
@@ -232,7 +231,7 @@ export const AGENT_CATEGORY_TIERS: Record<string, ComplexityTier> = {
 };
 
 /**
- * Keywords for complexity detection
+ * 复杂度检测关键词
  */
 export const COMPLEXITY_KEYWORDS = {
   architecture: [
@@ -254,7 +253,7 @@ export const COMPLEXITY_KEYWORDS = {
 };
 
 /**
- * Prompt adaptation strategies per tier
+ * 各档位的提示适配策略
  */
 export type PromptAdaptationStrategy = 'full' | 'balanced' | 'concise';
 

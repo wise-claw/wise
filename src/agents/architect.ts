@@ -1,10 +1,9 @@
 /**
- * Architect Agent - Architecture and Debugging Expert
+ * 架构师代理 - 架构与调试专家
  *
- * READ-ONLY consultation agent for strategic architecture decisions
- * and complex debugging.
+ * 只读咨询 agent，用于战略性架构决策与复杂调试。
  *
- * Ported from oh-my-opencode's architect agent.
+ * 从 oh-my-opencode 的 architect agent 移植。
  */
 
 import type { AgentConfig, AgentPromptMetadata } from './types.js';
@@ -36,7 +35,7 @@ export const ARCHITECT_PROMPT_METADATA: AgentPromptMetadata = {
   ],
 };
 
-// Prompt loaded dynamically from agents/architect.md (authoritative source)
+// prompt 从 agents/architect.md 动态加载（权威来源）
 
 export const architectAgent: AgentConfig = {
   name: 'architect',

@@ -1,11 +1,11 @@
 /**
- * Executor Agent - Focused Task Executor
+ * Executor Agent - 专注任务执行器
  *
- * Executes tasks directly without delegation capabilities.
- * Same discipline as WISE, but works alone.
+ * 直接执行任务，不具备委派能力。
+ * 与 WISE 同样的纪律，但独立工作。
  *
- * Ported from oh-my-opencode's executor agent.
- * Prompt loaded from: agents/executor.md
+ * 从 oh-my-opencode 的 executor agent 移植。
+ * prompt 加载自：agents/executor.md
  */
 
 import type { AgentConfig, AgentPromptMetadata } from './types.js';

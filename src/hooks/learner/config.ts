@@ -1,7 +1,7 @@
 /**
- * Learner Configuration
+ * Learner 配置
  *
- * Handles configuration loading and validation.
+ * 负责配置的加载与校验。
  */
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
@@ -10,33 +10,33 @@ import { getClaudeConfigDir } from '../../utils/config-dir.js';
 import { DEBUG_ENABLED } from './constants.js';
 
 export interface LearnerConfig {
-  /** Feature enabled/disabled */
+  /** 功能启用/禁用 */
   enabled: boolean;
-  /** Detection configuration */
+  /** 检测配置 */
   detection: {
-    /** Enable auto-detection */
+    /** 启用自动检测 */
     enabled: boolean;
-    /** Confidence threshold for prompting (0-100) */
+    /** 触发提示的置信度阈值 (0-100) */
     promptThreshold: number;
-    /** Cooldown between prompts (messages) */
+    /** 提示之间的冷却间隔（消息条数） */
     promptCooldown: number;
   };
-  /** Quality gate configuration */
+  /** 质量门禁配置 */
   quality: {
-    /** Minimum score to accept (0-100) */
+    /** 接受的最低分数 (0-100) */
     minScore: number;
-    /** Minimum problem length */
+    /** 问题描述的最小长度 */
     minProblemLength: number;
-    /** Minimum solution length */
+    /** 解决方案的最小长度 */
     minSolutionLength: number;
   };
-  /** Storage configuration */
+  /** 存储配置 */
   storage: {
-    /** Maximum skills per scope */
+    /** 每个作用域的最大技能数 */
     maxSkillsPerScope: number;
-    /** Auto-prune old skills */
+    /** 自动清理旧技能 */
     autoPrune: boolean;
-    /** Days before auto-prune (if enabled) */
+    /** 自动清理前的天数（启用时生效） */
     pruneDays: number;
   };
 }
@@ -63,7 +63,7 @@ const DEFAULT_CONFIG: LearnerConfig = {
 const CONFIG_PATH = join(getClaudeConfigDir(), 'wise', 'learner.json');
 
 /**
- * Load configuration from disk.
+ * 从磁盘加载配置。
  */
 export function loadConfig(): LearnerConfig {
   if (!existsSync(CONFIG_PATH)) {
@@ -83,7 +83,7 @@ export function loadConfig(): LearnerConfig {
 }
 
 /**
- * Save configuration to disk.
+ * 将配置保存到磁盘。
  */
 export function saveConfig(config: Partial<LearnerConfig>): boolean {
   const merged = mergeConfig(DEFAULT_CONFIG, config);
@@ -104,7 +104,7 @@ export function saveConfig(config: Partial<LearnerConfig>): boolean {
 }
 
 /**
- * Merge partial config with defaults.
+ * 将部分配置与默认值合并。
  */
 function mergeConfig(
   defaults: LearnerConfig,
@@ -128,7 +128,7 @@ function mergeConfig(
 }
 
 /**
- * Get a specific config value.
+ * 获取指定的配置值。
  */
 export function getConfigValue<K extends keyof LearnerConfig>(
   key: K
@@ -138,7 +138,7 @@ export function getConfigValue<K extends keyof LearnerConfig>(
 }
 
 /**
- * Update a specific config value.
+ * 更新指定的配置值。
  */
 export function setConfigValue<K extends keyof LearnerConfig>(
   key: K,

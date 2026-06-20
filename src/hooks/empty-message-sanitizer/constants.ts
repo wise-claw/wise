@@ -1,19 +1,19 @@
 /**
- * Empty Message Sanitizer Constants
+ * 空消息清理器常量
  *
- * Constants for the empty message sanitizer hook.
+ * 空消息清理器钩子使用的常量。
  *
- * Adapted from oh-my-opencode's empty-message-sanitizer hook.
+ * 改编自 oh-my-opencode 的 empty-message-sanitizer 钩子。
  */
 
 /**
- * Placeholder text injected for empty messages
- * This prevents API errors about empty content
+ * 为空消息注入的占位文本
+ * 用于防止因内容为空导致的 API 错误
  */
 export const PLACEHOLDER_TEXT = '[user interrupted]';
 
 /**
- * Tool-related part types that count as valid content
+ * 视为有效内容的工具相关 part 类型
  */
 export const TOOL_PART_TYPES = new Set([
   'tool',
@@ -22,17 +22,17 @@ export const TOOL_PART_TYPES = new Set([
 ]);
 
 /**
- * Hook name identifier
+ * 钩子名称标识符
  */
 export const HOOK_NAME = 'empty-message-sanitizer';
 
 /**
- * Debug log prefix
+ * 调试日志前缀
  */
 export const DEBUG_PREFIX = '[empty-message-sanitizer]';
 
 /**
- * Error message patterns for debugging
+ * 用于调试的错误消息模式
  */
 export const ERROR_PATTERNS = {
   EMPTY_CONTENT: 'all messages must have non-empty content',

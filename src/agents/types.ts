@@ -1,129 +1,129 @@
 /**
- * Agent Types for Wise
+ * Wise 的 Agent 类型
  *
- * Defines types for agent configuration and metadata used in dynamic prompt generation.
- * Ported from oh-my-opencode's agent type system.
+ * 定义用于动态 prompt 生成的 agent 配置与元数据类型。
+ * 从 oh-my-opencode 的 agent 类型系统移植。
  */
 
 import type { ModelType } from '../shared/types.js';
 export type { ModelType };
 
 /**
- * Cost tier for agent usage
- * Used to guide when to invoke expensive vs cheap agents
+ * agent 使用的成本档位
+ * 用于指导何时调用昂贵或便宜的 agent
  */
 export type AgentCost = 'FREE' | 'CHEAP' | 'EXPENSIVE';
 
 /**
- * Agent category for routing and grouping
+ * 用于路由与分组的 agent 类别
  */
 export type AgentCategory =
-  | 'exploration'    // Code search and discovery
-  | 'specialist'     // Domain-specific implementation
-  | 'advisor'        // Strategic consultation (read-only)
-  | 'utility'        // General purpose helpers
-  | 'orchestration'  // Multi-agent coordination
-  | 'planner'        // Strategic planning
-  | 'reviewer';      // Plan/work review
+  | 'exploration'    // 代码搜索与发现
+  | 'specialist'     // 特定领域实现
+  | 'advisor'        // 战略咨询（只读）
+  | 'utility'        // 通用辅助
+  | 'orchestration'  // 多 agent 协调
+  | 'planner'        // 战略规划
+  | 'reviewer';      // 计划/工作评审
 
 /**
- * Trigger condition for delegation
+ * 委派的触发条件
  */
 export interface DelegationTrigger {
-  /** Domain or area this trigger applies to */
+  /** 该触发器适用的领域或区域 */
   domain: string;
-  /** Condition that triggers delegation */
+  /** 触发委派的条件 */
   trigger: string;
 }
 
 /**
- * Metadata about an agent for dynamic prompt generation
- * This enables WISE to build delegation tables automatically
+ * 用于动态 prompt 生成的 agent 元数据
+ * 这使 WISE 能自动构建委派表
  */
 export interface AgentPromptMetadata {
-  /** Agent category */
+  /** Agent 类别 */
   category: AgentCategory;
-  /** Cost tier */
+  /** 成本档位 */
   cost: AgentCost;
-  /** Short alias for prompts */
+  /** prompt 的短别名 */
   promptAlias?: string;
-  /** Conditions that trigger delegation to this agent */
+  /** 触发向该 agent 委派的条件 */
   triggers: DelegationTrigger[];
-  /** When to use this agent */
+  /** 何时使用该 agent */
   useWhen?: string[];
-  /** When NOT to use this agent */
+  /** 何时不应使用该 agent */
   avoidWhen?: string[];
-  /** Description for dynamic prompt building */
+  /** 用于动态 prompt 构建的描述 */
   promptDescription?: string;
-  /** Tools this agent uses (for tool selection guidance) */
+  /** 该 agent 使用的工具（用于工具选择指导） */
   tools?: string[];
 }
 
 /**
- * Base agent configuration
+ * 基础 agent 配置
  */
 export interface AgentConfig {
-  /** Agent name/identifier */
+  /** Agent 名称/标识符 */
   name: string;
-  /** Short description for agent selection */
+  /** 用于 agent 选择的简短描述 */
   description: string;
-  /** System prompt for the agent */
+  /** 该 agent 的系统 prompt */
   prompt: string;
-  /** Tools the agent can use (optional - all tools allowed by default if omitted) */
+  /** agent 可使用的工具（可选 — 省略时默认允许全部工具） */
   tools?: string[];
-  /** Tools explicitly disallowed for this agent */
+  /** 明确禁止该 agent 使用的工具 */
   disallowedTools?: string[];
-  /** Model to use (defaults to sonnet) */
+  /** 要使用的模型（默认 sonnet） */
   model?: string;
-  /** Default model for this agent (explicit tier mapping) */
+  /** 该 agent 的默认模型（显式档位映射） */
   defaultModel?: string;
-  /** Optional metadata for dynamic prompt generation */
+  /** 用于动态 prompt 生成的可选元数据 */
   metadata?: AgentPromptMetadata;
 }
 
 /**
- * Extended agent config with all optional fields
+ * 全字段可选的扩展 agent 配置
  */
 export interface FullAgentConfig extends AgentConfig {
-  /** Temperature setting */
+  /** Temperature 设置 */
   temperature?: number;
-  /** Max tokens */
+  /** 最大 token 数 */
   maxTokens?: number;
-  /** Thinking configuration (for Claude models) */
+  /** Thinking 配置（用于 Claude 模型） */
   thinking?: {
     type: 'enabled' | 'disabled';
     budgetTokens?: number;
   };
-  /** Tool restrictions */
+  /** 工具限制 */
   toolRestrictions?: string[];
 }
 
 /**
- * Agent override configuration for customization
+ * 用于自定义的 agent 覆盖配置
  */
 export interface AgentOverrideConfig {
-  /** Override model */
+  /** 覆盖模型 */
   model?: string;
-  /** Enable/disable agent */
+  /** 启用/禁用 agent */
   enabled?: boolean;
-  /** Append to prompt */
+  /** 追加到 prompt */
   prompt_append?: string;
-  /** Override temperature */
+  /** 覆盖 temperature */
   temperature?: number;
 }
 
 /**
- * Map of agent overrides
+ * agent 覆盖项的映射
  */
 export type AgentOverrides = Partial<Record<string, AgentOverrideConfig>>;
 
 /**
- * Factory function signature for creating agents
+ * 用于创建 agent 的工厂函数签名
  */
 export type AgentFactory = (model?: string) => AgentConfig;
 
 /**
- * Available agent descriptor for WISE prompt building
+ * 用于 WISE prompt 构建的可用 agent 描述符
  */
 export interface AvailableAgent {
   name: string;
@@ -132,34 +132,34 @@ export interface AvailableAgent {
 }
 
 /**
- * Check if a model ID is a GPT model
+ * 检查 model ID 是否为 GPT 模型
  */
 export function isGptModel(modelId: string): boolean {
   return modelId.toLowerCase().includes('gpt');
 }
 
 /**
- * Check if a model ID is a Claude model
+ * 检查 model ID 是否为 Claude 模型
  */
 export function isClaudeModel(modelId: string): boolean {
   return modelId.toLowerCase().includes('claude');
 }
 
 /**
- * Get default model for a category
+ * 获取某类别的默认模型
  */
 export function getDefaultModelForCategory(category: AgentCategory): ModelType {
   switch (category) {
     case 'exploration':
-      return 'haiku'; // Fast, cheap
+      return 'haiku'; // 快速、便宜
     case 'specialist':
-      return 'sonnet'; // Balanced
+      return 'sonnet'; // 均衡
     case 'advisor':
-      return 'opus'; // High quality reasoning
+      return 'opus'; // 高质量推理
     case 'utility':
-      return 'haiku'; // Fast, cheap
+      return 'haiku'; // 快速、便宜
     case 'orchestration':
-      return 'sonnet'; // Balanced
+      return 'sonnet'; // 均衡
     default:
       return 'sonnet';
   }

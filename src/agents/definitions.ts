@@ -1,11 +1,11 @@
 /**
- * Agent Definitions for Wise
+ * Wise 的 Agent 定义
  *
- * This module provides:
- * 1. Re-exports of base agents from individual files
- * 2. Tiered agent variants with dynamically loaded prompts from /agents/*.md
- * 3. getAgentDefinitions() for agent registry
- * 4. wiseSystemPrompt for the main orchestrator
+ * 本模块提供：
+ * 1. 从独立文件重新导出基础 agent
+ * 2. 从 /agents/*.md 动态加载 prompt 的分层 agent 变体
+ * 3. 用于 agent 注册表的 getAgentDefinitions()
+ * 4. 主编排器的 wiseSystemPrompt
  */
 
 import type { AgentConfig, PluginConfig } from '../shared/types.js';
@@ -14,7 +14,7 @@ import { loadConfig } from '../config/loader.js';
 import { resolveInheritedModelFromEnv } from '../config/models.js';
 import { appendSkininthegamebrosGuidance } from './skininthegamebros-guidance.js';
 
-// Re-export base agents from individual files (rebranded names)
+// 从独立文件重新导出基础 agent（重命名后）
 export { architectAgent } from './architect.js';
 export { designerAgent } from './designer.js';
 export { writerAgent } from './writer.js';
@@ -29,7 +29,7 @@ export { tracerAgent } from './tracer.js';
 
 export { documentSpecialistAgent } from './document-specialist.js';
 
-// Import base agents for use in getAgentDefinitions
+// 导入基础 agent 以供 getAgentDefinitions 使用
 import { architectAgent } from './architect.js';
 import { designerAgent } from './designer.js';
 import { writerAgent } from './writer.js';
@@ -43,15 +43,15 @@ import { exploreAgent } from './explore.js';
 import { tracerAgent } from './tracer.js';
 import { documentSpecialistAgent } from './document-specialist.js';
 
-// Re-export loadAgentPrompt (also exported from index.ts)
+// 重新导出 loadAgentPrompt（亦从 index.ts 导出）
 export { loadAgentPrompt };
 
 // ============================================================
-// REFORMED AGENTS (BUILD/ANALYSIS LANE)
+// 改良后的 agent（构建/分析通道）
 // ============================================================
 
 /**
- * Debugger Agent - Root-Cause Analysis & Debugging (Sonnet)
+ * Debugger Agent - 根因分析与调试（Sonnet）
  */
 export const debuggerAgent: AgentConfig = {
   name: 'debugger',
@@ -62,7 +62,7 @@ export const debuggerAgent: AgentConfig = {
 };
 
 /**
- * Verifier Agent - Completion Evidence & Test Validation (Sonnet)
+ * Verifier Agent - 完成证据与测试校验（Sonnet）
  */
 export const verifierAgent: AgentConfig = {
   name: 'verifier',
@@ -73,16 +73,16 @@ export const verifierAgent: AgentConfig = {
 };
 
 // ============================================================
-// REFORMED AGENTS (REVIEW LANE)
+// 改良后的 agent（评审通道）
 // ============================================================
 
 // ============================================================
-// REFORMED AGENTS (DOMAIN SPECIALISTS)
+// 改良后的 agent（领域专家）
 // ============================================================
 
 /**
- * Test-Engineer Agent - Test Strategy & Coverage (Sonnet)
- * Replaces: tdd-guide agent
+ * Test-Engineer Agent - 测试策略与覆盖率（Sonnet）
+ * 替代：tdd-guide agent
  */
 export const testEngineerAgent: AgentConfig = {
   name: 'test-engineer',
@@ -93,11 +93,11 @@ export const testEngineerAgent: AgentConfig = {
 };
 
 // ============================================================
-// SPECIALIZED AGENTS (Security, Build, TDD, Code Review)
+// 专用 agent（安全、构建、TDD、代码评审）
 // ============================================================
 
 /**
- * Security-Reviewer Agent - Security Vulnerability Detection (Sonnet)
+ * Security-Reviewer Agent - 安全漏洞检测（Sonnet）
  */
 export const securityReviewerAgent: AgentConfig = {
   name: 'security-reviewer',
@@ -108,7 +108,7 @@ export const securityReviewerAgent: AgentConfig = {
 };
 
 /**
- * Code-Reviewer Agent - Expert Code Review (Opus)
+ * Code-Reviewer Agent - 专家级代码评审（Opus）
  */
 export const codeReviewerAgent: AgentConfig = {
   name: 'code-reviewer',
@@ -120,7 +120,7 @@ export const codeReviewerAgent: AgentConfig = {
 
 
 /**
- * Git-Master Agent - Git Operations Expert (Sonnet)
+ * Git-Master Agent - Git 操作专家（Sonnet）
  */
 export const gitMasterAgent: AgentConfig = {
   name: 'git-master',
@@ -131,7 +131,7 @@ export const gitMasterAgent: AgentConfig = {
 };
 
 /**
- * Code-Simplifier Agent - Code Simplification & Refactoring (Opus)
+ * Code-Simplifier Agent - 代码简化与重构（Opus）
  */
 export const codeSimplifierAgent: AgentConfig = {
   name: 'code-simplifier',
@@ -142,11 +142,11 @@ export const codeSimplifierAgent: AgentConfig = {
 };
 
 // ============================================================
-// DEPRECATED ALIASES (Backward Compatibility)
+// 已废弃别名（向后兼容）
 // ============================================================
 
 /**
- * @deprecated Use test-engineer agent instead
+ * @deprecated 改用 test-engineer agent
  */
 export const tddGuideAgentAlias = testEngineerAgent;
 
@@ -178,26 +178,26 @@ function getConfiguredAgentModel(name: string, config: PluginConfig): string | u
 }
 
 // ============================================================
-// AGENT REGISTRY
+// AGENT 注册表
 // ============================================================
 
 /**
- * Agent Role Disambiguation
+ * Agent 角色消歧
  *
- * HIGH-tier review/planning agents have distinct, non-overlapping roles:
+ * HIGH 档位的评审/规划 agent 拥有各自独立、不重叠的角色：
  *
- * | Agent | Role | What They Do | What They Don't Do |
+ * | Agent | 角色 | 职责 | 不负责 |
  * |-------|------|--------------|-------------------|
- * | architect | code-analysis | Analyze code, debug, verify | Requirements, plan creation, plan review |
- * | analyst | requirements-analysis | Find requirement gaps | Code analysis, planning, plan review |
- * | planner | plan-creation | Create work plans | Requirements, code analysis, plan review |
- * | critic | plan-review | Review plan quality | Requirements, code analysis, plan creation |
+ * | architect | 代码分析 | 分析代码、调试、校验 | 需求、计划创建、计划评审 |
+ * | analyst | 需求分析 | 发现需求缺口 | 代码分析、规划、计划评审 |
+ * | planner | 计划创建 | 创建工作计划 | 需求、代码分析、计划评审 |
+ * | critic | 计划评审 | 评审计划质量 | 需求、代码分析、计划创建 |
  *
- * Workflow: explore → analyst → planner → critic → executor → architect (verify)
+ * 工作流：explore → analyst → planner → critic → executor → architect（校验）
  */
 
 /**
- * Get all agent definitions as a record for use with Claude Agent SDK
+ * 以 record 形式获取全部 agent 定义，供 Claude Agent SDK 使用
  */
 export function getAgentDefinitions(options?: {
   overrides?: Partial<Record<string, Partial<AgentConfig>>>;
@@ -212,7 +212,7 @@ export function getAgentDefinitions(options?: {
 }> {
   const agents: Record<string, AgentConfig> = {
     // ============================================================
-    // BUILD/ANALYSIS LANE
+    // 构建/分析通道
     // ============================================================
     explore: exploreAgent,
     analyst: analystAgent,
@@ -223,13 +223,13 @@ export function getAgentDefinitions(options?: {
     verifier: verifierAgent,
 
     // ============================================================
-    // REVIEW LANE
+    // 评审通道
     // ============================================================
     'security-reviewer': securityReviewerAgent,
     'code-reviewer': codeReviewerAgent,
 
     // ============================================================
-    // DOMAIN SPECIALISTS
+    // 领域专家
     // ============================================================
     'test-engineer': testEngineerAgent,
     designer: designerAgent,
@@ -241,12 +241,12 @@ export function getAgentDefinitions(options?: {
     'code-simplifier': codeSimplifierAgent,
 
     // ============================================================
-    // COORDINATION
+    // 协调
     // ============================================================
     critic: criticAgent,
 
     // ============================================================
-    // BACKWARD COMPATIBILITY (Deprecated)
+    // 向后兼容（已废弃）
     // ============================================================
     'document-specialist': documentSpecialistAgent
   };
@@ -281,11 +281,11 @@ export function getAgentDefinitions(options?: {
 }
 
 // ============================================================
-// WISE SYSTEM PROMPT
+// WISE 系统 PROMPT
 // ============================================================
 
 /**
- * WISE System Prompt - The main orchestrator
+ * WISE 系统 Prompt - 主编排器
  */
 export const wiseSystemPrompt = `You are the relentless orchestrator of a multi-agent development system.
 

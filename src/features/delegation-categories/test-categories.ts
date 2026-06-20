@@ -1,7 +1,7 @@
 /**
- * Manual tests for delegation categories
+ * 委派类别的手动测试
  *
- * Run with: npx tsx src/features/delegation-categories/test-categories.ts
+ * 运行方式：npx tsx src/features/delegation-categories/test-categories.ts
  */
 
 import {
@@ -21,7 +21,7 @@ import {
 
 console.log('=== Delegation Categories Test ===\n');
 
-// Test 1: Resolve all categories
+// 测试 1：解析所有类别
 console.log('1. Testing resolveCategory():');
 for (const category of getAllCategories()) {
   const resolved = resolveCategory(category);
@@ -33,19 +33,19 @@ for (const category of getAllCategories()) {
 }
 console.log();
 
-// Test 2: isValidCategory
+// 测试 2：isValidCategory
 console.log('2. Testing isValidCategory():');
 console.log(`  isValidCategory('ultrabrain'): ${isValidCategory('ultrabrain')}`);
 console.log(`  isValidCategory('invalid'): ${isValidCategory('invalid')}`);
 console.log();
 
-// Test 3: getCategoryDescription
+// 测试 3：getCategoryDescription
 console.log('3. Testing getCategoryDescription():');
 console.log(`  ultrabrain: ${getCategoryDescription('ultrabrain')}`);
 console.log(`  quick: ${getCategoryDescription('quick')}`);
 console.log();
 
-// Test 4: detectCategoryFromPrompt
+// 测试 4：detectCategoryFromPrompt
 console.log('4. Testing detectCategoryFromPrompt():');
 const testPrompts = [
   'Design a beautiful dashboard with responsive layout',
@@ -63,31 +63,31 @@ for (const prompt of testPrompts) {
 }
 console.log();
 
-// Test 5: getCategoryForTask
+// 测试 5：getCategoryForTask
 console.log('5. Testing getCategoryForTask():');
 
-// Explicit tier
+// 显式 tier
 const explicitTier = getCategoryForTask({
   taskPrompt: 'Some task',
   explicitTier: 'LOW',
 });
 console.log(`  Explicit tier=LOW: ${explicitTier.category} (tier: ${explicitTier.tier})`);
 
-// Explicit category
+// 显式类别
 const explicitCategory = getCategoryForTask({
   taskPrompt: 'Some task',
   explicitCategory: 'ultrabrain',
 });
 console.log(`  Explicit category=ultrabrain: ${explicitCategory.category} (tier: ${explicitCategory.tier})`);
 
-// Auto-detect
+// 自动检测
 const autoDetect = getCategoryForTask({
   taskPrompt: 'Design a beautiful UI component with animations',
 });
 console.log(`  Auto-detect from prompt: ${autoDetect.category} (tier: ${autoDetect.tier})`);
 console.log();
 
-// Test 6: Tier extraction
+// 测试 6：tier 提取
 console.log('6. Testing tier extraction:');
 console.log(`  getCategoryTier('ultrabrain'): ${getCategoryTier('ultrabrain')}`);
 console.log(`  getCategoryTier('quick'): ${getCategoryTier('quick')}`);
@@ -96,7 +96,7 @@ console.log(`  getCategoryThinkingBudget('ultrabrain'): ${getCategoryThinkingBud
 console.log(`  getCategoryThinkingBudgetTokens('ultrabrain'): ${getCategoryThinkingBudgetTokens('ultrabrain')}`);
 console.log();
 
-// Test 7: Prompt enhancement
+// 测试 7：prompt 增强
 console.log('7. Testing enhancePromptWithCategory():');
 const basePrompt = 'Create a login form';
 const enhanced = enhancePromptWithCategory(basePrompt, 'visual-engineering');
@@ -104,7 +104,7 @@ console.log(`  Base: ${basePrompt}`);
 console.log(`  Enhanced: ${enhanced}`);
 console.log();
 
-// Test 8: Backward compatibility
+// 测试 8：向后兼容
 console.log('8. Testing backward compatibility with ComplexityTier:');
 console.log('  Categories map to tiers:');
 for (const [category, config] of Object.entries(CATEGORY_CONFIGS)) {

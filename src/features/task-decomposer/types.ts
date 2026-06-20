@@ -1,8 +1,7 @@
 /**
- * Task Decomposer Types
+ * 任务分解器类型
  *
- * Types for analyzing tasks and decomposing them into parallelizable
- * components with file ownership management.
+ * 用于分析任务并将其分解为可并行组件（含文件所有权管理）的类型定义。
  */
 
 export type TaskType =
@@ -30,171 +29,171 @@ export type ComponentRole =
   | 'module';
 
 export interface TaskAnalysis {
-  /** Original task description */
+  /** 原始任务描述 */
   task: string;
 
-  /** Detected task type */
+  /** 检测到的任务类型 */
   type: TaskType;
 
-  /** Task complexity score (0-1) */
+  /** 任务复杂度评分 (0-1) */
   complexity: number;
 
-  /** Whether task can be parallelized */
+  /** 任务是否可并行 */
   isParallelizable: boolean;
 
-  /** Estimated number of components */
+  /** 预计组件数量 */
   estimatedComponents: number;
 
-  /** Key areas identified in the task */
+  /** 任务中识别出的关键领域 */
   areas: string[];
 
-  /** Technologies/frameworks mentioned */
+  /** 提及的技术/框架 */
   technologies: string[];
 
-  /** File patterns mentioned or inferred */
+  /** 提及或推断的文件模式 */
   filePatterns: string[];
 
-  /** Dependencies between areas */
+  /** 领域之间的依赖关系 */
   dependencies: Array<{ from: string; to: string }>;
 }
 
 export interface Component {
-  /** Unique component ID */
+  /** 组件唯一 ID */
   id: string;
 
-  /** Component name */
+  /** 组件名称 */
   name: string;
 
-  /** Component role/type */
+  /** 组件角色/类型 */
   role: ComponentRole;
 
-  /** Description of what this component does */
+  /** 该组件功能的描述 */
   description: string;
 
-  /** Whether this component can run in parallel */
+  /** 该组件是否可并行运行 */
   canParallelize: boolean;
 
-  /** Components this depends on (must complete first) */
+  /** 该组件依赖的组件（必须先完成） */
   dependencies: string[];
 
-  /** Estimated effort/complexity (0-1) */
+  /** 预计工作量/复杂度 (0-1) */
   effort: number;
 
-  /** Technologies used by this component */
+  /** 该组件使用的技术 */
   technologies: string[];
 }
 
 export interface FileOwnership {
-  /** Component ID that owns these files */
+  /** 拥有这些文件的组件 ID */
   componentId: string;
 
-  /** Glob patterns for files this component owns exclusively */
+  /** 该组件独占文件的 glob 模式 */
   patterns: string[];
 
-  /** Specific files (non-glob) this component owns */
+  /** 该组件拥有的具体文件（非 glob） */
   files: string[];
 
-  /** Files that might overlap with other components */
+  /** 可能与其他组件重叠的文件 */
   potentialConflicts: string[];
 }
 
 export interface Subtask {
-  /** Unique subtask ID */
+  /** 子任务唯一 ID */
   id: string;
 
-  /** Subtask name */
+  /** 子任务名称 */
   name: string;
 
-  /** Component this subtask implements */
+  /** 该子任务实现的组件 */
   component: Component;
 
-  /** Detailed prompt for worker agent */
+  /** 给工作代理的详细 prompt */
   prompt: string;
 
-  /** File ownership for this subtask */
+  /** 该子任务的文件所有权 */
   ownership: FileOwnership;
 
-  /** Subtasks that must complete before this one */
+  /** 必须先完成的子任务 */
   blockedBy: string[];
 
-  /** Recommended agent type */
+  /** 推荐的代理类型 */
   agentType: string;
 
-  /** Recommended model tier */
+  /** 推荐的模型档位 */
   modelTier: 'low' | 'medium' | 'high';
 
-  /** Acceptance criteria */
+  /** 验收标准 */
   acceptanceCriteria: string[];
 
-  /** Verification steps */
+  /** 验证步骤 */
   verification: string[];
 }
 
 export interface SharedFile {
-  /** File path or glob pattern */
+  /** 文件路径或 glob 模式 */
   pattern: string;
 
-  /** Why this file is shared */
+  /** 该文件被共享的原因 */
   reason: string;
 
-  /** Components that need access to this file */
+  /** 需要访问该文件的组件 */
   sharedBy: string[];
 
-  /** Whether orchestration is required for this file */
+  /** 该文件是否需要协调 */
   requiresOrchestration: boolean;
 }
 
 export interface DecompositionResult {
-  /** Original task analysis */
+  /** 原始任务分析 */
   analysis: TaskAnalysis;
 
-  /** Identified components */
+  /** 识别出的组件 */
   components: Component[];
 
-  /** Generated subtasks with ownership */
+  /** 生成的带所有权的子任务 */
   subtasks: Subtask[];
 
-  /** Shared files requiring orchestration */
+  /** 需要协调的共享文件 */
   sharedFiles: SharedFile[];
 
-  /** Recommended execution order (by subtask ID) */
+  /** 推荐的执行顺序（按子任务 ID） */
   executionOrder: string[][];
 
-  /** Overall strategy description */
+  /** 整体策略描述 */
   strategy: string;
 
-  /** Warnings or issues detected */
+  /** 检测到的警告或问题 */
   warnings: string[];
 }
 
 export interface ProjectContext {
-  /** Project root directory */
+  /** 项目根目录 */
   rootDir: string;
 
-  /** Project type (detected) */
+  /** 项目类型（检测到的） */
   projectType?: string;
 
-  /** Technologies in use */
+  /** 使用中的技术 */
   technologies?: string[];
 
-  /** Directory structure */
+  /** 目录结构 */
   structure?: Record<string, string[]>;
 
-  /** Existing files that might be affected */
+  /** 可能受影响的现有文件 */
   existingFiles?: string[];
 
-  /** Framework conventions */
+  /** 框架约定 */
   conventions?: Record<string, any>;
 }
 
 export interface DecompositionStrategy {
-  /** Strategy name */
+  /** 策略名称 */
   name: string;
 
-  /** Task types this strategy applies to */
+  /** 该策略适用的任务类型 */
   applicableTypes: TaskType[];
 
-  /** Function to decompose task */
+  /** 分解任务的函数 */
   decompose: (
     analysis: TaskAnalysis,
     context: ProjectContext

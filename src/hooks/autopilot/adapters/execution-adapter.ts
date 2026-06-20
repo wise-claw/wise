@@ -1,10 +1,10 @@
 /**
- * EXECUTION Stage Adapter
+ * EXECUTION 阶段适配器
  *
- * Wraps team-based and solo execution into the pipeline stage adapter interface.
+ * 将基于团队和单人的执行封装到流水线阶段适配器接口中。
  *
- * When execution='team', delegates to the /team orchestrator for multi-worker execution.
- * When execution='solo', uses direct executor agents in the current session.
+ * 当 execution='team' 时，委派给 /team 编排器进行多工作者执行。
+ * 当 execution='solo' 时，在当前会话中使用直接的 executor 代理。
  */
 
 import type {
@@ -22,7 +22,7 @@ export const executionAdapter: PipelineStageAdapter = {
   completionSignal: EXECUTION_COMPLETION_SIGNAL,
 
   shouldSkip(_config: PipelineConfig): boolean {
-    // Execution stage is never skipped - it's the core of the pipeline
+    // 执行阶段永不跳过——它是流水线的核心
     return false;
   },
 
@@ -78,7 +78,7 @@ Signal: ${EXECUTION_COMPLETION_SIGNAL}
 `;
     }
 
-    // Solo execution mode
+    // 单人执行模式
     return `## PIPELINE STAGE: EXECUTION (Solo Mode)
 
 Execute the implementation plan using single-session execution.

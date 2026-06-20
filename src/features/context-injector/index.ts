@@ -1,23 +1,23 @@
 /**
- * Context Injector Module
+ * 上下文注入模块
  *
- * System for collecting and injecting context from multiple sources
- * into user prompts. Supports priority ordering and deduplication.
+ * 从多个来源收集上下文并注入到用户 prompt 的系统。
+ * 支持优先级排序与去重。
  *
- * Ported from oh-my-opencode's context-injector.
+ * 移植自 oh-my-opencode 的 context-injector。
  */
 
-// Collector
+// 收集器
 export { ContextCollector, contextCollector } from './collector.js';
 
-// Injector functions
+// 注入函数
 export {
   injectPendingContext,
   injectContextIntoText,
   createContextInjectorHook,
 } from './injector.js';
 
-// Types
+// 类型
 export type {
   ContextSourceType,
   ContextPriority,

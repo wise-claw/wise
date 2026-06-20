@@ -1,9 +1,9 @@
 /**
- * Auto Slash Command Executor
+ * 自动斜杠命令执行器
  *
- * Discovers and executes slash commands from various sources.
+ * 从多个来源发现并执行斜杠命令。
  *
- * Adapted from oh-my-opencode's auto-slash-command hook.
+ * 改编自 oh-my-opencode 的 auto-slash-command 钩子。
  */
 
 import { existsSync, readdirSync, readFileSync } from 'fs';
@@ -25,13 +25,13 @@ import { renderSkillResourcesGuidance } from '../../utils/skill-resources.js';
 import { renderSkillRuntimeGuidance } from '../../features/builtin-skills/runtime-guidance.js';
 import { getSkillsDir, renderBundledSkillBody } from '../../features/builtin-skills/skills.js';
 
-/** Claude config directory */
+/** Claude 配置目录 */
 const CLAUDE_CONFIG_DIR = getClaudeConfigDir();
 
 /**
- * Claude Code native commands that must not be shadowed by user skills.
- * Skills whose canonical name or alias matches one of these will be prefixed
- * with `wise-` to avoid overriding built-in CC slash commands.
+ * 不可被用户技能遮蔽的 Claude Code 原生命令。
+ * 规范名或别名命中其中之一的技能会被加上 `wise-` 前缀，
+ * 以免覆盖内置的 CC 斜杠命令。
  */
 const CC_NATIVE_COMMANDS = new Set([
   'review',
@@ -64,7 +64,7 @@ function getFrontmatterString(
 }
 
 /**
- * Discover commands from a directory
+ * 从目录中发现命令
  */
 function discoverCommandsFromDir(
   commandsDir: string,
@@ -84,7 +84,7 @@ function discoverCommandsFromDir(
   const commands: CommandInfo[] = [];
 
   for (const entry of entries) {
-    // Only process .md files
+    // 仅处理 .md 文件
     if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
 
     const commandPath = join(commandsDir, entry.name);
@@ -187,7 +187,7 @@ function discoverSkillsFromDir(skillsDir: string): CommandInfo[] {
 }
 
 /**
- * Discover all available commands from multiple sources
+ * 从多个来源发现所有可用命令
  */
 export function discoverAllCommands(): CommandInfo[] {
   const userCommandsDir = join(CLAUDE_CONFIG_DIR, 'commands');
@@ -205,7 +205,7 @@ export function discoverAllCommands(): CommandInfo[] {
   const userSkills = discoverSkillsFromDir(userSkillsDir);
   const builtinSkills = discoverSkillsFromDir(getSkillsDir());
 
-  // Priority: project commands > user commands > project Claude Code skills > project WISE skills > project compatibility skills > user skills > builtin skills
+  // 优先级：项目命令 > 用户命令 > 项目 Claude Code 技能 > 项目 WISE 技能 > 项目兼容技能 > 用户技能 > 内置技能
   const prioritized = [
     ...projectCommands,
     ...userCommands,
@@ -226,7 +226,7 @@ export function discoverAllCommands(): CommandInfo[] {
 }
 
 /**
- * Find a specific command by name
+ * 按名称查找指定命令
  */
 export function findCommand(commandName: string): CommandInfo | null {
   const allCommands = discoverAllCommands();
@@ -238,7 +238,7 @@ export function findCommand(commandName: string): CommandInfo | null {
 }
 
 /**
- * Resolve $ARGUMENTS placeholder in command content
+ * 解析命令内容中的 $ARGUMENTS 占位符
  */
 function resolveArguments(content: string, args: string): string {
   return content.replace(/\$ARGUMENTS/g, args || '(no arguments provided)');
@@ -279,7 +279,7 @@ function renderDeepInterviewAutoresearchGuidance(args: string): string {
 }
 
 /**
- * Format command template with metadata header
+ * 用元数据头部格式化命令模板
  */
 function formatCommandTemplate(cmd: CommandInfo, args: string): string {
   const sections: string[] = [];
@@ -318,7 +318,7 @@ function formatCommandTemplate(cmd: CommandInfo, args: string): string {
 
   sections.push('---\n');
 
-  // Resolve arguments in content, then execute any live-data commands
+  // 解析内容中的参数，再执行任何 live-data 命令
   const resolvedContent = resolveArguments(cmd.content || '', displayArgs);
   const baseContent = resolveLiveData(resolvedContent);
   const injectedContent = cmd.scope === 'skill'
@@ -352,7 +352,7 @@ function formatCommandTemplate(cmd: CommandInfo, args: string): string {
 }
 
 /**
- * Execute a slash command and return replacement text
+ * 执行斜杠命令并返回替换文本
  */
 export function executeSlashCommand(parsed: ParsedSlashCommand): ExecuteResult {
   const command = findCommand(parsed.command);
@@ -381,7 +381,7 @@ export function executeSlashCommand(parsed: ParsedSlashCommand): ExecuteResult {
 }
 
 /**
- * List all available commands
+ * 列出所有可用命令
  */
 export function listAvailableCommands(): Array<{
   name: string;

@@ -1,36 +1,36 @@
 /**
- * Codebase Map Generator
+ * Codebase Map 生成器
  *
- * Generates a compressed snapshot of the project structure on session start.
- * Injected as context to reduce blind file exploration by 30-50%.
+ * 在会话启动时生成项目结构的压缩快照。
+ * 作为上下文注入，可将盲目的文件探索减少 30-50%。
  *
- * Issue #804 - Startup codebase map injection hook
+ * Issue #804 - 启动时 codebase map 注入钩子
  */
 
 import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs';
 import { join, extname } from 'node:path';
 
 export interface CodebaseMapOptions {
-  /** Maximum files to include in the map. Default: 200 */
+  /** map 中包含的最大文件数。默认：200 */
   maxFiles?: number;
-  /** Maximum directory depth to scan. Default: 4 */
+  /** 扫描的最大目录深度。默认：4 */
   maxDepth?: number;
-  /** Additional patterns to ignore (matched against entry name) */
+  /** 额外要忽略的模式（按条目名匹配） */
   ignorePatterns?: string[];
-  /** Whether to include package.json metadata. Default: true */
+  /** 是否包含 package.json 元数据。默认：true */
   includeMetadata?: boolean;
 }
 
 export interface CodebaseMapResult {
-  /** The formatted codebase map string */
+  /** 格式化后的 codebase map 字符串 */
   map: string;
-  /** Total source files counted */
+  /** 统计到的源码文件总数 */
   totalFiles: number;
-  /** Whether the result was truncated due to maxFiles limit */
+  /** 结果是否因 maxFiles 限制而被截断 */
   truncated: boolean;
 }
 
-// Directories always skipped during scan
+// 扫描时始终跳过的目录
 const SKIP_DIRS = new Set([
   'node_modules', '.git', 'dist', 'build', 'out', 'coverage',
   '.next', '.nuxt', '.svelte-kit', '.cache', '.turbo', '.parcel-cache',
@@ -41,7 +41,7 @@ const SKIP_DIRS = new Set([
   'tmp', 'temp',
 ]);
 
-// File extensions considered source/config files
+// 视为源码/配置文件的扩展名
 const SOURCE_EXTENSIONS = new Set([
   '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
   '.py', '.rb', '.go', '.rs', '.java', '.kt', '.swift',
@@ -55,10 +55,10 @@ const SOURCE_EXTENSIONS = new Set([
   '.html', '.htm',
 ]);
 
-// Lock files and generated manifests — not useful for navigation
+// 锁文件与生成的清单 —— 对导航无用
 const SKIP_FILE_SUFFIXES = ['-lock.json', '.lock', '-lock.yaml', '-lock.toml'];
 
-// Important top-level files always included regardless of extension
+// 无论扩展名如何，始终包含的重要顶层文件
 const IMPORTANT_FILES = new Set([
   'package.json', 'tsconfig.json', 'tsconfig.base.json',
   'pyproject.toml', 'Cargo.toml', 'go.mod', 'go.sum',
@@ -74,26 +74,26 @@ interface TreeNode {
 }
 
 /**
- * Determine whether a directory entry should be skipped.
+ * 判断一个目录条目是否应被跳过。
  */
 export function shouldSkipEntry(
   name: string,
   isDir: boolean,
   ignorePatterns: string[],
 ): boolean {
-  // Skip hidden directories (allow hidden files if important)
+  // 跳过隐藏目录（重要隐藏文件则放行）
   if (name.startsWith('.') && isDir && !IMPORTANT_FILES.has(name)) {
     return true;
   }
 
-  // Skip blocked directories
+  // 跳过被屏蔽的目录
   if (isDir && SKIP_DIRS.has(name)) {
     return true;
   }
 
-  // For files: only include source/config extensions or important files
+  // 文件：仅纳入源码/配置扩展名或重要文件
   if (!isDir) {
-    // Skip lock files and generated manifests regardless of extension
+    // 无论扩展名如何，跳过锁文件与生成的清单
     if (SKIP_FILE_SUFFIXES.some((suffix) => name.endsWith(suffix))) {
       return true;
     }
@@ -103,7 +103,7 @@ export function shouldSkipEntry(
     }
   }
 
-  // Custom ignore patterns matched against entry name
+  // 按条目名匹配的自定义忽略模式
   for (const pattern of ignorePatterns) {
     if (name.includes(pattern)) return true;
   }
@@ -112,7 +112,7 @@ export function shouldSkipEntry(
 }
 
 /**
- * Recursively build a tree structure for the directory.
+ * 递归地为目录构建树形结构。
  */
 export function buildTree(
   dir: string,
@@ -131,13 +131,13 @@ export function buildTree(
     return [];
   }
 
-  // Sort: dirs first, then files — both alphabetically
+  // 排序：目录优先，再是文件 —— 均按字母序
   const withMeta = entries.map((name) => {
     let isDir = false;
     try {
       isDir = statSync(join(dir, name)).isDirectory();
     } catch {
-      // ignore stat errors
+      // 忽略 stat 错误
     }
     return { name, isDir };
   });
@@ -175,7 +175,7 @@ export function buildTree(
 }
 
 /**
- * Render a tree of nodes to ASCII art lines.
+ * 将节点树渲染为 ASCII 字符画行。
  */
 export function renderTree(nodes: TreeNode[], prefix: string, lines: string[]): void {
   for (let i = 0; i < nodes.length; i++) {
@@ -193,7 +193,7 @@ export function renderTree(nodes: TreeNode[], prefix: string, lines: string[]): 
 }
 
 /**
- * Extract a short summary from package.json (name, description, key scripts).
+ * 从 package.json 提取简短摘要（name、description、关键 scripts）。
  */
 export function extractPackageMetadata(directory: string): string {
   const pkgPath = join(directory, 'package.json');
@@ -221,11 +221,10 @@ export function extractPackageMetadata(directory: string): string {
 }
 
 /**
- * Generate a compressed codebase map for the given directory.
+ * 为给定目录生成压缩的 codebase map。
  *
- * Returns a tree-formatted string of source files with optional project
- * metadata. Designed to be injected at session start to reduce exploratory
- * file-search tool calls by 30-50%.
+ * 返回源码文件的树形格式字符串，并附带可选的项目元数据。
+ * 设计为在会话启动时注入，以减少探索性文件搜索工具调用 30-50%。
  */
 export function generateCodebaseMap(
   directory: string,

@@ -1,20 +1,19 @@
 /**
- * Empty Message Sanitizer Hook
+ * 空消息清理器钩子
  *
- * Sanitizes empty messages to prevent API errors.
- * According to the Anthropic API spec, all messages must have non-empty content
- * except for the optional final assistant message.
+ * 清理空消息以防止 API 错误。
+ * 根据 Anthropic API 规范，所有消息都必须包含非空内容，
+ * 可选的最终 assistant 消息除外。
  *
- * This hook:
- * 1. Detects messages with no valid content (empty text or no parts)
- * 2. Injects placeholder text to prevent API errors
- * 3. Marks injected content as synthetic
+ * 本钩子：
+ * 1. 检测没有有效内容（空文本或无 parts）的消息
+ * 2. 注入占位文本以防止 API 错误
+ * 3. 将注入的内容标记为 synthetic
  *
- * NOTE: This sanitizer would ideally run on a message transform hook that executes
- * AFTER all other message processing. In the shell hooks system, this should be
- * invoked at the last stage before messages are sent to the API.
+ * 注意：理想情况下，此清理器应在一个在所有其他消息处理之后执行的消息转换钩子上运行。
+ * 在 shell hooks 系统中，应在消息发送到 API 之前的最后阶段调用。
  *
- * Adapted from oh-my-opencode's empty-message-sanitizer hook.
+ * 改编自 oh-my-opencode 的 empty-message-sanitizer 钩子。
  */
 
 import * as fs from 'fs';
@@ -47,7 +46,7 @@ function debugLog(...args: unknown[]): void {
 }
 
 /**
- * Check if a part has non-empty text content
+ * 检查 part 是否包含非空文本内容
  */
 export function hasTextContent(part: MessagePart): boolean {
   if (part.type === 'text') {
@@ -58,22 +57,22 @@ export function hasTextContent(part: MessagePart): boolean {
 }
 
 /**
- * Check if a part is a tool-related part
+ * 检查 part 是否为工具相关 part
  */
 export function isToolPart(part: MessagePart): boolean {
   return TOOL_PART_TYPES.has(part.type);
 }
 
 /**
- * Check if message parts contain valid content
- * Valid content = non-empty text OR tool parts
+ * 检查消息 parts 是否包含有效内容
+ * 有效内容 = 非空文本或工具 parts
  */
 export function hasValidContent(parts: MessagePart[]): boolean {
   return parts.some((part) => hasTextContent(part) || isToolPart(part));
 }
 
 /**
- * Sanitize a single message to ensure it has valid content
+ * 清理单条消息以确保其包含有效内容
  */
 export function sanitizeMessage(
   message: MessageWithParts,
@@ -82,7 +81,7 @@ export function sanitizeMessage(
 ): boolean {
   const isAssistant = message.info.role === 'assistant';
 
-  // Skip final assistant message (allowed to be empty per API spec)
+  // 跳过最终的 assistant 消息（按 API 规范允许为空）
   if (isLastMessage && isAssistant) {
     debugLog('skipping final assistant message');
     return false;
@@ -90,14 +89,14 @@ export function sanitizeMessage(
 
   const parts = message.parts;
 
-  // FIX: Removed `&& parts.length > 0` - empty arrays also need sanitization
-  // When parts is [], the message has no content and would cause API error:
+  // 修复：移除了 `&& parts.length > 0` - 空数组同样需要清理
+  // 当 parts 为 [] 时，消息没有内容，会导致 API 错误：
   // "all messages must have non-empty content except for the optional final assistant message"
   if (!hasValidContent(parts)) {
     debugLog(`sanitizing message ${message.info.id}: no valid content`);
     let injected = false;
 
-    // Try to find an existing empty text part and replace its content
+    // 尝试查找已有的空文本 part 并替换其内容
     for (const part of parts) {
       if (part.type === 'text') {
         if (!part.text || !part.text.trim()) {
@@ -110,7 +109,7 @@ export function sanitizeMessage(
       }
     }
 
-    // If no text part was found, inject a new one
+    // 若未找到文本 part，则注入一个新的
     if (!injected) {
       const insertIndex = parts.findIndex((p) => isToolPart(p));
 
@@ -124,11 +123,11 @@ export function sanitizeMessage(
       };
 
       if (insertIndex === -1) {
-        // No tool parts, append to end
+        // 无工具 parts，追加到末尾
         parts.push(newPart);
         debugLog(`appended synthetic text part`);
       } else {
-        // Insert before first tool part
+        // 插入到第一个工具 part 之前
         parts.splice(insertIndex, 0, newPart);
         debugLog(`inserted synthetic text part before tool part`);
       }
@@ -137,7 +136,7 @@ export function sanitizeMessage(
     return true;
   }
 
-  // Also sanitize any empty text parts that exist alongside valid content
+  // 同时清理与有效内容共存的空文本 parts
   let sanitized = false;
   for (const part of parts) {
     if (part.type === 'text') {
@@ -154,7 +153,7 @@ export function sanitizeMessage(
 }
 
 /**
- * Sanitize all messages in the input
+ * 清理输入中的所有消息
  */
 export function sanitizeMessages(
   input: EmptyMessageSanitizerInput,
@@ -187,24 +186,24 @@ export function sanitizeMessages(
 }
 
 /**
- * Create empty message sanitizer hook for Claude Code shell hooks
+ * 为 Claude Code shell hooks 创建空消息清理器钩子
  *
- * This hook ensures all messages have valid content before being sent to the API.
- * It should be called at the last stage of message processing.
+ * 此钩子确保所有消息在发送到 API 之前都包含有效内容。
+ * 应在消息处理的最后阶段调用。
  */
 export function createEmptyMessageSanitizerHook(config?: EmptyMessageSanitizerConfig) {
   debugLog('createEmptyMessageSanitizerHook called', { config });
 
   return {
     /**
-     * Sanitize messages (called during message transform phase)
+     * 清理消息（在消息转换阶段调用）
      */
     sanitize: (input: EmptyMessageSanitizerInput): EmptyMessageSanitizerOutput => {
       return sanitizeMessages(input, config);
     },
 
     /**
-     * Get hook name
+     * 获取钩子名称
      */
     getName: (): string => {
       return HOOK_NAME;
@@ -212,7 +211,7 @@ export function createEmptyMessageSanitizerHook(config?: EmptyMessageSanitizerCo
   };
 }
 
-// Re-export types
+// 重新导出类型
 export type {
   MessagePart,
   MessageInfo,
@@ -222,7 +221,7 @@ export type {
   EmptyMessageSanitizerConfig,
 } from './types.js';
 
-// Re-export constants
+// 重新导出常量
 export {
   PLACEHOLDER_TEXT,
   TOOL_PART_TYPES,

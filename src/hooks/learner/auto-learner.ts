@@ -1,8 +1,8 @@
 /**
- * Auto-Learner Module
+ * 自动学习模块
  *
- * Automatically detects skill-worthy patterns during work sessions.
- * Tracks problem-solution pairs and suggests skill extraction.
+ * 在工作会话中自动检测值得沉淀为技能的模式。
+ * 跟踪问题-方案对并建议提取为技能。
  */
 
 import { createHash } from "crypto";
@@ -20,36 +20,36 @@ const QUOTED_STRING_PATTERN = /['"`]([^'"`]+)['"`]/g;
 const PASCAL_CASE_PATTERN = /\b([A-Z][a-zA-Z0-9]{2,})\b/g;
 
 /**
- * Detected pattern that could become a skill.
+ * 检测到的、可沉淀为技能的模式。
  */
 export interface PatternDetection {
   id: string;
   problem: string;
   solution: string;
-  confidence: number; // 0-100 skill-worthiness score
-  occurrences: number; // How many times pattern seen
-  firstSeen: number; // Timestamp
-  lastSeen: number; // Timestamp
-  suggestedTriggers: string[]; // Auto-generated triggers
-  suggestedTags: string[]; // Auto-generated tags
+  confidence: number; // 0-100 技能价值评分
+  occurrences: number; // 模式出现次数
+  firstSeen: number; // 时间戳
+  lastSeen: number; // 时间戳
+  suggestedTriggers: string[]; // 自动生成的触发器
+  suggestedTags: string[]; // 自动生成的标签
 }
 
 /**
- * Auto-learner session state.
+ * 自动学习会话状态。
  */
 export interface AutoLearnerState {
   sessionId: string;
   patterns: Map<string, PatternDetection>;
-  suggestedSkills: PatternDetection[]; // Ready to suggest to user
+  suggestedSkills: PatternDetection[]; // 可向用户建议
 }
 
 /**
- * Default threshold for suggesting skills.
+ * 建议技能的默认阈值。
  */
 const DEFAULT_SUGGESTION_THRESHOLD = 70;
 
 /**
- * Keywords that boost skill-worthiness score.
+ * 提升技能价值评分的关键字。
  */
 const HIGH_VALUE_KEYWORDS = [
   "error",
@@ -63,7 +63,7 @@ const HIGH_VALUE_KEYWORDS = [
 ];
 
 /**
- * Common file extensions that indicate technical content.
+ * 表明技术内容的常见文件扩展名。
  */
 const TECHNICAL_EXTENSIONS = [
   ".ts",
@@ -80,7 +80,7 @@ const TECHNICAL_EXTENSIONS = [
 ];
 
 /**
- * Generic patterns that lower skill-worthiness.
+ * 降低技能价值的通用模式。
  */
 const GENERIC_PATTERNS = [
   "try again",
@@ -91,7 +91,7 @@ const GENERIC_PATTERNS = [
 ];
 
 /**
- * Initialize state for a session.
+ * 为某会话初始化状态。
  */
 export function initAutoLearner(sessionId: string): AutoLearnerState {
   return {
@@ -102,7 +102,7 @@ export function initAutoLearner(sessionId: string): AutoLearnerState {
 }
 
 /**
- * Generate a content hash for deduplication.
+ * 生成用于去重的内容哈希。
  */
 function generateContentHash(problem: string, solution: string): string {
   const normalized = `${problem.toLowerCase().trim()}::${solution.toLowerCase().trim()}`;
@@ -110,12 +110,12 @@ function generateContentHash(problem: string, solution: string): string {
 }
 
 /**
- * Extract file paths from text.
+ * 从文本中提取文件路径。
  */
 function extractFilePaths(text: string): string[] {
   const paths: string[] = [];
 
-  // Match common path patterns
+  // 匹配常见路径模式
   const pathPatterns = [
     ABSOLUTE_PATH_PATTERN,
     RELATIVE_PATH_PATTERN,
@@ -135,12 +135,12 @@ function extractFilePaths(text: string): string[] {
 }
 
 /**
- * Extract error messages from text.
+ * 从文本中提取错误消息。
  */
 function extractErrorMessages(text: string): string[] {
   const errors: string[] = [];
 
-  // Match common error patterns
+  // 匹配常见错误模式
   const errorPatterns = [
     ERROR_MESSAGE_PATTERN,
     TYPE_ERROR_PATTERN,
@@ -160,12 +160,12 @@ function extractErrorMessages(text: string): string[] {
 }
 
 /**
- * Extract key technical terms from text.
+ * 从文本中提取关键技术术语。
  */
 function extractKeyTerms(text: string): string[] {
   const terms: string[] = [];
 
-  // Extract quoted strings (likely command names or technical terms)
+  // 提取引号字符串（可能是命令名或技术术语）
   const quotedMatches = text.matchAll(QUOTED_STRING_PATTERN);
   for (const match of quotedMatches) {
     if (match[1] && match[1].length > 2 && match[1].length < 30) {
@@ -173,7 +173,7 @@ function extractKeyTerms(text: string): string[] {
     }
   }
 
-  // Extract capitalized technical terms (like React, TypeScript, etc.)
+  // 提取首字母大写的技术术语（如 React、TypeScript 等）
   const capitalizedMatches = text.matchAll(PASCAL_CASE_PATTERN);
   for (const match of capitalizedMatches) {
     if (match[1] && !["The", "This", "That", "There"].includes(match[1])) {
@@ -185,42 +185,42 @@ function extractKeyTerms(text: string): string[] {
 }
 
 /**
- * Extract triggers from problem and solution text.
+ * 从问题与方案文本中提取触发器。
  */
 export function extractTriggers(problem: string, solution: string): string[] {
   const triggers = new Set<string>();
 
-  // Add error messages as triggers
+  // 将错误消息加入触发器
   const errors = extractErrorMessages(problem);
   for (const error of errors.slice(0, 3)) {
-    // Limit to 3 errors
-    // Take first 5 words of error message
+    // 限制为 3 条错误
+    // 取错误消息前 5 个词
     const words = error.split(/\s+/).slice(0, 5).join(" ");
     if (words.length > 5) {
       triggers.add(words);
     }
   }
 
-  // Add file paths (basenames only)
+  // 加入文件路径（仅基名）
   const paths = extractFilePaths(problem + " " + solution);
   for (const path of paths.slice(0, 3)) {
-    // Limit to 3 paths
+    // 限制为 3 个路径
     const basename = path.split(/[/\\]/).pop();
     if (basename && basename.length > 3) {
       triggers.add(basename);
     }
   }
 
-  // Add key terms
+  // 加入关键术语
   const terms = extractKeyTerms(problem + " " + solution);
   for (const term of terms.slice(0, 5)) {
-    // Limit to 5 terms
+    // 限制为 5 个术语
     if (term.length > 3 && term.length < 30) {
       triggers.add(term.toLowerCase());
     }
   }
 
-  // Add high-value keywords if present
+  // 若存在则加入高价值关键字
   const combinedText = (problem + " " + solution).toLowerCase();
   for (const keyword of HIGH_VALUE_KEYWORDS) {
     if (combinedText.includes(keyword)) {
@@ -228,17 +228,17 @@ export function extractTriggers(problem: string, solution: string): string[] {
     }
   }
 
-  return Array.from(triggers).slice(0, 10); // Max 10 triggers
+  return Array.from(triggers).slice(0, 10); // 最多 10 个触发器
 }
 
 /**
- * Generate tags based on content analysis.
+ * 基于内容分析生成标签。
  */
 function generateTags(problem: string, solution: string): string[] {
   const tags = new Set<string>();
   const combinedText = (problem + " " + solution).toLowerCase();
 
-  // Language/framework detection
+  // 语言/框架检测
   const langMap: Record<string, string> = {
     typescript: "typescript",
     javascript: "javascript",
@@ -258,7 +258,7 @@ function generateTags(problem: string, solution: string): string[] {
     }
   }
 
-  // Problem category detection
+  // 问题类别检测
   if (combinedText.includes("error") || combinedText.includes("bug")) {
     tags.add("debugging");
   }
@@ -278,7 +278,7 @@ function generateTags(problem: string, solution: string): string[] {
     tags.add("security");
   }
 
-  // File type detection
+  // 文件类型检测
   const paths = extractFilePaths(problem + " " + solution);
   for (const path of paths) {
     for (const ext of TECHNICAL_EXTENSIONS) {
@@ -289,18 +289,18 @@ function generateTags(problem: string, solution: string): string[] {
     }
   }
 
-  return Array.from(tags).slice(0, 5); // Max 5 tags
+  return Array.from(tags).slice(0, 5); // 最多 5 个标签
 }
 
 /**
- * Calculate skill-worthiness score (0-100).
+ * 计算技能价值评分（0-100）。
  */
 export function calculateSkillWorthiness(pattern: PatternDetection): number {
-  let score = 50; // Base score
+  let score = 50; // 基础分
 
   const combinedText = (pattern.problem + " " + pattern.solution).toLowerCase();
 
-  // Boost for specificity
+  // 具体性加分
   const hasFilePaths =
     extractFilePaths(pattern.problem + " " + pattern.solution).length > 0;
   if (hasFilePaths) {
@@ -312,21 +312,21 @@ export function calculateSkillWorthiness(pattern: PatternDetection): number {
     score += 15;
   }
 
-  // Boost for high-value keywords
+  // 高价值关键字加分
   let keywordCount = 0;
   for (const keyword of HIGH_VALUE_KEYWORDS) {
     if (combinedText.includes(keyword)) {
       keywordCount++;
     }
   }
-  score += Math.min(keywordCount * 5, 20); // Max 20 points from keywords
+  score += Math.min(keywordCount * 5, 20); // 关键字最多加 20 分
 
-  // Boost for multiple occurrences
+  // 多次出现加分
   if (pattern.occurrences > 1) {
-    score += Math.min((pattern.occurrences - 1) * 10, 30); // Max 30 points
+    score += Math.min((pattern.occurrences - 1) * 10, 30); // 最多 30 分
   }
 
-  // Boost for detailed solution (longer is better, to a point)
+  // 详细方案加分（在限度内越长越好）
   const solutionLength = pattern.solution.length;
   if (solutionLength > 100) {
     score += 10;
@@ -335,37 +335,37 @@ export function calculateSkillWorthiness(pattern: PatternDetection): number {
     score += 10;
   }
 
-  // Penalty for generic patterns
+  // 通用模式扣分
   for (const generic of GENERIC_PATTERNS) {
     if (combinedText.includes(generic)) {
       score -= 15;
     }
   }
 
-  // Penalty for very short content
+  // 内容过短扣分
   if (pattern.problem.length < 20 || pattern.solution.length < 30) {
     score -= 20;
   }
 
-  // Penalty for missing triggers
+  // 缺少触发器扣分
   if (pattern.suggestedTriggers.length === 0) {
     score -= 25;
   }
 
-  // Ensure score is in valid range
+  // 确保评分在合法范围内
   return Math.max(0, Math.min(100, score));
 }
 
 /**
- * Record a problem-solution pair.
- * Returns the pattern if it's new or updated, null if ignored.
+ * 记录一个问题-方案对。
+ * 若模式为新建或已更新则返回该模式，被忽略则返回 null。
  */
 export function recordPattern(
   state: AutoLearnerState,
   problem: string,
   solution: string,
 ): PatternDetection | null {
-  // Basic validation
+  // 基本校验
   if (!problem || !solution) {
     return null;
   }
@@ -377,19 +377,19 @@ export function recordPattern(
     return null;
   }
 
-  // Generate hash for deduplication
+  // 生成用于去重的哈希
   const hash = generateContentHash(trimmedProblem, trimmedSolution);
 
-  // Check if pattern already exists
+  // 检查模式是否已存在
   const existingPattern = state.patterns.get(hash);
 
   if (existingPattern) {
-    // Update existing pattern
+    // 更新已存在模式
     existingPattern.occurrences++;
     existingPattern.lastSeen = Date.now();
     existingPattern.confidence = calculateSkillWorthiness(existingPattern);
 
-    // Re-evaluate for suggestion
+    // 重新评估是否建议
     if (
       existingPattern.confidence >= DEFAULT_SUGGESTION_THRESHOLD &&
       !state.suggestedSkills.find((p) => p.id === existingPattern.id)
@@ -400,7 +400,7 @@ export function recordPattern(
     return existingPattern;
   }
 
-  // Create new pattern
+  // 创建新模式
   const triggers = extractTriggers(trimmedProblem, trimmedSolution);
   const tags = generateTags(trimmedProblem, trimmedSolution);
 
@@ -413,16 +413,16 @@ export function recordPattern(
     lastSeen: Date.now(),
     suggestedTriggers: triggers,
     suggestedTags: tags,
-    confidence: 0, // Will be calculated below
+    confidence: 0, // 将在下方计算
   };
 
-  // Calculate initial confidence
+  // 计算初始置信度
   newPattern.confidence = calculateSkillWorthiness(newPattern);
 
-  // Store pattern
+  // 存储模式
   state.patterns.set(hash, newPattern);
 
-  // Add to suggestions if worthy
+  // 若有价值则加入建议
   if (newPattern.confidence >= DEFAULT_SUGGESTION_THRESHOLD) {
     state.suggestedSkills.push(newPattern);
   }
@@ -431,7 +431,7 @@ export function recordPattern(
 }
 
 /**
- * Get ready-to-suggest skills (confidence above threshold).
+ * 获取可建议的技能（置信度高于阈值）。
  */
 export function getSuggestedSkills(
   state: AutoLearnerState,
@@ -443,12 +443,12 @@ export function getSuggestedSkills(
 }
 
 /**
- * Convert pattern to skill metadata (partial).
+ * 将模式转换为技能元数据（部分）。
  */
 export function patternToSkillMetadata(
   pattern: PatternDetection,
 ): Partial<SkillMetadata> {
-  // Generate a descriptive name from the problem
+  // 从问题生成描述性名称
   const problemWords = pattern.problem.split(/\s+/).slice(0, 6).join(" ");
   const name =
     problemWords.length > 50 ? problemWords.slice(0, 50) + "..." : problemWords;

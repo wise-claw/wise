@@ -1,120 +1,120 @@
 /**
- * Learned Skills Types
+ * 已学习技能类型
  *
- * Type definitions for skill files and metadata.
- * Follows patterns from rules-injector/types.ts
+ * 技能文件与元数据的类型定义。
+ * 遵循 rules-injector/types.ts 中的模式
  */
 
 /**
- * Skill metadata from YAML frontmatter.
+ * 来自 YAML frontmatter 的技能元数据。
  */
 export interface SkillMetadata {
-  /** Unique identifier for the skill */
+  /** 技能的唯一标识符 */
   id: string;
-  /** Human-readable name */
+  /** 人类可读的名称 */
   name: string;
-  /** Description of what this skill does */
+  /** 描述此技能的作用 */
   description: string;
-  /** Keywords that trigger skill injection */
+  /** 触发技能注入的关键词 */
   triggers: string[];
-  /** When the skill was created */
+  /** 技能创建时间 */
   createdAt: string;
-  /** Source: 'extracted' | 'promoted' | 'manual' */
+  /** 来源：'extracted' | 'promoted' | 'manual' */
   source: 'extracted' | 'promoted' | 'manual';
-  /** Original session ID if extracted */
+  /** 若为抽取所得，则为原始会话 ID */
   sessionId?: string;
-  /** Quality score (0-100) */
+  /** 质量评分（0-100） */
   quality?: number;
-  /** Number of times successfully applied */
+  /** 成功应用的次数 */
   usageCount?: number;
-  /** Tags for categorization */
+  /** 用于分类的标签 */
   tags?: string[];
-  /** Trigger matching strategy for skill injection */
+  /** 技能注入的触发匹配策略 */
   matching?: 'exact' | 'fuzzy';
-  /** Preferred model hint for skill execution */
+  /** 技能执行的首选 model 提示 */
   model?: string;
-  /** Preferred agent hint for skill execution */
+  /** 技能执行的首选 agent 提示 */
   agent?: string;
 }
 
 /**
- * Parsed skill file with content.
+ * 解析后的技能文件及其内容。
  */
 export interface LearnedSkill {
-  /** Absolute path to skill file */
+  /** 技能文件的绝对路径 */
   path: string;
-  /** Path relative to skills directory */
+  /** 相对于 skills 目录的路径 */
   relativePath: string;
-  /** Whether from user directories (~/.wise/skills or ~/.claude/skills/wise-learned) or project (.wise/skills) */
+  /** 是否来自用户目录（~/.wise/skills 或 ~/.claude/skills/wise-learned）或项目目录（.wise/skills） */
   scope: 'user' | 'project';
-  /** Parsed frontmatter metadata */
+  /** 已解析的 frontmatter 元数据 */
   metadata: SkillMetadata;
-  /** Skill content (the actual instructions) */
+  /** 技能内容（实际指令） */
   content: string;
-  /** SHA-256 hash for deduplication */
+  /** 用于去重的 SHA-256 哈希 */
   contentHash: string;
-  /** Priority: project > user */
+  /** 优先级：project > user */
   priority: number;
 }
 
 /**
- * Skill file candidate during discovery.
+ * 发现阶段中的技能文件候选项。
  */
 export interface SkillFileCandidate {
-  /** Path to the skill file */
+  /** 技能文件路径 */
   path: string;
-  /** Real path after symlink resolution */
+  /** 解析符号链接后的真实路径 */
   realPath: string;
-  /** Scope: user or project */
+  /** 作用域：user 或 project */
   scope: 'user' | 'project';
-  /** The root directory this skill was found in (for accurate relative path computation) */
+  /** 发现该技能所在的根目录（用于精确计算相对路径） */
   sourceDir: string;
 }
 
 /**
- * Quality gate validation result.
+ * 质量门校验结果。
  */
 export interface QualityValidation {
-  /** Whether skill passes quality gates */
+  /** 技能是否通过质量门 */
   valid: boolean;
-  /** Missing required fields */
+  /** 缺失的必填字段 */
   missingFields: string[];
-  /** Warnings (non-blocking) */
+  /** 警告（非阻断） */
   warnings: string[];
-  /** Quality score (0-100) */
+  /** 质量评分（0-100） */
   score: number;
 }
 
 /**
- * Skill extraction request.
+ * 技能抽取请求。
  */
 export interface SkillExtractionRequest {
-  /** The problem being solved */
+  /** 待解决的问题 */
   problem: string;
-  /** The solution/approach */
+  /** 解决方案/方法 */
   solution: string;
-  /** Trigger keywords */
+  /** 触发关键词 */
   triggers: string[];
-  /** Optional tags */
+  /** 可选标签 */
   tags?: string[];
-  /** Target scope: user or project */
+  /** 目标作用域：user 或 project */
   targetScope: 'user' | 'project';
 }
 
 /**
- * Session storage for tracking injected skills.
+ * 用于跟踪已注入技能的会话存储。
  */
 export interface InjectedSkillsData {
-  /** Session ID */
+  /** 会话 ID */
   sessionId: string;
-  /** Content hashes of already injected skills */
+  /** 已注入技能的内容哈希 */
   injectedHashes: string[];
-  /** Timestamp of last update */
+  /** 最近一次更新的时间戳 */
   updatedAt: number;
 }
 
 /**
- * Hook context passed to skill processing.
+ * 传递给技能处理的钩子上下文。
  */
 export interface HookContext {
   sessionId: string;

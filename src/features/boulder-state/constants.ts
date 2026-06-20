@@ -1,28 +1,28 @@
 /**
- * Boulder State Constants
+ * Boulder State 常量
  *
- * Ported from oh-my-opencode's boulder-state.
+ * 移植自 oh-my-opencode 的 boulder-state。
  */
 
 import { WisePaths } from '../../lib/worktree-paths.js';
 
-/** WISE state directory */
+/** WISE 状态目录 */
 export const BOULDER_DIR = WisePaths.ROOT;
 
-/** Boulder state file name */
+/** Boulder 状态文件名 */
 export const BOULDER_FILE = 'boulder.json';
 
-/** Full path pattern for boulder state */
+/** boulder 状态的完整路径模式 */
 export const BOULDER_STATE_PATH = `${BOULDER_DIR}/${BOULDER_FILE}`;
 
-/** Notepad directory for learnings */
+/** learnings 的 notepad 目录 */
 export const NOTEPAD_DIR = 'notepads';
 
-/** Full path for notepads */
+/** notepads 的完整路径 */
 export const NOTEPAD_BASE_PATH = `${BOULDER_DIR}/${NOTEPAD_DIR}`;
 
-/** Planner plan directory */
+/** Planner 计划目录 */
 export const PLANNER_PLANS_DIR = WisePaths.PLANS;
 
-/** Plan file extension */
+/** 计划文件扩展名 */
 export const PLAN_EXTENSION = '.md';

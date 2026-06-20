@@ -1,10 +1,10 @@
 /**
- * Autopilot Enforcement & Signal Detection
+ * Autopilot 强制执行与信号检测
  *
- * Parallel to ralph-loop enforcement - intercepts stops and continues
- * until phase completion signals are detected.
+ * 与 ralph-loop 强制执行并行——拦截 stop 并持续运行，
+ * 直到检测到阶段完成信号。
  *
- * Also handles signal detection in session transcripts.
+ * 同时负责在会话记录中检测信号。
  */
 
 import { existsSync, readFileSync } from "fs";
@@ -47,13 +47,13 @@ import {
 import { formatAutopilotRuntimeInsight } from "./runtime-insight.js";
 
 export interface AutopilotEnforcementResult {
-  /** Whether to block the stop event */
+  /** 是否阻止 stop 事件 */
   shouldBlock: boolean;
-  /** Message to inject into context */
+  /** 注入上下文的消息 */
   message: string;
-  /** Current phase */
+  /** 当前阶段 */
   phase: AutopilotPhase;
-  /** Additional metadata */
+  /** 额外元数据 */
   metadata?: {
     iteration?: number;
     maxIterations?: number;
@@ -64,11 +64,11 @@ export interface AutopilotEnforcementResult {
 }
 
 // ============================================================================
-// SIGNAL DETECTION
+// 信号检测
 // ============================================================================
 
 /**
- * Signal patterns - each signal can appear in transcript
+ * 信号模式——每个信号都可能出现在会话记录中
  */
 const SIGNAL_PATTERNS: Record<AutopilotSignal, RegExp> = {
   EXPANSION_COMPLETE: /EXPANSION_COMPLETE/i,
@@ -82,7 +82,7 @@ const SIGNAL_PATTERNS: Record<AutopilotSignal, RegExp> = {
 };
 
 /**
- * Detect a specific signal in the session transcript
+ * 在会话记录中检测特定信号
  */
 export function detectSignal(
   sessionId: string,
@@ -114,7 +114,7 @@ export function detectSignal(
 }
 
 /**
- * Get the expected signal for the current phase
+ * 获取当前阶段对应的预期信号
  */
 export function getExpectedSignalForPhase(
   phase: string,
@@ -136,7 +136,7 @@ export function getExpectedSignalForPhase(
 }
 
 /**
- * Detect any autopilot signal in transcript (for phase advancement)
+ * 检测会话记录中的任意 autopilot 信号（用于阶段推进）
  */
 export function detectAnySignal(sessionId: string): AutopilotSignal | null {
   for (const signal of Object.keys(SIGNAL_PATTERNS) as AutopilotSignal[]) {
@@ -148,7 +148,7 @@ export function detectAnySignal(sessionId: string): AutopilotSignal | null {
 }
 
 // ============================================================================
-// ENFORCEMENT
+// 强制执行
 // ============================================================================
 
 const AWAITING_CONFIRMATION_TTL_MS = 2 * 60 * 1000;
@@ -199,7 +199,7 @@ function isOrphanedRoutingEchoState(state: AutopilotState): boolean {
 }
 
 /**
- * Get the next phase after current phase
+ * 获取当前阶段之后的下一个阶段
  */
 function getNextPhase(current: AutopilotPhase): AutopilotPhase | null {
   switch (current) {
@@ -219,8 +219,8 @@ function getNextPhase(current: AutopilotPhase): AutopilotPhase | null {
 }
 
 /**
- * Check autopilot state and determine if it should continue
- * This is the main enforcement function called by persistent-mode hook
+ * 检查 autopilot 状态并判断是否应继续运行
+ * 这是 persistent-mode 钩子调用的主强制执行函数
  */
 export async function checkAutopilot(
   sessionId?: string,
@@ -233,7 +233,7 @@ export async function checkAutopilot(
     return null;
   }
 
-  // Strict session isolation: only process state for matching session
+  // 严格会话隔离：仅处理匹配会话的状态
   if (state.session_id !== sessionId) {
     return null;
   }
@@ -246,7 +246,7 @@ export async function checkAutopilot(
     return null;
   }
 
-  // Check hard max iterations (global security limit)
+  // 检查硬性最大迭代数（全局安全限制）
   const hardMax = getHardMaxIterations();
   if (hardMax > 0 && state.iteration >= hardMax) {
     transitionPhase(workingDir, "failed", sessionId);
@@ -257,7 +257,7 @@ export async function checkAutopilot(
     };
   }
 
-  // Check max iterations (safety limit)
+  // 检查最大迭代数（安全限制）
   if (state.iteration >= state.max_iterations) {
     transitionPhase(workingDir, "failed", sessionId);
     return {
@@ -267,7 +267,7 @@ export async function checkAutopilot(
     };
   }
 
-  // Check for completion
+  // 检查是否已完成
   if (state.phase === "complete") {
     return {
       shouldBlock: false,
@@ -285,29 +285,29 @@ export async function checkAutopilot(
   }
 
   // ====================================================================
-  // PIPELINE-AWARE ENFORCEMENT
-  // If the state has pipeline tracking, use the pipeline orchestrator
-  // for signal detection and stage transitions instead of legacy phases.
+  // 流水线感知的强制执行
+  // 如果状态包含流水线跟踪信息，则使用流水线编排器
+  // 进行信号检测和阶段推进，而非使用旧版阶段逻辑。
   // ====================================================================
   if (hasPipelineTracking(state)) {
     return checkPipelineAutopilot(state, sessionId, workingDir);
   }
 
   // ====================================================================
-  // LEGACY ENFORCEMENT (pre-pipeline states)
+  // 旧版强制执行（流水线之前的状态）
   // ====================================================================
 
-  // Check for phase completion signal
+  // 检查阶段完成信号
   const expectedSignal = getExpectedSignalForPhase(state.phase);
   if (expectedSignal && sessionId && detectSignal(sessionId, expectedSignal)) {
-    // Phase complete - transition to next phase
+    // 阶段完成——切换到下一阶段
     const nextPhase = getNextPhase(state.phase);
     if (nextPhase) {
-      // Handle special transitions
+      // 处理特殊切换
       if (state.phase === "execution" && nextPhase === "qa") {
         const result = transitionRalphToUltraQA(workingDir, sessionId);
         if (!result.success) {
-          // Transition failed, continue in current phase
+          // 切换失败，继续在当前阶段运行
           return generateContinuationPrompt(state, workingDir);
         }
       } else if (state.phase === "qa" && nextPhase === "validation") {
@@ -326,7 +326,7 @@ export async function checkAutopilot(
         transitionPhase(workingDir, nextPhase, sessionId);
       }
 
-      // Get new state and generate prompt for next phase
+      // 获取新状态并为下一阶段生成 prompt
       const newState = readAutopilotState(workingDir, sessionId);
       if (newState) {
         return generateContinuationPrompt(newState, workingDir, sessionId);
@@ -334,24 +334,24 @@ export async function checkAutopilot(
     }
   }
 
-  // No signal detected - continue current phase
+  // 未检测到信号——继续当前阶段
   return generateContinuationPrompt(state, workingDir, sessionId);
 }
 
 /**
- * Generate continuation prompt for current phase
+ * 为当前阶段生成续接 prompt
  */
 function generateContinuationPrompt(
   state: AutopilotState,
   directory: string,
   sessionId?: string,
 ): AutopilotEnforcementResult {
-  // Read tool error before generating message
+  // 在生成消息前读取工具错误
   const toolError = readLastToolError(directory);
   const errorGuidance = getToolErrorRetryGuidance(toolError);
   const runtimeInsight = formatAutopilotRuntimeInsight(directory, sessionId);
 
-  // Increment iteration
+  // 递增迭代数
   state.iteration += 1;
   writeAutopilotState(directory, state, sessionId);
 
@@ -399,12 +399,12 @@ IMPORTANT: When the phase is complete, output the appropriate signal:
 }
 
 // ============================================================================
-// PIPELINE-AWARE ENFORCEMENT
+// 流水线感知的强制执行
 // ============================================================================
 
 /**
- * Pipeline-aware enforcement for autopilot states that have pipeline tracking.
- * Uses the pipeline orchestrator for signal detection and stage transitions.
+ * 针对带有流水线跟踪信息的 autopilot 状态的流水线感知强制执行。
+ * 使用流水线编排器进行信号检测和阶段推进。
  */
 function checkPipelineAutopilot(
   state: AutopilotState,
@@ -416,7 +416,7 @@ function checkPipelineAutopilot(
 
   const currentAdapter = getCurrentStageAdapter(tracking);
   if (!currentAdapter) {
-    // No more stages — pipeline is complete
+    // 没有更多阶段——流水线已完成
     return {
       shouldBlock: false,
       message:
@@ -425,21 +425,21 @@ function checkPipelineAutopilot(
     };
   }
 
-  // Check if the current stage's completion signal has been emitted
+  // 检查当前阶段的完成信号是否已发出
   const completionSignal = getCurrentCompletionSignal(tracking);
   if (
     completionSignal &&
     sessionId &&
     detectPipelineSignal(sessionId, completionSignal)
   ) {
-    // Current stage complete — advance to next stage
+    // 当前阶段完成——推进到下一阶段
     const { adapter: nextAdapter, phase: nextPhase } = advanceStage(
       directory,
       sessionId,
     );
 
     if (!nextAdapter || nextPhase === "complete") {
-      // Pipeline complete
+      // 流水线完成
       transitionPhase(directory, "complete", sessionId);
       return {
         shouldBlock: false,
@@ -457,13 +457,13 @@ function checkPipelineAutopilot(
       };
     }
 
-    // Generate transition + next stage prompt
+    // 生成切换 + 下一阶段 prompt
     const transitionMsg = generateTransitionPrompt(
       currentAdapter.id,
       nextAdapter.id,
     );
 
-    // Re-read tracking to get updated state
+    // 重新读取跟踪信息以获取更新后的状态
     const updatedState = readAutopilotState(directory, sessionId);
     const updatedTracking = updatedState
       ? readPipelineTracking(updatedState)
@@ -503,14 +503,14 @@ ${stagePrompt}
     };
   }
 
-  // No signal detected — continue current stage
+  // 未检测到信号——继续当前阶段
   incrementStageIteration(directory, sessionId);
 
   const toolError = readLastToolError(directory);
   const errorGuidance = getToolErrorRetryGuidance(toolError);
   const runtimeInsight = formatAutopilotRuntimeInsight(directory, sessionId);
 
-  // Increment overall iteration
+  // 递增总迭代数
   state.iteration += 1;
   writeAutopilotState(directory, state, sessionId);
 
@@ -565,7 +565,7 @@ IMPORTANT: When this stage is complete, output the signal: ${currentAdapter.comp
 }
 
 /**
- * Detect a pipeline-specific signal in the session transcript.
+ * 在会话记录中检测流水线专属信号。
  */
 function detectPipelineSignal(sessionId: string, signal: string): boolean {
   const claudeDir = getClaudeConfigDir();

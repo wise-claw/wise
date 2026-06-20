@@ -16,10 +16,10 @@ describe('Tier-0 contract docs consistency', () => {
   const claudeDoc = readProjectFile('docs', 'CLAUDE.md');
 
   it('keeps 参考 ToC counts aligned with section headings', () => {
-    const tocAgents = referenceDoc.match(/\[Agents \((\d+) Total\)\]\(#agents-\d+-total\)/);
-    const headingAgents = referenceDoc.match(/^## Agents \((\d+) Total\)$/m);
-    const tocSkills = referenceDoc.match(/\[Skills \((\d+) Total\)\]\(#skills-\d+-total\)/);
-    const headingSkills = referenceDoc.match(/^## Skills \((\d+) Total\)$/m);
+    const tocAgents = referenceDoc.match(/\[智能体（共 (\d+) 个）\]\(#agents-\d+-total\)/);
+    const headingAgents = referenceDoc.match(/^## 智能体（共 (\d+) 个）$/m);
+    const tocSkills = referenceDoc.match(/\[技能（共 (\d+) 个）\]\(#skills-\d+-total\)/);
+    const headingSkills = referenceDoc.match(/^## 技能（共 (\d+) 个）$/m);
 
     expect(tocAgents?.[1]).toBe(headingAgents?.[1]);
     expect(tocSkills?.[1]).toBe(headingSkills?.[1]);
@@ -48,9 +48,9 @@ describe('Tier-0 contract docs consistency', () => {
   });
 
   it('keeps deprecated compatibility aliases documented for project session manager', () => {
-    // swarm alias removed in #1131
+    // swarm 别名已在 #1131 移除
     expect(referenceDoc).toContain('project-session-manager');
-    expect(referenceDoc).toContain('`psm` | **Deprecated** compatibility alias for `project-session-manager`');
+    expect(referenceDoc).toContain('**已弃用** `project-session-manager` 兼容别名');
   });
 
   it('does not document removed wrapper slash commands as installed skills', () => {
@@ -59,24 +59,23 @@ describe('Tier-0 contract docs consistency', () => {
   });
 
   it('documents team as explicit-only rather than an auto-triggered keyword', () => {
-    expect(claudeDoc).toContain('Team orchestration is explicit via `/team`.');
+    expect(claudeDoc).toContain('团队编排通过 `/team` 显式触发。');
     expect(referenceDoc).not.toContain('| `team`, `coordinated team`');
   });
 
   it('keeps install and update guidance aligned on canonical setup entrypoints', () => {
-    const localPluginDoc = readProjectFile('docs', 'LOCAL_PLUGIN_INSTALL.md');
+    const localPluginDoc = readProjectFile('docs', '本地插件安装.md');
 
-    expect(claudeDoc).toContain('Say "setup wise" or run `/wise:wise-setup`.');
+    expect(claudeDoc).toContain('说 "setup wise" 或运行 `/wise:wise-setup`。');
     expect(referenceDoc).toContain('/wise:setup');
     expect(localPluginDoc).toContain('/setup');
-    expect(localPluginDoc).toContain('git worktrees');
+    expect(localPluginDoc).toContain('git worktree');
   });
 
   it('uses the published /docs/ path instead of the removed docs.html path in README links', () => {
-    // After the omc→wise rebrand the multi-language READMEs were trimmed to a
-    // single canonical doc (README.zh.md). Discover whatever README* files
-    // actually exist so this contract stays in sync with the docs cleanup
-    // instead of hard-coding a list that drifts when files are removed.
+    // omc→wise 重命名后，多语言 README 已精简为单一规范文档（README.zh.md）。
+    // 动态发现实际存在的 README* 文件，使本契约随文档清理保持同步，
+    // 而非硬编码会在文件被移除时漂移的列表。
     const readmes = readdirSync(PROJECT_ROOT)
       .filter((file) => file === 'README.md' || file.startsWith('README.'))
       .filter((file) => existsSync(join(PROJECT_ROOT, file)))

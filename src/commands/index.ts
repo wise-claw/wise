@@ -1,8 +1,7 @@
 /**
- * Command Expansion Utilities
+ * 命令展开工具
  *
- * Provides SDK-compatible access to slash commands by reading
- * command templates and expanding them with arguments.
+ * 通过读取命令模板并用参数展开,提供与 SDK 兼容的 slash 命令访问。
  */
 
 import { readFileSync, existsSync, readdirSync } from 'fs';
@@ -23,14 +22,14 @@ export interface ExpandedCommand {
 }
 
 /**
- * Get the commands directory path
+ * 获取 commands 目录路径
  */
 export function getCommandsDir(): string {
   return join(getClaudeConfigDir(), 'commands');
 }
 
 /**
- * Parse command frontmatter and content
+ * 解析命令 frontmatter 和内容
  */
 function parseCommandFile(content: string): { description: string; template: string } {
   const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
@@ -42,7 +41,7 @@ function parseCommandFile(content: string): { description: string; template: str
   const frontmatter = frontmatterMatch[1];
   const template = frontmatterMatch[2];
 
-  // Extract description from frontmatter
+  // 从 frontmatter 中提取描述
   const descMatch = frontmatter.match(/description:\s*(.+)/);
   const description = descMatch ? descMatch[1].trim() : '';
 
@@ -50,7 +49,7 @@ function parseCommandFile(content: string): { description: string; template: str
 }
 
 /**
- * Get a specific command by name
+ * 按名称获取指定命令
  */
 export function getCommand(name: string): CommandInfo | null {
   const commandsDir = getCommandsDir();
@@ -77,7 +76,7 @@ export function getCommand(name: string): CommandInfo | null {
 }
 
 /**
- * Get all available commands
+ * 获取所有可用命令
  */
 export function getAllCommands(): CommandInfo[] {
   const commandsDir = getCommandsDir();
@@ -106,25 +105,25 @@ export function getAllCommands(): CommandInfo[] {
 }
 
 /**
- * List available command names
+ * 列出可用的命令名
  */
 export function listCommands(): string[] {
   return getAllCommands().map(c => c.name);
 }
 
 /**
- * Expand a command template with arguments
+ * 用参数展开命令模板
  *
- * @param name - Command name (without leading slash)
- * @param args - Arguments to substitute for $ARGUMENTS
- * @returns Expanded command ready for SDK query
+ * @param name - 命令名 (不含前导斜杠)
+ * @param args - 用于替换 $ARGUMENTS 的参数
+ * @returns 展开后的命令,可用于 SDK query
  *
  * @example
  * ```typescript
  * import { expandCommand } from 'wise';
  *
  * const prompt = expandCommand('ralph', 'Build a REST API');
- * // Returns the full ralph template with "Build a REST API" substituted
+ * // 返回完整的 ralph 模板,其中 "Build a REST API" 已被替换
  * ```
  */
 export function expandCommand(name: string, args: string = ''): ExpandedCommand | null {
@@ -134,7 +133,7 @@ export function expandCommand(name: string, args: string = ''): ExpandedCommand 
     return null;
   }
 
-  // Replace $ARGUMENTS placeholder with actual arguments
+  // 用实际参数替换 $ARGUMENTS 占位符
   const prompt = command.template.replace(/\$ARGUMENTS/g, args);
 
   return {
@@ -145,8 +144,8 @@ export function expandCommand(name: string, args: string = ''): ExpandedCommand 
 }
 
 /**
- * Expand a command and return just the prompt string
- * Convenience function for direct use with SDK query
+ * 展开命令并仅返回 prompt 字符串
+ * 便于直接用于 SDK query 的便捷函数
  *
  * @example
  * ```typescript
@@ -166,14 +165,14 @@ export function expandCommandPrompt(name: string, args: string = ''): string | n
 }
 
 /**
- * Check if a command exists
+ * 检查命令是否存在
  */
 export function commandExists(name: string): boolean {
   return getCommand(name) !== null;
 }
 
 /**
- * Batch expand multiple commands
+ * 批量展开多个命令
  */
 export function expandCommands(commands: Array<{ name: string; args?: string }>): ExpandedCommand[] {
   return commands

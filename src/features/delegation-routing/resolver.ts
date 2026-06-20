@@ -1,7 +1,7 @@
 /**
- * Delegation Router
+ * 委派路由器
  *
- * Resolves which provider/tool to use for a given agent role.
+ * 解析对给定 agent 角色使用哪个提供方/工具。
  */
 
 import type {
@@ -26,24 +26,24 @@ export const DEPRECATED_MCP_PROVIDER_WARNING =
   '[WISE] Codex/Gemini MCP delegation is deprecated. Use /team to coordinate CLI workers instead.';
 
 /**
- * Resolve delegation decision based on configuration and context
+ * 根据配置和上下文解析委派决策
  *
- * Precedence (highest to lowest):
- * 1. Explicit tool invocation
- * 2. Configured routing (if enabled)
- * 3. Default heuristic (role category → Claude subagent)
+ * 优先级（从高到低）：
+ * 1. 显式工具调用
+ * 2. 已配置的路由（若启用）
+ * 3. 默认启发式（角色类别 → Claude 子代理）
  * 4. defaultProvider
  */
 export function resolveDelegation(options: ResolveDelegationOptions): DelegationDecision {
   const { agentRole, explicitTool, explicitModel, config } = options;
   const canonicalAgentRole = normalizeDelegationRole(agentRole);
 
-  // Priority 1: Explicit tool invocation
+  // 优先级 1：显式工具调用
   if (explicitTool) {
     return resolveExplicitTool(explicitTool, explicitModel, canonicalAgentRole);
   }
 
-  // Priority 2: Configured routing (if enabled)
+  // 优先级 2：已配置的路由（若启用）
   const configuredRoute = config?.roles?.[agentRole]
     ?? (canonicalAgentRole !== agentRole ? config?.roles?.[canonicalAgentRole] : undefined);
 
@@ -51,19 +51,19 @@ export function resolveDelegation(options: ResolveDelegationOptions): Delegation
     return resolveFromConfig(canonicalAgentRole, configuredRoute);
   }
 
-  // Priority 3 & 4: Default heuristic
+  // 优先级 3 和 4：默认启发式
   return resolveDefault(canonicalAgentRole, config);
 }
 
 /**
- * Resolve when user explicitly specified a tool
+ * 用户显式指定工具时的解析
  */
 function resolveExplicitTool(
   tool: DelegationTool,
   model: string | undefined,
   agentRole: string
 ): DelegationDecision {
-  // Only 'Task' is supported - explicit tool invocation always uses Claude
+  // 仅支持 'Task' —— 显式工具调用始终使用 Claude
   return {
     provider: 'claude',
     tool: 'Task',
@@ -73,7 +73,7 @@ function resolveExplicitTool(
 }
 
 /**
- * Resolve from configuration
+ * 从配置解析
  */
 function resolveFromConfig(
   agentRole: string,
@@ -84,10 +84,9 @@ function resolveFromConfig(
   const agentOrModel = route.model || route.agentType || agentRole;
   const fallbackChain = route.fallback;
 
-  // Deprecated MCP providers are a compatibility input only. Preserve their
-  // fallback-chain evidence while routing to an executable Claude Task target.
-  // External model names are not valid Claude subagent roles, so route.model
-  // stays diagnostic-only via reason text instead of agentOrModel.
+  // 已弃用的 MCP 提供方仅作为兼容性输入。在路由到可执行的 Claude Task 目标时，
+  // 保留其兜底链证据。外部模型名不是有效的 Claude 子代理角色，因此 route.model
+  // 仅作诊断用途，通过 reason 文本体现，而不放进 agentOrModel。
   if (isDeprecatedMcpProvider(provider)) {
     console.warn(DEPRECATED_MCP_PROVIDER_WARNING);
     const claudeAgent = route.agentType || agentRole;
@@ -101,7 +100,7 @@ function resolveFromConfig(
     };
   }
 
-  // Only claude → Task is valid; correct any mismatch
+  // 仅 claude → Task 有效；纠正任何不匹配
   if (tool !== 'Task') {
     console.warn(`[delegation-routing] Provider/tool mismatch: ${provider} with ${tool}. Correcting to Task.`);
     tool = 'Task';
@@ -117,13 +116,13 @@ function resolveFromConfig(
 }
 
 /**
- * Resolve using defaults
+ * 使用默认值解析
  */
 function resolveDefault(
   agentRole: string,
   config: DelegationRoutingConfig | undefined
 ): DelegationDecision {
-  // Check if we have a default agent mapping for this role
+  // 检查是否有该角色的默认 agent 映射
   const defaultAgent = ROLE_CATEGORY_DEFAULTS[agentRole];
 
   if (defaultAgent) {
@@ -135,14 +134,14 @@ function resolveDefault(
     };
   }
 
-  // Fall back to default provider or claude
+  // 兜底到默认提供方或 claude
   const defaultProvider = config?.defaultProvider || 'claude';
 
   if (isDeprecatedMcpProvider(defaultProvider)) {
     console.warn(DEPRECATED_MCP_PROVIDER_WARNING);
   }
 
-  // Default to claude Task (codex/gemini default providers fall back to claude)
+  // 默认使用 claude Task（codex/gemini 默认提供方兜底到 claude）
   return {
     provider: 'claude',
     tool: 'Task',
@@ -158,7 +157,7 @@ export function isDeprecatedMcpProvider(
 }
 
 /**
- * Parse fallback chain format ["claude:explore", "codex:gpt-5"]
+ * 解析兜底链格式 ["claude:explore", "codex:gpt-5"]
  */
 export function parseFallbackChain(
   fallback: string[] | undefined
@@ -172,8 +171,8 @@ export function parseFallbackChain(
       const parts = entry.split(':');
       if (parts.length >= 2) {
         const provider = parts[0].trim();
-        const agentOrModel = parts.slice(1).join(':').trim(); // Handle cases like "codex:gpt-5.3-codex"
-        // Skip entries with empty provider or empty agent/model
+        const agentOrModel = parts.slice(1).join(':').trim(); // 处理形如 "codex:gpt-5.3-codex" 的情况
+        // 跳过 provider 或 agent/model 为空的条目
         if (provider && agentOrModel) {
           return {
             provider,
@@ -181,7 +180,7 @@ export function parseFallbackChain(
           };
         }
       }
-      // Invalid format, skip
+      // 无效格式，跳过
       return null;
     })
     .filter((item): item is { provider: string; agentOrModel: string } => item !== null);

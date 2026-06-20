@@ -1,8 +1,8 @@
 /**
- * Verification Module
+ * 验证模块
  *
- * Reusable verification protocol logic extracted from ralph, ultrawork, and autopilot.
- * Provides a single source of truth for verification requirements and execution.
+ * 从 ralph、ultrawork 和 autopilot 中抽取的可复用验证协议逻辑。
+ * 为验证需求和执行提供单一事实来源。
  */
 
 import { exec } from 'child_process';
@@ -22,7 +22,7 @@ import type {
 const execAsync = promisify(exec);
 
 /**
- * Standard verification checks used across workflows
+ * 跨工作流使用的标准验证检查
  */
 export const STANDARD_CHECKS = {
   BUILD: {
@@ -87,7 +87,7 @@ export const STANDARD_CHECKS = {
 };
 
 /**
- * Create a verification protocol
+ * 创建验证协议
  */
 export function createProtocol(
   name: string,
@@ -104,7 +104,7 @@ export function createProtocol(
 }
 
 /**
- * Create a verification checklist from a protocol
+ * 根据协议创建验证清单
  */
 export function createChecklist(protocol: VerificationProtocol): VerificationChecklist {
   return {
@@ -116,7 +116,7 @@ export function createChecklist(protocol: VerificationProtocol): VerificationChe
 }
 
 /**
- * Run a single verification check
+ * 执行单个验证检查
  */
 async function runSingleCheck(
   check: VerificationCheck,
@@ -124,7 +124,7 @@ async function runSingleCheck(
 ): Promise<VerificationEvidence> {
   const { cwd, timeout = 60000 } = options;
 
-  // If check has a command, run it
+  // 若检查带有命令，则执行它
   if (check.command) {
     try {
       const { stdout, stderr } = await execAsync(check.command, {
@@ -152,9 +152,9 @@ async function runSingleCheck(
     }
   }
 
-  // Manual verification checks (no command) — kept as not-passed so gate logic
-  // does not auto-approve. Callers can check metadata.status to distinguish
-  // "genuinely failed" from "pending human review".
+  // 人工验证检查（无命令）— 保持为未通过，以便门禁逻辑
+  // 不会自动批准。调用方可检查 metadata.status 来区分
+  // "真正失败" 与 "等待人工审核"。
   return {
     type: check.evidenceType,
     passed: false,
@@ -164,7 +164,7 @@ async function runSingleCheck(
 }
 
 /**
- * Execute all verification checks
+ * 执行所有验证检查
  */
 export async function runVerification(
   checklist: VerificationChecklist,
@@ -174,18 +174,18 @@ export async function runVerification(
 
   checklist.status = 'in_progress';
 
-  // Filter checks based on options
+  // 根据选项过滤检查
   const checksToRun = skipOptional
     ? checklist.checks.filter(c => c.required)
     : checklist.checks;
 
   if (parallel && !failFast) {
-    // Run all checks in parallel
+    // 并行执行所有检查
     const results = await Promise.allSettled(
       checksToRun.map(check => runSingleCheck(check, options))
     );
 
-    // Update checklist with results
+    // 用结果更新清单
     checksToRun.forEach((check, idx) => {
       const result = results[idx];
       if (result.status === 'fulfilled') {
@@ -202,14 +202,14 @@ export async function runVerification(
       }
     });
   } else {
-    // Run checks sequentially
+    // 顺序执行检查
     for (const check of checksToRun) {
       try {
         const evidence = await runSingleCheck(check, options);
         check.evidence = evidence;
         check.completed = true;
 
-        // Stop on first failure if failFast is enabled
+        // 若启用 failFast，则在首次失败时停止
         if (failFast && !evidence.passed) {
           break;
         }
@@ -229,7 +229,7 @@ export async function runVerification(
     }
   }
 
-  // Generate summary
+  // 生成摘要
   checklist.summary = generateSummary(checklist);
   checklist.completedAt = new Date();
   checklist.status = checklist.summary.allRequiredPassed ? 'complete' : 'failed';
@@ -238,7 +238,7 @@ export async function runVerification(
 }
 
 /**
- * Validate evidence for a specific check
+ * 校验特定检查的证据
  */
 export function checkEvidence(
   check: VerificationCheck,
@@ -247,7 +247,7 @@ export function checkEvidence(
   const issues: string[] = [];
   const recommendations: string[] = [];
 
-  // Basic validation
+  // 基础校验
   if (!evidence) {
     issues.push(`No evidence provided for check: ${check.name}`);
     recommendations.push('Run the verification check to collect evidence');
@@ -259,12 +259,12 @@ export function checkEvidence(
     };
   }
 
-  // Check evidence type matches
+  // 检查证据类型是否匹配
   if (evidence.type !== check.evidenceType) {
     issues.push(`Evidence type mismatch: expected ${check.evidenceType}, got ${evidence.type}`);
   }
 
-  // Check if passed
+  // 检查是否通过
   if (!evidence.passed) {
     issues.push(`Check failed: ${check.name}`);
     if (evidence.error) {
@@ -276,7 +276,7 @@ export function checkEvidence(
     recommendations.push('Fix the issue and re-run verification');
   }
 
-  // Check for stale evidence (older than 5 minutes)
+  // 检查证据是否过期（超过 5 分钟）
   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
   if (evidence.timestamp < fiveMinutesAgo) {
     issues.push('Evidence is stale (older than 5 minutes)');
@@ -292,7 +292,7 @@ export function checkEvidence(
 }
 
 /**
- * Generate summary of verification results
+ * 生成验证结果摘要
  */
 function generateSummary(checklist: VerificationChecklist): VerificationSummary {
   const total = checklist.checks.length;
@@ -330,7 +330,7 @@ function generateSummary(checklist: VerificationChecklist): VerificationSummary 
 }
 
 /**
- * Format verification report
+ * 格式化验证报告
  */
 export function formatReport(
   checklist: VerificationChecklist,
@@ -348,7 +348,7 @@ export function formatReport(
 
   const lines: string[] = [];
 
-  // Header
+  // 报告头
   if (format === 'markdown') {
     lines.push(`# Verification Report: ${checklist.protocol.name}`);
     lines.push('');
@@ -368,7 +368,7 @@ export function formatReport(
     lines.push('');
   }
 
-  // Summary
+  // 摘要
   if (checklist.summary) {
     const { summary } = checklist;
     if (format === 'markdown') {
@@ -391,7 +391,7 @@ export function formatReport(
     }
   }
 
-  // Checks
+  // 检查项
   if (format === 'markdown') {
     lines.push('## Checks');
     lines.push('');
@@ -451,7 +451,7 @@ export function formatReport(
 }
 
 /**
- * Validate entire checklist
+ * 校验整个清单
  */
 export async function validateChecklist(
   checklist: VerificationChecklist
@@ -459,7 +459,7 @@ export async function validateChecklist(
   const issues: string[] = [];
   const recommendations: string[] = [];
 
-  // Check if verification is complete
+  // 检查验证是否完成
   if (checklist.status !== 'complete' && checklist.status !== 'failed') {
     issues.push('Verification is not complete');
     recommendations.push('Run verification to completion before validating');
@@ -471,7 +471,7 @@ export async function validateChecklist(
     };
   }
 
-  // Validate each check
+  // 校验每个检查
   for (const check of checklist.checks) {
     if (!check.evidence) {
       if (check.required) {
@@ -490,7 +490,7 @@ export async function validateChecklist(
     }
   }
 
-  // Run custom validator if provided
+  // 若提供了自定义校验器则运行
   if (checklist.protocol.customValidator) {
     const customResult = await checklist.protocol.customValidator(checklist);
     if (!customResult.valid) {
@@ -509,7 +509,7 @@ export async function validateChecklist(
   };
 }
 
-// Re-export types
+// 重新导出类型
 export type {
   VerificationProtocol,
   VerificationCheck,

@@ -1,8 +1,8 @@
 /**
- * Sentinel Health Analyzer
+ * Sentinel 健康分析器
  *
- * Parses JSONL log files of sentinel runs and computes readiness stats.
- * Ported from sentinel_health.py (issue #1155).
+ * 解析 sentinel 运行记录的 JSONL 日志文件，并计算就绪度统计。
+ * 移植自 sentinel_health.py（issue #1155）。
  */
 
 import { readFileSync, existsSync } from 'fs';
@@ -15,7 +15,7 @@ import type {
 import { loadGuardsConfig } from './config.js';
 
 // ---------------------------------------------------------------------------
-// Stats computation helpers
+// 统计计算辅助函数
 // ---------------------------------------------------------------------------
 
 function computeRate(numerator: number, denominator: number): number {
@@ -40,11 +40,11 @@ export function getReasonCoverageRate(stats: SentinelStats): number {
 }
 
 // ---------------------------------------------------------------------------
-// Log entry helpers
+// 日志条目辅助函数
 // ---------------------------------------------------------------------------
 
 /**
- * Normalize a verdict string to PASS, WARN, or FAIL.
+ * 将判定字符串归一化为 PASS、WARN 或 FAIL。
  */
 function extractVerdict(entry: SentinelLogEntry): 'PASS' | 'WARN' | 'FAIL' {
   const raw = String(entry.verdict ?? '').toUpperCase().trim();
@@ -54,14 +54,14 @@ function extractVerdict(entry: SentinelLogEntry): 'PASS' | 'WARN' | 'FAIL' {
 }
 
 /**
- * Check if a log entry has a reason/explanation.
+ * 检查日志条目是否带有 reason/explanation。
  */
 function hasReason(entry: SentinelLogEntry): boolean {
   return !!(entry.reason || entry.error || entry.message);
 }
 
 /**
- * Check if a log entry indicates a timeout.
+ * 检查日志条目是否表明发生了超时。
  */
 function isTimeout(entry: SentinelLogEntry): boolean {
   if (entry.runtime?.timed_out === true) return true;
@@ -71,14 +71,14 @@ function isTimeout(entry: SentinelLogEntry): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Log analysis
+// 日志分析
 // ---------------------------------------------------------------------------
 
 /**
- * Parse a JSONL log file and compute aggregate sentinel stats.
+ * 解析 JSONL 日志文件并计算聚合的 sentinel 统计数据。
  *
- * @param logPath - Path to the JSONL log file
- * @returns Aggregated sentinel statistics
+ * @param logPath - JSONL 日志文件路径
+ * @returns 聚合后的 sentinel 统计数据
  */
 export function analyzeLog(logPath: string): SentinelStats {
   const stats: SentinelStats = {
@@ -108,7 +108,7 @@ export function analyzeLog(logPath: string): SentinelStats {
     try {
       entry = JSON.parse(line) as SentinelLogEntry;
     } catch {
-      // Skip malformed lines
+      // 跳过格式错误的行
       continue;
     }
 
@@ -127,16 +127,15 @@ export function analyzeLog(logPath: string): SentinelStats {
 }
 
 // ---------------------------------------------------------------------------
-// Readiness check
+// 就绪度检查
 // ---------------------------------------------------------------------------
 
 /**
- * Determine if the sentinel signal is upstream-ready based on
- * configurable thresholds.
+ * 根据可配置的阈值判定 sentinel 信号是否已就绪可上游使用。
  *
- * @param stats  - Computed sentinel statistics
- * @param policy - Readiness thresholds (from config or provided)
- * @returns Tuple of [ready, blockers] — ready is true if all thresholds met
+ * @param stats  - 计算得到的 sentinel 统计数据
+ * @param policy - 就绪度阈值（来自配置或直接提供）
+ * @returns 元组 [ready, blockers] —— 所有阈值均满足时 ready 为 true
  */
 export function isUpstreamReady(
   stats: SentinelStats,
@@ -176,7 +175,7 @@ export function isUpstreamReady(
 }
 
 /**
- * Convenience wrapper: analyze a log file and check readiness.
+ * 便捷封装：分析日志文件并检查就绪度。
  */
 export function checkSentinelHealth(
   logPath: string,

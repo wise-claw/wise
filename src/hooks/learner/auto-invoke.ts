@@ -6,9 +6,9 @@ import { atomicWriteJson } from '../../lib/atomic-write.js';
 
 export interface InvocationConfig {
   enabled: boolean;
-  confidenceThreshold: number;  // Default: 80
-  maxAutoInvokes: number;       // Per session, default: 3
-  cooldownMs: number;           // Between invokes, default: 30000
+  confidenceThreshold: number;  // 默认：80
+  maxAutoInvokes: number;       // 每会话，默认：3
+  cooldownMs: number;           // 调用间隔，默认：30000
 }
 
 export interface InvocationRecord {
@@ -17,8 +17,8 @@ export interface InvocationRecord {
   timestamp: number;
   confidence: number;
   prompt: string;
-  wasSuccessful: boolean | null;  // null = unknown
-  feedbackScore: number | null;   // User rating if provided
+  wasSuccessful: boolean | null;  // null = 未知
+  feedbackScore: number | null;   // 用户评分（若提供）
 }
 
 export interface AutoInvokeState {
@@ -36,7 +36,7 @@ const DEFAULT_CONFIG: InvocationConfig = {
 };
 
 /**
- * Load auto-invocation config from ~/.claude/.wise-config.json
+ * 从 ~/.claude/.wise-config.json 加载自动调用配置
  */
 export function loadInvocationConfig(): InvocationConfig {
   const configPath = path.join(getClaudeConfigDir(), '.wise-config.json');
@@ -49,7 +49,7 @@ export function loadInvocationConfig(): InvocationConfig {
     const configFile = fs.readFileSync(configPath, 'utf-8');
     const config = JSON.parse(configFile);
 
-    // Merge with defaults
+    // 与默认值合并
     return {
       enabled: config.autoInvoke?.enabled ?? DEFAULT_CONFIG.enabled,
       confidenceThreshold: config.autoInvoke?.confidenceThreshold ?? DEFAULT_CONFIG.confidenceThreshold,
@@ -63,7 +63,7 @@ export function loadInvocationConfig(): InvocationConfig {
 }
 
 /**
- * Initialize auto-invoke state for a session
+ * 为某会话初始化自动调用状态
  */
 export function initAutoInvoke(sessionId: string): AutoInvokeState {
   return {
@@ -75,7 +75,7 @@ export function initAutoInvoke(sessionId: string): AutoInvokeState {
 }
 
 /**
- * Decide whether to auto-invoke a skill based on confidence and constraints
+ * 根据置信度和约束决定是否自动调用技能
  */
 export function shouldAutoInvoke(
   state: AutoInvokeState,
@@ -84,28 +84,28 @@ export function shouldAutoInvoke(
 ): boolean {
   const { config, invocations, lastInvokeTime } = state;
 
-  // Check if auto-invoke is enabled
+  // 检查自动调用是否启用
   if (!config.enabled) {
     return false;
   }
 
-  // Check confidence threshold
+  // 检查置信度阈值
   if (confidence < config.confidenceThreshold) {
     return false;
   }
 
-  // Check max invocations per session
+  // 检查每会话最大调用次数
   if (invocations.length >= config.maxAutoInvokes) {
     return false;
   }
 
-  // Check cooldown
+  // 检查冷却
   const now = Date.now();
   if (now - lastInvokeTime < config.cooldownMs) {
     return false;
   }
 
-  // Check if this skill was already invoked in this session
+  // 检查本会话是否已调用过该技能
   const alreadyInvoked = invocations.some(inv => inv.skillId === skillId);
   if (alreadyInvoked) {
     return false;
@@ -115,7 +115,7 @@ export function shouldAutoInvoke(
 }
 
 /**
- * Record a skill invocation
+ * 记录一次技能调用
  */
 export function recordInvocation(
   state: AutoInvokeState,
@@ -129,14 +129,14 @@ export function recordInvocation(
 }
 
 /**
- * Update the success status of a skill invocation
+ * 更新技能调用的成功状态
  */
 export function updateInvocationSuccess(
   state: AutoInvokeState,
   skillId: string,
   wasSuccessful: boolean
 ): void {
-  // Update the most recent invocation of this skill
+  // 更新该技能最近一次调用
   const invocation = [...state.invocations]
     .reverse()
     .find(inv => inv.skillId === skillId);
@@ -147,7 +147,7 @@ export function updateInvocationSuccess(
 }
 
 /**
- * Format skill for auto-invocation (more prominent than passive injection)
+ * 格式化技能以供自动调用（比被动注入更显眼）
  */
 export function formatAutoInvoke(skill: {
   name: string;
@@ -171,7 +171,7 @@ Please follow the skill's instructions immediately.
 }
 
 /**
- * Get invocation statistics for the session
+ * 获取本会话的调用统计
  */
 export function getInvocationStats(state: AutoInvokeState): {
   total: number;
@@ -200,13 +200,13 @@ export function getInvocationStats(state: AutoInvokeState): {
 }
 
 /**
- * Save invocation history to disk for analytics
+ * 将调用历史保存到磁盘用于分析
  */
 export function saveInvocationHistory(state: AutoInvokeState): void {
   const historyDir = path.join(os.homedir(), '.wise', 'analytics', 'invocations');
   const historyFile = path.join(historyDir, `${state.sessionId}.json`);
 
-  // Use atomic write to prevent corruption from concurrent sessions (Bug #11 fix)
+  // 使用原子写入防止并发会话导致损坏（Bug #11 修复）
   atomicWriteJson(historyFile, {
     sessionId: state.sessionId,
     config: state.config,
@@ -218,7 +218,7 @@ export function saveInvocationHistory(state: AutoInvokeState): void {
 }
 
 /**
- * Load invocation history from disk
+ * 从磁盘加载调用历史
  */
 export function loadInvocationHistory(sessionId: string): AutoInvokeState | null {
   const historyFile = path.join(
@@ -250,7 +250,7 @@ export function loadInvocationHistory(sessionId: string): AutoInvokeState | null
 }
 
 /**
- * Get aggregated invocation analytics across all sessions
+ * 获取跨所有会话的聚合调用分析
  */
 export function getAggregatedStats(): {
   totalSessions: number;

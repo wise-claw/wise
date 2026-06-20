@@ -1,11 +1,10 @@
 /**
- * Hook Bridge - TypeScript logic invoked by shell scripts
+ * 钩子桥接 - 由 shell 脚本调用的 TypeScript 逻辑
  *
- * This module provides the main entry point for shell hooks to call TypeScript
- * for complex processing. The shell script reads stdin, passes it to this module,
- * and writes the JSON output to stdout.
+ * 本模块为 shell 钩子调用 TypeScript 进行复杂处理提供主入口。
+ * shell 脚本读取 stdin，将其传递给本模块，再把 JSON 输出写入 stdout。
  *
- * Usage from shell:
+ * Shell 调用方式：
  * ```bash
  * #!/bin/bash
  * INPUT=$(cat)
@@ -33,7 +32,7 @@ import { createSwallowedErrorLogger } from "../lib/swallowed-error.js";
 import { dispatchNotificationInBackground } from "./background-notifications.js";
 import { readCanonicalTeamStateCandidate } from "./team-canonical-state.js";
 
-// Hot-path imports: needed on every/most hook invocations (keyword-detector, pre/post-tool-use)
+// 热路径导入：每次/大多数钩子调用都会用到（keyword-detector、pre/post-tool-use）
 import {
   removeCodeBlocks,
   getAllKeywordsWithSizeCheck,
@@ -95,11 +94,11 @@ import {
   PROMPT_TRANSLATION_MESSAGE,
 } from "../installer/hooks.js";
 import { getUltraworkMessage } from "./keyword-detector/ultrawork/index.js";
-// Agent dashboard is used in pre/post-tool-use hot path
+// 代理仪表盘用于 pre/post-tool-use 热路径
 import { getAgentDashboard } from "./subagent-tracker/index.js";
-// Session replay recordFileTouch is used in pre-tool-use hot path
+// 会话回放的 recordFileTouch 用于 pre-tool-use 热路径
 import { recordFileTouch } from "./subagent-tracker/session-replay.js";
-// Type-only imports for lazy-loaded modules (zero runtime cost)
+// 延迟加载模块的类型-only 导入（零运行时开销）
 import type {
   SubagentStartInput,
   SubagentStopInput,
@@ -113,7 +112,7 @@ import {
 } from "./permission-handler/index.js";
 import type { SessionEndInput } from "./session-end/index.js";
 import type { StopContext } from "./todo-continuation/index.js";
-// Security: wrap untrusted file content to prevent prompt injection
+// 安全：包装不可信文件内容以防止 prompt 注入
 import { wrapUntrustedFileContent } from "../agents/prompt-helpers.js";
 
 const PKILL_F_FLAG_PATTERN = /\bpkill\b.*\s-f\b/;
@@ -272,10 +271,10 @@ function writeSessionStartedMarker(directory: string, sessionId?: string): void 
       started_at: new Date().toISOString(),
       cwd: directory,
       pid: process.pid,
-      // Do not persist process.ppid here: installed hooks run through
-      // scripts/run.cjs, whose short-lived process exits as soon as this
-      // hook returns. Treating that runner PID as owner liveness caused
-      // later SessionStart hooks to falsely clean live session state.
+      // 此处不要持久化 process.ppid：已安装的钩子通过
+      // scripts/run.cjs 运行，该短命进程在本钩子返回后即退出。
+      // 将该 runner PID 当作存活属主会导致后续 SessionStart 钩子
+      // 误清理仍然存活的会话状态。
       boot_id: readLinuxBootId(),
     };
     writeFileSync(sessionStartedMarkerPath(directory, sessionId), JSON.stringify(marker, null, 2), {
@@ -283,7 +282,7 @@ function writeSessionStartedMarker(directory: string, sessionId?: string): void 
       mode: 0o600,
     });
   } catch {
-    // SessionStart markers are best-effort and must never block startup.
+    // SessionStart 标记是尽力而为的，绝不能阻断启动。
   }
 }
 
@@ -296,7 +295,7 @@ function removeSessionStartedMarker(directory: string, sessionId?: string): void
       unlinkSync(markerPath);
     }
   } catch {
-    // Best-effort marker cleanup only.
+    // 仅做尽力而为的标记清理。
   }
 }
 
@@ -311,14 +310,14 @@ function cleanupSessionModeStateFiles(directory: string, sessionId: string): voi
     const filePath = join(dir, file);
     const state = readJsonObject(filePath);
 
-    // SessionStart reconciliation is intentionally narrower than SessionEnd:
-    // only remove files inside the explicit stale session directory. Do not
-    // touch legacy/global state, even if it is unowned or shares a mode name.
+    // SessionStart 的对账刻意比 SessionEnd 更窄：
+    // 只删除显式 stale 会话目录内的文件。不要触碰
+    // legacy/全局状态，即使它无属主或与某个模式同名。
     if (state?.active === true || file === "skill-active-state.json") {
       try {
         unlinkSync(filePath);
       } catch {
-        // Leave files in place when deletion fails.
+        // 删除失败时保留文件原样。
       }
     }
   }
@@ -346,20 +345,19 @@ function cleanupMissionStateForSession(directory: string, sessionId: string): vo
     parsed.updatedAt = new Date().toISOString();
     writeFileSync(missionStatePath, JSON.stringify(parsed, null, 2));
   } catch {
-    // Best-effort cleanup only.
+    // 仅做尽力而为的清理。
   }
 }
 
 /**
- * Return true only when SessionStart has durable abandonment evidence.
+ * 仅当 SessionStart 存在持久的废弃证据时返回 true。
  *
- * Claude Code SessionStart input currently provides session metadata such as
- * session_id, transcript_path, cwd, source, model, and agent_type, but no
- * stable owner process for the interactive session. In installed WISE hooks the
- * immediate hook parent belongs to scripts/run.cjs and is intentionally
- * short-lived, so same-boot PID liveness checks are not reliable here. SessionEnd
- * remains the primary same-boot cleanup path; SessionStart only reconciles
- * durable leftovers, such as markers from a previous OS boot.
+ * Claude Code 的 SessionStart 输入当前提供 session_id、transcript_path、
+ * cwd、source、model、agent_type 等会话元数据，但没有交互式会话的稳定
+ * 属主进程。在已安装的 WISE 钩子中，直接父进程属于 scripts/run.cjs 且
+ * 刻意设计为短命，因此此处的同启动 PID 存活检查并不可靠。SessionEnd
+ * 仍是主要的同启动清理路径；SessionStart 仅对账持久残留，例如上一次
+ * OS 启动留下的标记。
  */
 function hasDurableAbandonmentEvidence(marker: SessionStartedMarker): boolean {
   const storedBootId = typeof marker.boot_id === "string" ? marker.boot_id : undefined;
@@ -368,9 +366,9 @@ function hasDurableAbandonmentEvidence(marker: SessionStartedMarker): boolean {
     return true;
   }
 
-  // Same-boot hard-kill cleanup requires a durable owner signal. Claude Code
-  // does not currently provide one to hooks, so keep active state rather than
-  // guessing from hook-runner process ancestry or transcript metadata.
+  // 同启动硬杀清理需要持久的属主信号。Claude Code 目前
+  // 未向钩子提供该信号，因此保留 active 状态，而不是从
+  // hook-runner 进程谱系或 transcript 元数据中猜测。
   return false;
 }
 
@@ -392,10 +390,10 @@ async function reconcileAbandonedSessionStarts(directory: string, currentSession
     const marker = readJsonObject(markerPath) as SessionStartedMarker | null;
     if (!marker) continue;
 
-    // Explicit ownership only: the marker must belong to the session directory.
+    // 仅认显式属主：标记必须属于该会话目录。
     if (marker.session_id !== sessionId) continue;
 
-    // If SessionEnd already wrote its summary, only remove the leftover marker.
+    // 若 SessionEnd 已写入其摘要，则只删除遗留标记。
     if (hasSessionEndSummary(directory, sessionId)) {
       removeSessionStartedMarker(directory, sessionId);
       continue;
@@ -403,8 +401,8 @@ async function reconcileAbandonedSessionStarts(directory: string, currentSession
 
     if (!hasDurableAbandonmentEvidence(marker)) continue;
 
-    // Deliberately narrow: clear only WISE session-scoped mode/mission state.
-    // Do not call team runtime shutdown here; SessionStart must not kill tmux PIDs.
+    // 刻意收窄：只清理 WISE 会话级 mode/mission 状态。
+    // 不要在此处调用 team 运行时关闭；SessionStart 不得杀掉 tmux PID。
     cleanupSessionModeStateFiles(directory, sessionId);
     cleanupMissionStateForSession(directory, sessionId);
     removeSessionStartedMarker(directory, sessionId);
@@ -415,7 +413,7 @@ async function reconcileAbandonedSessionStarts(directory: string, currentSession
         rmdirSync(sessionStateDir(directory, sessionId));
       }
     } catch {
-      // Leave non-empty/unreadable directories untouched.
+      // 不动非空/不可读的目录。
     }
   }
 }
@@ -556,7 +554,7 @@ function recordScheduledWakeup(directory: string, sessionId: string | undefined,
       ),
     );
   } catch {
-    // Wakeup state is best-effort; never fail the hook.
+    // 唤醒状态是尽力而为的；绝不让钩子失败。
   }
 }
 
@@ -603,7 +601,7 @@ function updateModeAwaitingConfirmation(
       writeFileSync(tmpPath, JSON.stringify(state, null, 2));
       renameSync(tmpPath, statePath);
     } catch {
-      // Best-effort state sync only.
+      // 仅做尽力而为的状态同步。
     }
   }
 }
@@ -966,7 +964,7 @@ function writeTeamStopBreakerCount(
         unlinkSync(breakerPath);
       }
     } catch {
-      // no-op
+      // 空操作
     }
     return;
   }
@@ -983,7 +981,7 @@ function writeTeamStopBreakerCount(
       "utf-8",
     );
   } catch {
-    // no-op
+    // 空操作
   }
 }
 
@@ -1046,8 +1044,8 @@ function workerBashBlockReason(command: string): string | null {
 }
 
 /**
- * Returns the required camelCase keys for a given hook type.
- * Centralizes key requirements to avoid drift between normalization and validation.
+ * 返回给定钩子类型所需的 camelCase 键。
+ * 集中管理键要求，避免归一化与校验之间出现偏差。
  */
 export function requiredKeysForHook(hookType: string): string[] {
   switch (hookType) {
@@ -1066,9 +1064,9 @@ export function requiredKeysForHook(hookType: string): string[] {
 }
 
 /**
- * Validates that an input object contains all required fields.
- * Returns true if all required fields are present, false otherwise.
- * Logs missing keys at debug level on failure.
+ * 校验输入对象是否包含所有必填字段。
+ * 所有必填字段齐全则返回 true，否则返回 false。
+ * 失败时以 debug 级别记录缺失的键。
  */
 function validateHookInput<T>(
   input: unknown,
@@ -1090,47 +1088,47 @@ function validateHookInput<T>(
 }
 
 /**
- * Input format from Claude Code hooks (via stdin)
+ * 来自 Claude Code 钩子的输入格式（经 stdin）
  */
 export interface HookInput {
-  /** Session identifier */
+  /** 会话标识符 */
   sessionId?: string;
-  /** Optional agent name context for routing prompt variants */
+  /** 可选的 agent 名称上下文，用于路由 prompt 变体 */
   agentName?: string;
-  /** Optional model identifier context for routing prompt variants */
+  /** 可选的 model 标识符上下文，用于路由 prompt 变体 */
   model?: string;
-  /** User prompt text */
+  /** 用户 prompt 文本 */
   prompt?: string;
-  /** Message content (alternative to prompt) */
+  /** 消息内容（prompt 的替代形式） */
   message?: {
     content?: string;
   };
-  /** Message parts (alternative structure) */
+  /** 消息片段（替代结构） */
   parts?: Array<{
     type: string;
     text?: string;
   }>;
-  /** Tool name (for tool hooks) */
+  /** 工具名（用于工具钩子） */
   toolName?: string;
-  /** Tool input parameters */
+  /** 工具输入参数 */
   toolInput?: unknown;
-  /** Tool output (for post-tool hooks) */
+  /** 工具输出（用于 post-tool 钩子） */
   toolOutput?: unknown;
-  /** Working directory */
+  /** 工作目录 */
   directory?: string;
 }
 
 /**
- * Output format for Claude Code hooks (to stdout)
+ * Claude Code 钩子的输出格式（写到 stdout）
  */
 export interface HookOutput {
-  /** Whether to continue with the operation */
+  /** 是否继续执行该操作 */
   continue: boolean;
-  /** Optional message to inject into context */
+  /** 可选的注入上下文消息 */
   message?: string;
-  /** Reason for blocking (when continue=false) */
+  /** 阻断原因（当 continue=false 时） */
   reason?: string;
-  /** Modified tool input (for pre-tool hooks) */
+  /** 修改后的工具输入（用于 pre-tool 钩子） */
   modifiedInput?: unknown;
 }
 
@@ -1145,12 +1143,11 @@ function hasInjectableText(value: unknown): value is string {
 }
 
 /**
- * Strip empty hook text fields before serializing to Claude Code.
+ * 在序列化给 Claude Code 之前剥离空的钩子文本字段。
  *
- * Some hook handlers use empty strings as internal sentinels. Passing those
- * through to the shell hook protocol can create empty system-message/context
- * injections on the next turn, which is especially risky after Task/Agent
- * completion when Claude is deciding whether to continue.
+ * 某些钩子处理器把空字符串当作内部哨兵。把这些空字符串透传给
+ * shell 钩子协议会在下一轮创建空的 system-message/context 注入，
+ * 这在 Task/Agent 完成后 Claude 决定是否继续时尤其危险。
  */
 export function sanitizeHookOutputForSerialization(
   output: SerializableHookOutput,
@@ -1192,7 +1189,7 @@ function isDelegationToolName(toolName: string | undefined): boolean {
 }
 
 /**
- * Hook types that can be processed
+ * 可处理的钩子类型
  */
 export type HookType =
   | "keyword-detector"
@@ -1200,20 +1197,20 @@ export type HookType =
   | "ralph"
   | "persistent-mode"
   | "session-start"
-  | "session-end" // NEW: Cleanup and metrics on session end
+  | "session-end" // 新增：会话结束时清理与指标采集
   | "pre-tool-use"
   | "post-tool-use"
   | "autopilot"
-  | "subagent-start" // NEW: Track agent spawns
-  | "subagent-stop" // NEW: Verify agent completion
-  | "pre-compact" // NEW: Save state before compaction
-  | "setup-init" // NEW: One-time initialization
-  | "setup-maintenance" // NEW: Periodic maintenance
-  | "permission-request" // NEW: Smart auto-approval
-  | "code-simplifier"; // NEW: Auto-simplify recently modified files on Stop
+  | "subagent-start" // 新增：追踪 agent 派生
+  | "subagent-stop" // 新增：校验 agent 完成
+  | "pre-compact" // 新增：压缩前保存状态
+  | "setup-init" // 新增：一次性初始化
+  | "setup-maintenance" // 新增：周期性维护
+  | "permission-request" // 新增：智能自动批准
+  | "code-simplifier"; // 新增：Stop 时自动简化最近修改的文件
 
 /**
- * Extract prompt text from various input formats
+ * 从多种输入格式中提取 prompt 文本
  */
 function getPromptText(input: HookInput): string {
   if (input.prompt) {
@@ -1254,10 +1251,9 @@ function activateRalplanStartupState(directory: string, sessionId?: string): voi
 }
 
 /**
- * Resolve the on-disk path of the mode-specific state file for a workflow
- * skill. Returns the session-scoped path when a session id is available, else
- * the root path. Used to persist `mode_state_path` on the workflow slot so
- * downstream consumers can locate the mode payload.
+ * 解析工作流 skill 对应的 mode 专属状态文件在磁盘上的路径。
+ * 有 session id 时返回会话级路径，否则返回根路径。用于在
+ * workflow slot 上持久化 `mode_state_path`，以便下游消费者定位 mode 负载。
  */
 function resolveWorkflowSlotModeStatePath(
   directory: string,
@@ -1269,9 +1265,9 @@ function resolveWorkflowSlotModeStatePath(
 }
 
 /**
- * Seed (or refresh) a canonical workflow-slot entry in the dual-copy ledger
- * via the only sanctioned helper, `writeSkillActiveStateCopies()`. Returns
- * `true` when at least one copy was written, `false` on best-effort failure.
+ * 通过唯一受认可的辅助函数 `writeSkillActiveStateCopies()`，在双副本
+ * 账本中播种（或刷新）一个规范 workflow-slot 条目。至少写入一份副本时
+ * 返回 `true`，尽力而为失败时返回 `false`。
  */
 function seedWorkflowSlotForSkill(
   directory: string,
@@ -1287,8 +1283,7 @@ function seedWorkflowSlotForSkill(
     const current = readSkillActiveStateNormalized(directory, sessionId);
     const pruned = pruneExpiredWorkflowSkillTombstones(current);
 
-    // Resolve mode-state file pointers eagerly so downstream readers can
-    // locate the mode payload without re-deriving the path.
+    // 提前解析 mode-state 文件指针，使下游读者无需重新推导路径即可定位 mode 负载。
     const rootStatePath = resolveStatePathSafe("skill-active", directory);
     const sessionStatePath = sessionId
       ? resolveSessionStatePathSafe("skill-active", sessionId, directory)
@@ -1319,8 +1314,8 @@ function seedWorkflowSlotForSkill(
 }
 
 /**
- * Idempotently confirm a workflow slot — refreshes `last_confirmed_at` when
- * the slot is live. No-op when the slot is missing or already tombstoned.
+ * 幂等地确认一个 workflow slot —— 当 slot 存活时刷新 `last_confirmed_at`。
+ * slot 缺失或已被 tombstone 时为空操作。
  */
 function confirmWorkflowSlot(
   directory: string,
@@ -1344,9 +1339,8 @@ function confirmWorkflowSlot(
 }
 
 /**
- * Soft-tombstone a workflow slot on completion. The slot is retained until
- * the TTL pruner removes it, so late-arriving stop hooks see consistent
- * state.
+ * 完成时对 workflow slot 做软 tombstone。slot 会保留至
+ * TTL 清理器移除它，使后到的 stop 钩子看到一致的状态。
  */
 function tombstoneWorkflowSlot(
   directory: string,
@@ -1367,8 +1361,8 @@ function tombstoneWorkflowSlot(
 
 function resolveStatePathSafe(stateName: string, directory: string): string {
   try {
-    // Lazy resolve to avoid a circular import; same module is imported in
-    // skill-state via the mode-paths registry.
+    // 延迟解析以避免循环导入；同一模块在 skill-state 中
+    // 通过 mode-paths 注册表导入。
     return join(getWiseRoot(directory), "state", `${stateName}-state.json`);
   } catch {
     return "";
@@ -1394,10 +1388,9 @@ function resolveSessionStatePathSafe(
 }
 
 /**
- * Mode-specific seeding entrypoints invoked alongside the workflow slot when
- * the user issues an explicit slash command. Each branch is a no-op when the
- * mode does not require pre-skill state (e.g. `team`, where the team skill
- * itself owns initial state via worker spawning).
+ * 当用户发出显式 slash 命令时，与 workflow slot 一并调用的 mode 专属
+ * 播种入口。当某 mode 不需要 pre-skill 状态时，各分支为空操作
+ *（例如 `team`，其 team skill 本身通过 worker 派生拥有初始状态）。
  */
 async function seedModeStateForExplicitWorkflowSlash(
   skill: string,
@@ -1414,22 +1407,22 @@ async function seedModeStateForExplicitWorkflowSlash(
       return;
     default:
       // ralph / ultrawork / team / ultraqa / deep-interview / self-improve
-      // own their state activation inside their own Skill PostToolUse handlers.
-      // Pre-Skill seeding for these would clobber existing in-flight state
-      // (e.g. nested `autopilot → ralph`); the workflow slot alone is enough
-      // to keep stop-hook enforcement from premature termination.
+      // 在各自的 Skill PostToolUse 处理器内部完成状态激活。
+      // 对它们做 pre-Skill 播种会覆盖已有的进行中状态
+      //（例如嵌套的 `autopilot → ralph`）；仅靠 workflow slot 就足以
+      // 防止 stop-hook 强制提前终止。
       return;
   }
 }
 
 /**
- * Process keyword detection hook
- * Detects magic keywords and returns injection message
- * Also activates persistent state for modes that require it (ralph, ultrawork)
+ * 处理关键词检测钩子
+ * 检测魔法关键词并返回注入消息
+ * 同时为需要持久状态的 mode（ralph、ultrawork）激活状态
  */
 async function processKeywordDetector(input: HookInput): Promise<HookOutput> {
-  // Team worker guard: prevent keyword detection inside team workers to avoid
-  // infinite spawning loops (worker detects "team" -> invokes team skill -> spawns more workers)
+  // Team worker 守卫：防止在 team worker 内部做关键词检测，以避免
+  // 无限派生循环（worker 检测到 "team" -> 调用 team skill -> 派生更多 worker）
   if (process.env.WISE_TEAM_WORKER) {
     return { continue: true };
   }
@@ -1439,27 +1432,26 @@ async function processKeywordDetector(input: HookInput): Promise<HookOutput> {
     return { continue: true };
   }
 
-  // `/ask <provider> ...` delegates the remainder of the prompt to an
-  // external advisor. Do not interpret magic keywords inside that payload as
-  // instructions for the current Claude Code session.
+  // `/ask <provider> ...` 把 prompt 的剩余部分委派给
+  // 外部顾问。不要把该负载中的魔法关键词解读为
+  // 当前 Claude Code 会话的指令。
   if (isExplicitAskSlashInvocation(promptText)) {
     return { continue: true };
   }
 
-  // Remove code blocks to prevent false positives
+  // 移除代码块以防误报
   const cleanedText = removeCodeBlocks(promptText);
 
   const sessionId = input.sessionId;
   const directory = resolveToWorktreeRoot(input.directory);
   const messages: string[] = [];
 
-  // Unified explicit slash invocation handler — covers all 8 canonical
-  // workflow skills (autopilot, ralph, team, ultrawork, ultraqa,
-  // deep-interview, ralplan, self-improve). Seeds the workflow slot via the
-  // sanctioned dual-copy helper BEFORE the Skill tool fires, and seeds the
-  // mode-specific state file when the mode requires pre-Skill state. The
-  // ralplan path additionally returns the legacy [RALPLAN INIT] context
-  // injection so existing routing tests remain green.
+  // 统一的显式 slash 调用处理器 —— 覆盖全部 8 个规范
+  // workflow skill（autopilot、ralph、team、ultrawork、ultraqa、
+  // deep-interview、ralplan、self-improve）。在 Skill 工具触发之前，
+  // 通过受认可的双副本辅助函数播种 workflow slot，并在 mode 需要
+  // pre-Skill 状态时播种 mode 专属状态文件。ralplan 路径额外返回
+  // 旧的 [RALPLAN INIT] 上下文注入，使既有路由测试保持通过。
   const explicitSlash = parseExplicitWorkflowSlashInvocation(promptText);
   if (explicitSlash) {
     seedWorkflowSlotForSkill(
@@ -1487,13 +1479,12 @@ async function processKeywordDetector(input: HookInput): Promise<HookOutput> {
         },
       } as HookOutput & { hookSpecificOutput: Record<string, unknown> };
     }
-    // For non-ralplan workflow slash invocations, fall through so the regular
-    // keyword pipeline still emits the mode message constants and routes
-    // through the normal activation path. The workflow slot is already armed
-    // so the stop-hook will treat the upcoming Skill invocation as authorized.
+    // 对于非 ralplan 的 workflow slash 调用，继续往下走，让常规
+    // 关键词流水线仍发出 mode 消息常量并走正常激活路径。workflow slot
+    // 已就绪，因此 stop-hook 会把即将到来的 Skill 调用视为已授权。
   }
 
-  // Record prompt submission time in HUD state
+  // 在 HUD 状态中记录 prompt 提交时间
   try {
     const hudState = readHudState(directory, input.sessionId) || {
       timestamp: new Date().toISOString(),
@@ -1503,15 +1494,15 @@ async function processKeywordDetector(input: HookInput): Promise<HookOutput> {
     hudState.timestamp = new Date().toISOString();
     writeHudState(hudState, directory, input.sessionId);
   } catch {
-    // Silent failure - don't break keyword detection
+    // 静默失败 - 不打断关键词检测
   }
 
-  // Load config for task-size detection settings
+  // 加载配置以获取任务规模检测设置
   const config = loadConfig();
   const taskSizeConfig = config.taskSizeDetection ?? {};
   const promptPrerequisiteConfig = getPromptPrerequisiteConfig(config);
 
-  // Get all keywords with optional task-size filtering (issue #790)
+  // 获取所有关键词，可选按任务规模过滤（issue #790）
   const sizeCheckResult = getAllKeywordsWithSizeCheck(cleanedText, {
     enabled: taskSizeConfig.enabled !== false,
     smallWordLimit: taskSizeConfig.smallWordLimit ?? 50,
@@ -1520,9 +1511,9 @@ async function processKeywordDetector(input: HookInput): Promise<HookOutput> {
       taskSizeConfig.suppressHeavyModesForSmallTasks !== false,
   });
 
-  // Apply ralplan-first gate BEFORE task-size suppression (issue #997).
-  // Reconstruct the full keyword set so the gate sees execution keywords
-  // that task-size suppression may have already removed for small tasks.
+  // 在任务规模抑制之前应用 ralplan 优先闸门（issue #997）。
+  // 重建完整关键词集合，使闸门能看到任务规模抑制可能已为小任务
+  // 移除的执行类关键词。
   const fullKeywords = [
     ...sizeCheckResult.keywords,
     ...sizeCheckResult.suppressedKeywords,
@@ -1531,7 +1522,7 @@ async function processKeywordDetector(input: HookInput): Promise<HookOutput> {
 
   let keywords: typeof fullKeywords;
   if (gateResult.gateApplied) {
-    // Gate fired: redirect to ralplan (task-size suppression is moot — we're planning, not executing)
+    // 闸门触发：重定向到 ralplan（任务规模抑制已无意义 —— 我们在做规划，而非执行）
     keywords = gateResult.keywords;
     const gated = gateResult.gatedKeywords.join(", ");
     messages.push(
@@ -1543,10 +1534,10 @@ async function processKeywordDetector(input: HookInput): Promise<HookOutput> {
         `Or prefix with \`force:\` / \`!\` to bypass.`,
     );
   } else {
-    // Gate did not fire: use task-size-suppressed result as normal
+    // 闸门未触发：按正常方式使用任务规模抑制后的结果
     keywords = sizeCheckResult.keywords;
 
-    // Notify user when heavy modes were suppressed for a small task
+    // 当重型 mode 因小任务被抑制时通知用户
     if (
       sizeCheckResult.suppressedKeywords.length > 0 &&
       sizeCheckResult.taskSizeResult
@@ -1586,7 +1577,7 @@ async function processKeywordDetector(input: HookInput): Promise<HookOutput> {
     messages.push(PROMPT_TRANSLATION_MESSAGE);
   }
 
-  // Wake OpenClaw gateway for keyword-detector (non-blocking, fires for all prompts)
+  // 为 keyword-detector 唤醒 OpenClaw 网关（非阻塞，对所有 prompt 触发）
   if (input.sessionId) {
     _openclaw.wake("keyword-detector", {
       sessionId: input.sessionId,
@@ -1602,11 +1593,11 @@ async function processKeywordDetector(input: HookInput): Promise<HookOutput> {
     return { continue: true };
   }
 
-  // Process each keyword and collect messages
+  // 处理每个关键词并收集消息
   for (const keywordType of keywords) {
     switch (keywordType) {
       case "ralph": {
-        // Lazy-load ralph module
+        // 延迟加载 ralph 模块
         const {
           createRalphLoopHook,
           detectCriticModeFlag,
@@ -1616,7 +1607,7 @@ async function processKeywordDetector(input: HookInput): Promise<HookOutput> {
         const criticMode = detectCriticModeFlag(promptText) ?? undefined;
         const cleanPrompt = stripCriticModeFlag(promptText);
 
-        // Activate ralph state which also auto-activates ultrawork
+        // 激活 ralph 状态，同时自动激活 ultrawork
         const hook = createRalphLoopHook(directory);
         const started = hook.startLoop(
           sessionId,
@@ -1634,9 +1625,9 @@ async function processKeywordDetector(input: HookInput): Promise<HookOutput> {
       }
 
       case "ultrawork": {
-        // Lazy-load ultrawork module
+        // 延迟加载 ultrawork 模块
         const { activateUltrawork } = await import("./ultrawork/index.js");
-        // Activate persistent ultrawork state
+        // 激活持久的 ultrawork 状态
         const activated = activateUltrawork(promptText, sessionId, directory);
         if (activated) {
           markModeAwaitingConfirmation(directory, sessionId, 'ultrawork');
@@ -1674,8 +1665,8 @@ async function processKeywordDetector(input: HookInput): Promise<HookOutput> {
         messages.push(SECURITY_REVIEW_MESSAGE);
         break;
 
-      // For modes without dedicated message constants, return generic activation message
-      // These are handled by UserPromptSubmit hook for skill invocation
+      // 对于没有专属消息常量的 mode，返回通用激活消息
+      // 这些由 UserPromptSubmit 钩子处理以进行 skill 调用
       case "cancel":
       case "autopilot":
       case "ralplan":
@@ -1704,12 +1695,12 @@ async function processKeywordDetector(input: HookInput): Promise<HookOutput> {
       }
 
       default:
-        // Skip unknown keywords
+        // 跳过未知关键词
         break;
     }
   }
 
-  // Return combined message with delimiter
+  // 用分隔符返回合并后的消息
   if (messages.length === 0) {
     return { continue: true };
   }
@@ -1721,23 +1712,22 @@ async function processKeywordDetector(input: HookInput): Promise<HookOutput> {
 }
 
 /**
- * Process stop continuation hook (legacy path).
- * Always returns continue: true — real enforcement is in processPersistentMode().
+ * 处理 stop continuation 钩子（旧路径）。
+ * 始终返回 continue: true —— 真正的强制逻辑在 processPersistentMode() 中。
  */
 async function processStopContinuation(_input: HookInput): Promise<HookOutput> {
-  // Always allow stop - no hard blocking
+  // 始终允许 stop - 不做硬阻断
   return { continue: true };
 }
 
 /**
- * Process persistent mode hook (enhanced stop continuation)
- * Unified handler for ultrawork, ralph, and todo-continuation.
+ * 处理持久 mode 钩子（增强版 stop continuation）
+ * ultrawork、ralph 和 todo-continuation 的统一处理器。
  *
- * NOTE: The legacy `processRalph` function was removed in issue #1058.
- * Ralph is now handled exclusively by `checkRalphLoop` inside
- * `persistent-mode/index.ts`, which has richer logic (PRD checks,
- * team pipeline coordination, tool-error injection, cancel caching,
- * ultrawork self-heal, and architect rejection handling).
+ * 注意：旧的 `processRalph` 函数已在 issue #1058 中移除。
+ * ralph 现在由 `persistent-mode/index.ts` 中的 `checkRalphLoop` 专门处理，
+ * 后者逻辑更丰富（PRD 检查、team 流水线协调、工具错误注入、取消缓存、
+ * ultrawork 自愈，以及 architect 拒绝处理）。
  */
 async function processPersistentMode(input: HookInput): Promise<HookOutput> {
   const rawSessionId = (input as Record<string, unknown>).session_id as
@@ -1746,7 +1736,7 @@ async function processPersistentMode(input: HookInput): Promise<HookOutput> {
   const sessionId = input.sessionId ?? rawSessionId;
   const directory = resolveToWorktreeRoot(input.directory);
 
-  // Lazy-load persistent-mode and todo-continuation modules
+  // 延迟加载 persistent-mode 和 todo-continuation 模块
   const {
     checkPersistentModes,
     createHookOutput,
@@ -1757,7 +1747,7 @@ async function processPersistentMode(input: HookInput): Promise<HookOutput> {
   const { isExplicitCancelCommand, isAuthenticationError } =
     await import("./todo-continuation/index.js");
 
-  // Extract stop context for abort detection (supports both camelCase and snake_case)
+  // 提取 stop 上下文以做中止检测（同时支持 camelCase 和 snake_case）
   const stopContext: StopContext = {
     stop_reason: (input as Record<string, unknown>).stop_reason as
       | string
@@ -1796,9 +1786,9 @@ async function processPersistentMode(input: HookInput): Promise<HookOutput> {
   const result = await checkPersistentModes(sessionId, directory, stopContext);
   const output = createHookOutput(result);
 
-  // Skip legacy bridge.ts team enforcement if persistent-mode already
-  // handled this stop event (or intentionally emitted a stop message).
-  // Prevents mixed/double continuation prompts across modes.
+  // 若 persistent-mode 已处理本次 stop 事件（或有意发出了 stop 消息），
+  // 则跳过 legacy bridge.ts 的 team 强制逻辑。
+  // 防止跨 mode 出现混合/重复的 continuation 提示。
   if (result.mode !== "none" || Boolean(output.message)) {
     return output;
   }
@@ -1810,8 +1800,8 @@ async function processPersistentMode(input: HookInput): Promise<HookOutput> {
     isTeamStateTerminal(teamState)
   ) {
     writeTeamStopBreakerCount(directory, sessionId, 0);
-    // No persistent mode and no active team — Claude is truly idle.
-    // Send session-idle notification (non-blocking) unless this was a user abort or context limit.
+    // 无持久 mode 且无活跃 team —— Claude 确实处于空闲。
+    // 除非本次是用户中止或上下文上限，否则发送 session-idle 通知（非阻塞）。
     if (result.mode === "none" && sessionId) {
       const isAbort =
         stopContext.user_requested === true ||
@@ -1820,8 +1810,8 @@ async function processPersistentMode(input: HookInput): Promise<HookOutput> {
         stopContext.stop_reason === "context_limit" ||
         stopContext.stopReason === "context_limit";
       if (!isAbort && !isContextLimit) {
-        // Per-session cooldown: prevent notification spam when the session idles repeatedly.
-        // Uses session-scoped state so one session does not suppress another.
+        // 按会话冷却：会话反复空闲时防止通知刷屏。
+        // 使用会话级状态，使一个会话不会抑制另一个。
         const stateDir = join(getWiseRoot(directory), "state");
         const { getIdleNotificationRepoState } = await import("./persistent-mode/idle-repo-state.js");
         const idleRepoState = getIdleNotificationRepoState(directory);
@@ -1838,21 +1828,21 @@ async function processPersistentMode(input: HookInput): Promise<HookOutput> {
         }
       }
 
-      // IMPORTANT: Do NOT clean up reply-listener/session-registry on Stop hooks.
-      // Stop can fire for normal "idle" turns while the session is still active.
-      // Reply cleanup is handled in the true SessionEnd hook only.
+      // 重要：不要在 Stop 钩子中清理 reply-listener/session-registry。
+      // 会话仍活跃时，Stop 也可能为正常 "idle" 轮次触发。
+      // 回复清理只在真正的 SessionEnd 钩子中处理。
     }
     return output;
   }
 
-  // Explicit cancel should suppress team continuation prompts.
+  // 显式取消应抑制 team continuation 提示。
   if (isExplicitCancelCommand(stopContext)) {
     writeTeamStopBreakerCount(directory, sessionId, 0);
     return output;
   }
 
-  // Auth failures (401/403/expired OAuth) should not inject Team continuation.
-  // Otherwise stop hooks can force a retry loop while credentials are invalid.
+  // 鉴权失败（401/403/OAuth 过期）不应注入 Team continuation。
+  // 否则 stop 钩子会在凭证无效时强制重试循环。
   if (isAuthenticationError(stopContext)) {
     writeTeamStopBreakerCount(directory, sessionId, 0);
     return output;
@@ -1860,14 +1850,14 @@ async function processPersistentMode(input: HookInput): Promise<HookOutput> {
 
   const stage = getTeamStageForEnforcement(teamState);
   if (!stage) {
-    // Fail-open for missing/corrupt/unknown phase/state values.
+    // 对缺失/损坏/未知的 phase/state 值采取失败放行。
     writeTeamStopBreakerCount(directory, sessionId, 0);
     return output;
   }
 
   const newBreakerCount = readTeamStopBreakerCount(directory, sessionId) + 1;
   if (newBreakerCount > TEAM_STOP_BLOCKER_MAX) {
-    // Circuit breaker: never allow infinite stop-hook blocking loops.
+    // 断路器：绝不允许无限的 stop-hook 阻断循环。
     writeTeamStopBreakerCount(directory, sessionId, 0);
     return output;
   }
@@ -1899,8 +1889,8 @@ When team verification passes or cancel is requested, allow terminal cleanup beh
 }
 
 /**
- * Process session start hook
- * Restores persistent mode states and injects context if needed
+ * 处理会话启动钩子
+ * 恢复持久 mode 状态并按需注入上下文
  */
 async function processSessionStart(input: HookInput): Promise<HookOutput> {
   const sessionId = input.sessionId;
@@ -1909,28 +1899,28 @@ async function processSessionStart(input: HookInput): Promise<HookOutput> {
   writeSessionStartedMarker(directory, sessionId);
   await reconcileAbandonedSessionStarts(directory, sessionId);
 
-  // Lazy-load session-start dependencies
+  // 延迟加载 session-start 依赖
   const { initSilentAutoUpdate } = await import("../features/auto-update.js");
   const { readAutopilotState } = await import("./autopilot/index.js");
   const { readUltraworkState } = await import("./ultrawork/index.js");
   const { checkIncompleteTodos } = await import("./todo-continuation/index.js");
   const { buildAgentsOverlay } = await import("./agents-overlay.js");
 
-  // Trigger silent auto-update check (non-blocking, checks config internally)
+  // 触发静默自动更新检查（非阻塞，内部自行检查配置）
   initSilentAutoUpdate();
 
-  // Send session-start notification (non-blocking, swallows errors)
+  // 发送 session-start 通知（非阻塞，吞掉错误）
   if (sessionId) {
     dispatchNotificationInBackground("session-start", {
       sessionId,
       projectPath: directory,
       profileName: process.env.WISE_NOTIFY_PROFILE,
     });
-    // Wake OpenClaw gateway for session-start (non-blocking)
+    // 为 session-start 唤醒 OpenClaw 网关（非阻塞）
     _openclaw.wake("session-start", { sessionId, projectPath: directory });
   }
 
-  // Start reply listener daemon if configured (non-blocking, swallows errors)
+  // 若已配置则启动回复监听守护进程（非阻塞，吞掉错误）
   if (sessionId) {
     Promise.all([
       import("../notifications/reply-listener.js"),
@@ -1960,17 +1950,17 @@ async function processSessionStart(input: HookInput): Promise<HookOutput> {
 
   const messages: string[] = [];
 
-  // Inject startup codebase map (issue #804) — first context item so agents orient quickly
+  // 注入启动 codebase map（issue #804）—— 第一个上下文条目，让 agent 快速定位
   try {
     const overlayResult = buildAgentsOverlay(directory);
     if (overlayResult.message) {
       messages.push(overlayResult.message);
     }
   } catch {
-    // Non-blocking: codebase map failure must never break session start
+    // 非阻塞：codebase map 失败绝不能打断会话启动
   }
 
-  // Check for active autopilot state - only restore if it belongs to this session
+  // 检查活跃的 autopilot 状态 - 仅当其属于本会话时才恢复
   const autopilotState = readAutopilotState(directory, sessionId);
   if (autopilotState?.active && autopilotState.session_id === sessionId) {
     messages.push(`<session-restore>
@@ -1990,7 +1980,7 @@ Treat this as prior-session context only. Prioritize the user's newest request, 
 `);
   }
 
-  // Check for active ultrawork state - only restore if it belongs to this session
+  // 检查活跃的 ultrawork 状态 - 仅当其属于本会话时才恢复
   const ultraworkState = readUltraworkState(directory, sessionId);
   if (ultraworkState?.active && ultraworkState.session_id === sessionId) {
     messages.push(`<session-restore>
@@ -2078,7 +2068,7 @@ Treat this as prior-session context only. Prioritize the user's newest request, 
     }
   }
 
-  // Load root AGENTS.md if it exists (deepinit output - issue #613)
+  // 若存在则加载根 AGENTS.md（deepinit 产出 - issue #613）
   const agentsMdPath = join(directory, "AGENTS.md");
   if (existsSync(agentsMdPath)) {
     try {
@@ -2086,12 +2076,12 @@ Treat this as prior-session context only. Prioritize the user's newest request, 
         readFileSync(agentsMdPath, "utf-8"),
       ).trim();
       if (agentsContent) {
-        // Truncate to ~5000 tokens (20000 chars) to avoid context bloat
+        // 截断到约 5000 token（20000 字符）以避免上下文膨胀
         const MAX_AGENTS_CHARS = 20000;
         if (agentsContent.length > MAX_AGENTS_CHARS) {
           agentsContent = agentsContent.slice(0, MAX_AGENTS_CHARS);
         }
-        // Security: wrap untrusted file content to prevent prompt injection
+        // 安全：包装不可信文件内容以防止 prompt 注入
         const wrappedContent = wrapUntrustedFileContent(
           agentsMdPath,
           agentsContent,
@@ -2111,11 +2101,11 @@ ${wrappedContent}
 `);
       }
     } catch {
-      // Skip if file can't be read
+      // 文件无法读取时跳过
     }
   }
 
-  // Check for incomplete todos
+  // 检查未完成的 todo
   const todoResult = await checkIncompleteTodos(sessionId, directory);
   if (todoResult.count > 0) {
     messages.push(`<session-restore>
@@ -2132,10 +2122,10 @@ Please continue working on these tasks.
 `);
   }
 
-  // Bedrock/Vertex/proxy override: tell the LLM not to pass model on Task calls.
-  // This prevents the LLM from following the static CLAUDE.md instruction
-  // "Pass model on Task calls: haiku, sonnet, opus" which produces invalid
-  // model IDs on non-standard providers. (issues #1135, #1201)
+  // Bedrock/Vertex/代理覆盖：告知 LLM 不要在 Task 调用上传 model。
+  // 这能防止 LLM 遵循静态 CLAUDE.md 指令
+  // "Pass model on Task calls: haiku, sonnet, opus"，该指令在非标准
+  // provider 上会产生无效 model ID。（issues #1135, #1201）
   try {
     const sessionConfig = loadConfig();
     if (sessionConfig.routing?.forceInherit) {
@@ -2159,7 +2149,7 @@ The CLAUDE.md instruction "Pass model on Task calls: haiku, sonnet, opus" applie
 </system-reminder>`);
     }
   } catch {
-    // Non-blocking: config load failure must never break session start
+    // 非阻塞：配置加载失败绝不能打断会话启动
   }
 
   if (messages.length > 0) {
@@ -2237,9 +2227,9 @@ export function extractAskUserQuestionPrompts(toolInput: unknown) {
 }
 
 /**
- * Fire-and-forget notification for AskUserQuestion (issue #597).
- * Extracted for testability; the dynamic import makes direct assertion
- * on the notify() call timing-sensitive, so tests spy on this wrapper instead.
+ * AskUserQuestion 的即发即忘通知（issue #597）。
+ * 为可测试性而抽出；动态导入使得直接断言 notify() 调用时机敏感，
+ * 因此测试改为 spy 这个包装器。
  */
 export function dispatchAskUserQuestionNotification(
   sessionId: string,
@@ -2262,18 +2252,18 @@ export function dispatchAskUserQuestionNotification(
   });
 }
 
-/** @internal Object wrapper so tests can spy on the dispatch call. */
+/** @internal 对象包装器，使测试能 spy 派发调用。 */
 export const _notify = {
   askUserQuestion: dispatchAskUserQuestionNotification,
 };
 
 /**
- * @internal Object wrapper for OpenClaw gateway dispatch.
- * Mirrors the _notify pattern for testability (tests spy on _openclaw.wake
- * instead of mocking dynamic imports).
+ * @internal OpenClaw 网关派发的对象包装器。
+ * 沿用 _notify 模式以保持可测试性（测试 spy _openclaw.wake，
+ * 而不是 mock 动态导入）。
  *
- * Fire-and-forget: the lazy import + double .catch() ensures OpenClaw
- * never blocks hooks or surfaces errors.
+ * 即发即忘：延迟导入 + 双层 .catch() 确保 OpenClaw
+ * 永不阻塞钩子或暴露错误。
  */
 export const _openclaw = {
   wake: (
@@ -2291,8 +2281,8 @@ export const _openclaw = {
 };
 
 /**
- * Process pre-tool-use hook
- * Checks delegation enforcement and tracks background tasks
+ * 处理 pre-tool-use 钩子
+ * 检查委派强制并追踪后台任务
  */
 function processPreToolUse(input: HookInput): HookOutput {
   const directory = resolveToWorktreeRoot(input.directory);
@@ -2331,7 +2321,7 @@ function processPreToolUse(input: HookInput): HookOutput {
     }
   }
 
-  // Check delegation enforcement FIRST
+  // 优先检查委派强制
   const enforcementResult = processOrchestratorPreTool({
     toolName: input.toolName || "",
     toolInput: (input.toolInput as Record<string, unknown>) || {},
@@ -2339,7 +2329,7 @@ function processPreToolUse(input: HookInput): HookOutput {
     directory,
   });
 
-  // If enforcement blocks, return immediately
+  // 若强制逻辑阻断，立即返回
   if (!enforcementResult.continue) {
     return {
       continue: false,
@@ -2353,9 +2343,9 @@ function processPreToolUse(input: HookInput): HookOutput {
     : [];
   let modifiedToolInput: Record<string, unknown> | undefined;
 
-  // Check blocking BEFORE recording progress — otherwise a denied tool
-  // (e.g. Edit) that also matches a prerequisite would have its progress
-  // persisted even though the tool never actually executed.
+  // 在记录进度之前检查阻断 —— 否则一个被拒绝的工具
+  //（例如 Edit）若同时命中前置条件，其进度会被持久化，
+  // 尽管该工具从未真正执行。
   const promptPrerequisiteState = readPromptPrerequisiteState(directory, input.sessionId);
   if (
     promptPrerequisiteState?.active
@@ -2384,20 +2374,19 @@ function processPreToolUse(input: HookInput): HookOutput {
     );
   }
 
-  // NOTE: DEAD CODE in production — kept only for Vitest-driven regression coverage.
-  // Production PreToolUse is wired in `hooks/hooks.json` to
-  // `scripts/pre-tool-enforcer.mjs` (NOT this bridge). This block is reachable
-  // only via `processHook('pre-tool-use', ...)` which is called from tests under
-  // src/**/__tests__/. The emitted message here is kept wording-aligned with the
-  // enforcer to prevent accidental drift, but must NOT be relied on to shape LLM
-  // behavior in production. Tracked for deletion — see the Open Questions entry
-  // at `.wise/plans/open-questions.md` under the model-routing alignment section.
-  // Force-inherit: deny Task/Agent calls that carry a `model` parameter when
-  // forceInherit is enabled (Bedrock, Vertex, CC Switch, etc.).
-  // Claude Code's hook protocol does not support modifiedInput, so we cannot
-  // silently strip the model. Instead, deny the call so Claude retries without
-  // the model param, letting agents inherit the parent session's model.
-  // (issues #1135, #1201, #1415)
+  // 注意：生产环境中的死代码 —— 仅为 Vitest 驱动的回归覆盖而保留。
+  // 生产环境的 PreToolUse 在 `hooks/hooks.json` 中接到了
+  // `scripts/pre-tool-enforcer.mjs`（不是本 bridge）。此代码块只能通过
+  // `processHook('pre-tool-use', ...)` 到达，而后者仅被 src/**/__tests__/
+  // 下的测试调用。此处发出的消息与 enforcer 保持措辞对齐以防意外漂移，
+  // 但绝不可依赖它来塑造生产环境中的 LLM 行为。已标记待删除 —— 见
+  // `.wise/plans/open-questions.md` 中 model-routing 对齐部分的 Open Questions 条目。
+  // Force-inherit：当 forceInherit 启用时（Bedrock、Vertex、CC Switch 等），
+  // 拒绝携带 `model` 参数的 Task/Agent 调用。
+  // Claude Code 的钩子协议不支持 modifiedInput，因此我们无法
+  // 静默剥离 model。改为拒绝该调用，让 Claude 不带 model 参数重试，
+  // 从而让 agent 继承父会话的 model。
+  //（issues #1135, #1201, #1415）
   if (isDelegationToolName(input.toolName)) {
     const originalInput = input.toolInput as
       | Record<string, unknown>
@@ -2407,9 +2396,9 @@ function processPreToolUse(input: HookInput): HookOutput {
     if (inputModel) {
       const config = loadConfig();
       if (config.routing?.forceInherit) {
-        // Use permissionDecision:"deny" — the only PreToolUse mechanism
-        // Claude Code supports for blocking a specific tool call with
-        // feedback. modifiedInput is NOT supported by the hook protocol.
+        // 使用 permissionDecision:"deny" —— 这是 Claude Code 支持的、
+        // 唯一能在 PreToolUse 中带反馈阻断特定工具调用的机制。
+        // 钩子协议不支持 modifiedInput。
         const denyReason = `[MODEL ROUTING] This environment uses a non-standard provider (Bedrock/Vertex/proxy). Omit the \`model\` parameter on ${input.toolName} calls so agents inherit the parent session's model. The model "${inputModel}" was rejected.`;
         return {
           continue: true,
@@ -2477,11 +2466,11 @@ function processPreToolUse(input: HookInput): HookOutput {
     }
   }
 
-  // Notify when AskUserQuestion is about to execute (issue #597)
-  // Fire-and-forget: notify users that input is needed BEFORE the tool blocks
+  // 当 AskUserQuestion 即将执行时通知（issue #597）
+  // 即发即忘：在工具阻塞之前通知用户需要输入
   if (input.toolName === "AskUserQuestion" && input.sessionId) {
     _notify.askUserQuestion(input.sessionId, directory, input.toolInput);
-    // Wake OpenClaw gateway for ask-user-question (non-blocking)
+    // 为 ask-user-question 唤醒 OpenClaw 网关（非阻塞）
     _openclaw.wake("ask-user-question", {
       sessionId: input.sessionId,
       projectPath: directory,
@@ -2499,30 +2488,28 @@ function processPreToolUse(input: HookInput): HookOutput {
     });
   }
 
-  // Activate skill state when Skill tool is invoked (issue #1033)
-  // This writes skill-active-state.json so the Stop hook can prevent premature
-  // session termination while a skill is executing.
-  // Pass rawSkillName so writeSkillActiveState can distinguish WISE built-in
-  // skills from project custom skills with the same name (issue #1581).
+  // 当 Skill 工具被调用时激活 skill 状态（issue #1033）
+  // 这会写入 skill-active-state.json，使 Stop 钩子能在 skill 执行期间
+  // 防止会话被提前终止。
+  // 传入 rawSkillName，让 writeSkillActiveState 能区分 WISE 内置 skill
+  // 与同名的项目自定义 skill（issue #1581）。
   if (input.toolName === "Skill") {
     const skillName = getInvokedSkillName(input.toolInput);
     if (skillName) {
       const rawSkillName = getRawSkillName(input.toolInput);
-      // Use the statically-imported synchronous write so it completes before
-      // the Stop hook can fire. The previous fire-and-forget .then() raced with
-      // the Stop hook in short-lived processes.
+      // 使用静态导入的同步写入，确保它在 Stop 钩子触发前完成。
+      // 之前即发即忘的 .then() 在短命进程中会与 Stop 钩子产生竞态。
       try {
         writeSkillActiveState(directory, skillName, input.sessionId, rawSkillName);
         confirmSkillModeStates(directory, skillName, input.sessionId);
         if (isConsensusPlanningSkillInvocation(skillName, input.toolInput)) {
           activateRalplanState(directory, input.sessionId);
         }
-        // Workflow-slot ledger: when the Skill tool is invoked for one of the
-        // 8 canonical workflow skills, ensure the slot is present and freshly
-        // confirmed. Seed first (idempotent — preserves existing fields when
-        // the slot was already armed during UserPromptSubmit), then refresh
-        // `last_confirmed_at` so stop-hook reconciliation can distinguish a
-        // truly idle workflow from an in-flight one.
+        // Workflow-slot 账本：当 Skill 工具为 8 个规范 workflow skill 之一
+        // 被调用时，确保 slot 存在且已新鲜确认。先播种（幂等 —— 当 slot
+        // 已在 UserPromptSubmit 期间武装时保留既有字段），再刷新
+        // `last_confirmed_at`，使 stop-hook 对账能区分真正空闲的 workflow
+        // 与进行中的 workflow。
         if (isCanonicalWorkflowSkill(skillName)) {
           seedWorkflowSlotForSkill(
             directory,
@@ -2533,13 +2520,13 @@ function processPreToolUse(input: HookInput): HookOutput {
           confirmWorkflowSlot(directory, skillName, input.sessionId);
         }
       } catch {
-        // Skill-state/state-sync writes are best-effort; don't fail the hook on error.
+        // skill-state/状态同步写入是尽力而为的；出错不要让钩子失败。
       }
     }
   }
 
-  // Notify when a new agent is spawned via Task tool (issue #761)
-  // Fire-and-forget: verbosity filtering is handled inside notify()
+  // 当通过 Task 工具派生新 agent 时通知（issue #761）
+  // 即发即忘：冗长过滤在 notify() 内部处理
   if (input.toolName === "Task" && input.sessionId) {
     const taskInput = input.toolInput as
       | {
@@ -2560,8 +2547,8 @@ function processPreToolUse(input: HookInput): HookOutput {
     });
   }
 
-  // Warn about pkill -f self-termination risk (issue #210)
-  // Matches: pkill -f, pkill -9 -f, pkill --full, etc.
+  // 警告 pkill -f 的自终止风险（issue #210）
+  // 匹配：pkill -f、pkill -9 -f、pkill --full 等。
   if (input.toolName === "Bash") {
     const effectiveBashInput = (modifiedToolInput ?? input.toolInput) as
       | { command?: string }
@@ -2585,8 +2572,8 @@ function processPreToolUse(input: HookInput): HookOutput {
     }
   }
 
-  // Background process guard - prevent forkbomb (issue #302)
-  // Block new background tasks if limit is exceeded
+  // 后台进程守卫 - 防止 fork 炸弹（issue #302）
+  // 超出限制时阻断新的后台任务
   if (input.toolName === "Task" || input.toolName === "Bash") {
     const toolInput = (modifiedToolInput ?? input.toolInput) as
       | {
@@ -2614,7 +2601,7 @@ function processPreToolUse(input: HookInput): HookOutput {
     }
   }
 
-  // Track Task tool invocations for HUD display
+  // 追踪 Task 工具调用以供 HUD 展示
   if (input.toolName === "Task") {
     const toolInput = (modifiedToolInput ?? input.toolInput) as
       | {
@@ -2638,9 +2625,9 @@ function processPreToolUse(input: HookInput): HookOutput {
     }
   }
 
-  // Track background Bash invocations too. Ralph's Stop hook uses this
-  // session-owned pending-work signal to avoid reinforcing while Claude Code is
-  // expected to notify when the background command finishes.
+  // 同时追踪后台 Bash 调用。Ralph 的 Stop 钩子使用这个会话级
+  // pending-work 信号，以避免在预期 Claude Code 会于后台命令完成时
+  // 通知的情况下重复强化。
   if (input.toolName === "Bash") {
     const toolInput = (modifiedToolInput ?? input.toolInput) as
       | {
@@ -2667,12 +2654,12 @@ function processPreToolUse(input: HookInput): HookOutput {
     recordScheduledWakeup(directory, input.sessionId, input.toolInput);
   }
 
-  // Track file ownership for Edit/Write tools
+  // 追踪 Edit/Write 工具的文件归属
   if (input.toolName === "Edit" || input.toolName === "Write") {
     const toolInput = input.toolInput as { file_path?: string } | undefined;
     if (toolInput?.file_path && input.sessionId) {
-      // Note: We don't have agent_id here in pre-tool, file ownership is recorded elsewhere
-      // Record file touch for replay
+      // 注意：此处 pre-tool 没有 agent_id，文件归属在别处记录
+      // 记录文件触碰以供回放
       recordFileTouch(
         directory,
         input.sessionId,
@@ -2682,7 +2669,7 @@ function processPreToolUse(input: HookInput): HookOutput {
     }
   }
 
-  // Inject agent dashboard for Task tool calls (debugging parallel agents)
+  // 为 Task 工具调用注入 agent 仪表盘（调试并行 agent）
   if (input.toolName === "Task") {
     const dashboard = getAgentDashboard(directory);
     if (dashboard) {
@@ -2697,8 +2684,8 @@ function processPreToolUse(input: HookInput): HookOutput {
     }
   }
 
-  // Wake OpenClaw gateway for pre-tool-use (non-blocking, fires only for allowed tools).
-  // AskUserQuestion already has a dedicated high-signal OpenClaw event.
+  // 为 pre-tool-use 唤醒 OpenClaw 网关（非阻塞，仅对允许的工具触发）。
+  // AskUserQuestion 已有专属的高信号 OpenClaw 事件。
   if (input.sessionId && input.toolName !== "AskUserQuestion") {
     _openclaw.wake("pre-tool-use", {
       sessionId: input.sessionId,
@@ -2718,7 +2705,7 @@ function processPreToolUse(input: HookInput): HookOutput {
 }
 
 /**
- * Process post-tool-use hook
+ * 处理 post-tool-use 钩子
  */
 function getInvokedSkillName(toolInput: unknown): string | null {
   if (!toolInput || typeof toolInput !== "object") {
@@ -2741,10 +2728,10 @@ function getInvokedSkillName(toolInput: unknown): string | null {
 }
 
 /**
- * Extract the raw (un-normalized) skill name from Skill tool input.
- * Used to distinguish WISE built-in skills (prefixed with 'wise:')
- * from project custom skills or other plugin skills with the same bare name.
- * See: https://github.com/wise-claw/wise/issues/1581
+ * 从 Skill 工具输入中提取原始（未归一化）skill 名。
+ * 用于区分 WISE 内置 skill（带 'wise:' 前缀）与同裸名的项目自定义
+ * skill 或其他插件 skill。
+ * 参见：https://github.com/wise-claw/wise/issues/1581
  */
 function getRawSkillName(toolInput: unknown): string | undefined {
   if (!toolInput || typeof toolInput !== "object") return undefined;
@@ -2757,8 +2744,8 @@ async function processPostToolUse(input: HookInput): Promise<HookOutput> {
   const directory = resolveToWorktreeRoot(input.directory);
   const messages: string[] = [];
 
-  // Ensure mode state activation also works when execution starts via Skill tool
-  // (e.g., ralplan consensus handoff into Skill("wise:ralph")).
+  // 确保当执行通过 Skill 工具启动时，mode 状态激活也能生效
+  //（例如 ralplan 共识交接进入 Skill("wise:ralph")）。
   const toolName = (input.toolName || "").toLowerCase();
   if (toolName === "skill") {
     const skillName = getInvokedSkillName(input.toolInput);
@@ -2786,11 +2773,11 @@ async function processPostToolUse(input: HookInput): Promise<HookOutput> {
       );
     }
 
-    // Clear skill-active state on skill completion to prevent false-blocking.
-    // Without this, every non-'none' skill falsely blocks stops until TTL expires.
-    // Guard: only clear if the completing skill owns the active state.
-    // When a parent skill (e.g. wise-setup) invokes a child skill (e.g. mcp-setup),
-    // the child's PostToolUse fires first — we must not delete the parent's state.
+    // 在 skill 完成时清除 skill-active 状态以防误阻断。
+    // 否则每个非 'none' 的 skill 都会误阻断 stop，直到 TTL 过期。
+    // 守卫：仅当完成中的 skill 拥有该 active 状态时才清除。
+    // 当父 skill（如 wise-setup）调用子 skill（如 mcp-setup）时，
+    // 子 skill 的 PostToolUse 先触发 —— 此时绝不能删除父 skill 的状态。
     const { clearSkillActiveState, readSkillActiveState } = await import("./skill-state/index.js");
     const currentState = readSkillActiveState(directory, input.sessionId);
     const completingSkill = (getInvokedSkillName(input.toolInput) ?? "")
@@ -2799,10 +2786,9 @@ async function processPostToolUse(input: HookInput): Promise<HookOutput> {
     if (!currentState || !currentState.active || currentState.skill_name === completingSkill) {
       clearSkillActiveState(directory, input.sessionId);
     }
-    // Workflow-slot ledger: tombstone the canonical workflow slot when its
-    // Skill invocation completes. Soft-tombstoning (rather than hard delete)
-    // preserves the slot until the TTL pruner removes it — late-arriving
-    // stop hooks see consistent state instead of a missing slot.
+    // Workflow-slot 账本：当规范 workflow slot 的 Skill 调用完成时，
+    // 对其做 tombstone。软 tombstone（而非硬删除）会保留 slot 直到
+    // TTL 清理器移除它 —— 后到的 stop 钩子看到的是一致状态，而非缺失 slot。
     if (skillName && isCanonicalWorkflowSkill(skillName)) {
       tombstoneWorkflowSlot(directory, skillName, input.sessionId);
     }
@@ -2811,7 +2797,7 @@ async function processPostToolUse(input: HookInput): Promise<HookOutput> {
     }
   }
 
-  // Run orchestrator post-tool processing (remember tags, verification reminders, etc.)
+  // 运行 orchestrator 的 post-tool 处理（remember 标签、校验提醒等）
   const orchestratorResult = processOrchestratorPostTool(
     {
       toolName: input.toolName || "",
@@ -2911,7 +2897,7 @@ async function processPostToolUse(input: HookInput): Promise<HookOutput> {
     }
   }
 
-  // After delegation completion, show updated agent dashboard
+  // 委派完成后，展示更新后的 agent 仪表盘
   if (isDelegationToolName(input.toolName)) {
     const dashboard = getAgentDashboard(directory);
     if (dashboard) {
@@ -2931,8 +2917,8 @@ async function processPostToolUse(input: HookInput): Promise<HookOutput> {
   }
   }
 
-  // Wake OpenClaw gateway for post-tool-use (non-blocking, fires for all tools).
-  // AskUserQuestion already emitted a dedicated question.requested signal.
+  // 为 post-tool-use 唤醒 OpenClaw 网关（非阻塞，对所有工具触发）。
+  // AskUserQuestion 已发出专属的 question.requested 信号。
   if (input.sessionId && input.toolName !== "AskUserQuestion") {
     _openclaw.wake("post-tool-use", {
       sessionId: input.sessionId,
@@ -2954,13 +2940,13 @@ async function processPostToolUse(input: HookInput): Promise<HookOutput> {
 }
 
 /**
- * Process autopilot hook
- * Manages autopilot state and injects phase prompts
+ * 处理 autopilot 钩子
+ * 管理 autopilot 状态并注入阶段 prompt
  */
 async function processAutopilot(input: HookInput): Promise<HookOutput> {
   const directory = resolveToWorktreeRoot(input.directory);
 
-  // Lazy-load autopilot module
+  // 延迟加载 autopilot 模块
   const { readAutopilotState, getPhasePrompt } =
     await import("./autopilot/index.js");
 
@@ -2970,7 +2956,7 @@ async function processAutopilot(input: HookInput): Promise<HookOutput> {
     return { continue: true };
   }
 
-  // Check phase and inject appropriate prompt
+  // 检查阶段并注入相应 prompt
   const config = loadConfig();
   const context = {
     idea: state.originalIdea,
@@ -2994,7 +2980,7 @@ async function processAutopilot(input: HookInput): Promise<HookOutput> {
 }
 
 /**
- * Cached parsed WISE_SKIP_HOOKS for performance (env vars don't change during process lifetime)
+ * 为性能缓存已解析的 WISE_SKIP_HOOKS（进程生命周期内环境变量不变）
  */
 let _cachedSkipHooks: string[] | null = null;
 function getSkipHooks(): string[] {
@@ -3008,21 +2994,21 @@ function getSkipHooks(): string[] {
 }
 
 /**
- * Reset the skip hooks cache (for testing only)
+ * 重置 skip hooks 缓存（仅用于测试）
  */
 export function resetSkipHooksCache(): void {
   _cachedSkipHooks = null;
 }
 
 /**
- * Main hook processor
- * Routes to specific hook handler based on type
+ * 主钩子处理器
+ * 根据类型路由到具体钩子处理器
  */
 export async function processHook(
   hookType: HookType,
   rawInput: HookInput,
 ): Promise<HookOutput> {
-  // Environment kill-switches for plugin coexistence
+  // 插件共存的环境 kill 开关
   if (process.env.DISABLE_WISE === "1" || process.env.DISABLE_WISE === "true") {
     return { continue: true };
   }
@@ -3031,7 +3017,7 @@ export async function processHook(
     return { continue: true };
   }
 
-  // Normalize snake_case fields from Claude Code to camelCase
+  // 将 Claude Code 的 snake_case 字段归一化为 camelCase
   const input = normalizeHookInput(rawInput, hookType) as HookInput;
 
   try {
@@ -3043,7 +3029,7 @@ export async function processHook(
         return await processStopContinuation(input);
 
       case "ralph":
-        // Ralph is now handled by the unified persistent-mode handler (issue #1058).
+        // ralph 现在由统一的 persistent-mode 处理器处理（issue #1058）。
         return await processPersistentMode(input);
 
       case "persistent-mode":
@@ -3061,7 +3047,7 @@ export async function processHook(
       case "autopilot":
         return await processAutopilot(input);
 
-      // Lazy-loaded async hook types
+      // 延迟加载的异步钩子类型
       case "session-end": {
         if (
           !validateHookInput<SessionEndInput>(
@@ -3073,9 +3059,9 @@ export async function processHook(
           return { continue: true };
         }
         const { handleSessionEnd } = await import("./session-end/index.js");
-        // De-normalize: SessionEndInput expects snake_case fields (session_id, cwd).
-        // normalizeHookInput mapped session_id→sessionId and cwd→directory, so we
-        // must reconstruct the snake_case shape before calling the handler.
+        // 反归一化：SessionEndInput 期望 snake_case 字段（session_id、cwd）。
+        // normalizeHookInput 已把 session_id→sessionId、cwd→directory 映射过，
+        // 因此调用处理器之前必须重建 snake_case 形态。
         const rawSE = input as unknown as Record<string, unknown>;
         const sessionEndInput: SessionEndInput = {
           session_id: (rawSE.sessionId ?? rawSE.session_id) as string,
@@ -3106,9 +3092,9 @@ export async function processHook(
         }
         const { processSubagentStart } =
           await import("./subagent-tracker/index.js");
-        // Reconstruct snake_case fields from normalized camelCase input.
-        // normalizeHookInput maps cwd→directory and session_id→sessionId,
-        // but SubagentStartInput expects the original snake_case field names.
+        // 从归一化后的 camelCase 输入重建 snake_case 字段。
+        // normalizeHookInput 把 cwd→directory、session_id→sessionId 映射过，
+        // 但 SubagentStartInput 期望原始 snake_case 字段名。
         const normalized = input as unknown as Record<string, unknown>;
         const startInput: SubagentStartInput = {
           cwd: (normalized.directory ?? normalized.cwd) as string,
@@ -3121,8 +3107,8 @@ export async function processHook(
           prompt: normalized.prompt as string | undefined,
           model: normalized.model as string | undefined,
         };
-        // recordAgentStart is already called inside processSubagentStart,
-        // so we don't call it here to avoid duplicate session replay entries.
+        // recordAgentStart 已在 processSubagentStart 内部调用，
+        // 因此此处不再调用，以避免重复的会话回放条目。
         return processSubagentStart(startInput);
       }
 
@@ -3138,8 +3124,8 @@ export async function processHook(
         }
         const { processSubagentStop } =
           await import("./subagent-tracker/index.js");
-        // Reconstruct snake_case fields from normalized camelCase input.
-        // Same normalization mismatch as subagent-start: cwd→directory, session_id→sessionId.
+        // 从归一化后的 camelCase 输入重建 snake_case 字段。
+        // 与 subagent-start 同样的归一化错配：cwd→directory、session_id→sessionId。
         const normalizedStop = input as unknown as Record<string, unknown>;
         const stopInput: SubagentStopInput = {
           cwd: (normalizedStop.directory ?? normalizedStop.cwd) as string,
@@ -3153,8 +3139,8 @@ export async function processHook(
           output: normalizedStop.output as string | undefined,
           success: normalizedStop.success as boolean | undefined,
         };
-        // recordAgentStop is already called inside processSubagentStop,
-        // so we don't call it here to avoid duplicate session replay entries.
+        // recordAgentStop 已在 processSubagentStop 内部调用，
+        // 因此此处不再调用，以避免重复的会话回放条目。
         return processSubagentStop(stopInput);
       }
 
@@ -3169,7 +3155,7 @@ export async function processHook(
           return { continue: true };
         }
         const { processPreCompact } = await import("./pre-compact/index.js");
-        // De-normalize: PreCompactInput expects snake_case fields (session_id, cwd).
+        // 反归一化：PreCompactInput 期望 snake_case 字段（session_id、cwd）。
         const rawPC = input as unknown as Record<string, unknown>;
         const preCompactInput: PreCompactInput = {
           session_id: (rawPC.sessionId ?? rawPC.session_id) as string,
@@ -3195,7 +3181,7 @@ export async function processHook(
           return { continue: true };
         }
         const { processSetup } = await import("./setup/index.js");
-        // De-normalize: SetupInput expects snake_case fields (session_id, cwd).
+        // 反归一化：SetupInput 期望 snake_case 字段（session_id、cwd）。
         const rawSetup = input as unknown as Record<string, unknown>;
         const setupInput: SetupInput = {
           session_id: (rawSetup.sessionId ?? rawSetup.session_id) as string,
@@ -3220,8 +3206,8 @@ export async function processHook(
         }
         const { handlePermissionRequest } =
           await import("./permission-handler/index.js");
-        // De-normalize: PermissionRequestInput expects snake_case fields
-        // (session_id, cwd, tool_name, tool_input).
+        // 反归一化：PermissionRequestInput 期望 snake_case 字段
+        //（session_id、cwd、tool_name、tool_input）。
         const rawPR = input as unknown as Record<string, unknown>;
         const permissionInput: PermissionRequestInput = {
           session_id: (rawPR.sessionId ?? rawPR.session_id) as string,
@@ -3253,15 +3239,15 @@ export async function processHook(
         return { continue: true };
     }
   } catch (error) {
-    // Log error but don't block execution
+    // 记录错误但不阻断执行
     console.error(`[hook-bridge] Error in ${hookType}:`, error);
     return { continue: true };
   }
 }
 
 /**
- * CLI entry point for shell script invocation
- * Reads JSON from stdin, processes hook, writes JSON to stdout
+ * shell 脚本调用的 CLI 入口
+ * 从 stdin 读取 JSON，处理钩子，把 JSON 写到 stdout
  */
 export async function main(): Promise<void> {
   const args = process.argv.slice(2);
@@ -3279,7 +3265,7 @@ export async function main(): Promise<void> {
   }
   const hookType = hookTypeRaw as HookType;
 
-  // Read stdin
+  // 读取 stdin
   const chunks: Buffer[] = [];
   for await (const chunk of process.stdin) {
     chunks.push(chunk);
@@ -3294,21 +3280,21 @@ export async function main(): Promise<void> {
     input = {};
   }
 
-  // Process hook
+  // 处理钩子
   const output = await processHook(hookType, input);
 
-  // Write output to stdout
+  // 把输出写到 stdout
   console.log(JSON.stringify(sanitizeHookOutputForSerialization(output)));
 }
 
-// Run if called directly (works in both ESM and bundled CJS)
-// In CJS bundle, check if this is the main module by comparing with process.argv[1]
-// In ESM, we can use import.meta.url comparison
+// 直接调用时运行（同时兼容 ESM 和打包后的 CJS）
+// 在 CJS 包中，通过比较 process.argv[1] 判断是否为主模块
+// 在 ESM 中，可用 import.meta.url 比较
 function isMainModule(): boolean {
   try {
     return import.meta.url === pathToFileURL(process.argv[1]).href;
   } catch {
-    // In CJS bundle, always run main() when loaded directly
+    // 在 CJS 包中，直接加载时总是运行 main()
     return true;
   }
 }

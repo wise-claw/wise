@@ -1,15 +1,15 @@
 import type { SkillPipelineMetadata } from '../../utils/skill-pipeline.js';
 
 /**
- * Auto Slash Command Types
+ * 自动斜杠命令类型
  *
- * Type definitions for slash command detection and execution.
+ * 斜杠命令检测与执行的类型定义。
  *
- * Adapted from oh-my-opencode's auto-slash-command hook.
+ * 改编自 oh-my-opencode 的 auto-slash-command 钩子。
  */
 
 /**
- * Input for auto slash command hook
+ * 自动斜杠命令钩子的输入
  */
 export interface AutoSlashCommandHookInput {
   sessionId?: string;
@@ -18,26 +18,26 @@ export interface AutoSlashCommandHookInput {
 }
 
 /**
- * Output for auto slash command hook
+ * 自动斜杠命令钩子的输出
  */
 export interface AutoSlashCommandHookOutput {
   parts: Array<{ type: string; text?: string; [key: string]: unknown }>;
 }
 
 /**
- * Parsed slash command from user input
+ * 从用户输入中解析出的斜杠命令
  */
 export interface ParsedSlashCommand {
-  /** The command name without the leading slash */
+  /** 不含前导斜杠的命令名 */
   command: string;
-  /** Arguments passed to the command */
+  /** 传递给命令的参数 */
   args: string;
-  /** Raw matched text */
+  /** 原始匹配文本 */
   raw: string;
 }
 
 /**
- * Result of auto slash command detection
+ * 自动斜杠命令检测结果
  */
 export interface AutoSlashCommandResult {
   detected: boolean;
@@ -46,12 +46,12 @@ export interface AutoSlashCommandResult {
 }
 
 /**
- * Command scope indicating where it was discovered
+ * 命令作用域，指示命令的发现来源
  */
 export type CommandScope = 'user' | 'project' | 'skill';
 
 /**
- * Command metadata from frontmatter
+ * 来自 frontmatter 的命令元数据
  */
 export interface CommandMetadata {
   name: string;
@@ -67,7 +67,7 @@ export interface CommandMetadata {
 }
 
 /**
- * Discovered command information
+ * 已发现的命令信息
  */
 export interface CommandInfo {
   name: string;
@@ -78,7 +78,7 @@ export interface CommandInfo {
 }
 
 /**
- * Result of executing a slash command
+ * 斜杠命令执行结果
  */
 export interface ExecuteResult {
   success: boolean;

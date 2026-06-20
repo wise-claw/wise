@@ -1,12 +1,12 @@
 /**
- * Mode Registry - Centralized Mode State Detection
+ * 模式注册表 - 集中式模式状态检测
  *
- * CRITICAL: This module uses ONLY file-based detection.
- * It NEVER imports from mode modules to avoid circular dependencies.
+ * 关键：本模块仅使用基于文件的检测。
+ * 绝不从模式模块导入，以避免循环依赖。
  *
- * Mode modules import FROM this registry (unidirectional).
+ * 模式模块从本注册表导入（单向）。
  *
- * All modes store state in `.wise/state/` subdirectory for consistency.
+ * 所有模式统一将状态存储在 `.wise/state/` 子目录下。
  */
 
 import {
@@ -43,10 +43,10 @@ export type {
 } from "./types.js";
 
 /**
- * Mode configuration registry
+ * 模式配置注册表
  *
- * Maps each mode to its state file location and detection method.
- * All paths are relative to .wise/state/ directory.
+ * 将每个模式映射到其状态文件位置与检测方式。
+ * 所有路径均相对于 .wise/state/ 目录。
  */
 const MODE_CONFIGS: Record<ExecutionMode, ModeConfig> = {
   [MODE_NAMES.AUTOPILOT]: {
@@ -96,23 +96,23 @@ const MODE_CONFIGS: Record<ExecutionMode, ModeConfig> = {
   },
 };
 
-// Export for use in other modules
+// 导出供其他模块使用
 export { MODE_CONFIGS };
 
 /**
- * Modes that are mutually exclusive (cannot run concurrently)
+ * 互斥模式（不能并发运行）
  */
 const EXCLUSIVE_MODES: ExecutionMode[] = [MODE_NAMES.AUTOPILOT, MODE_NAMES.AUTORESEARCH];
 
 /**
- * Get the state directory path
+ * 获取状态目录路径
  */
 export function getStateDir(cwd: string): string {
   return join(getWiseRoot(cwd), "state");
 }
 
 /**
- * Ensure the state directory exists
+ * 确保状态目录存在
  */
 export function ensureStateDir(cwd: string): void {
   const stateDir = getStateDir(cwd);
@@ -120,7 +120,7 @@ export function ensureStateDir(cwd: string): void {
 }
 
 /**
- * Get the full path to a mode's state file
+ * 获取模式状态文件的完整路径
  */
 export function getStateFilePath(
   cwd: string,
@@ -135,7 +135,7 @@ export function getStateFilePath(
 }
 
 /**
- * Get the full path to a mode's marker file
+ * 获取模式标记文件的完整路径
  */
 export function getMarkerFilePath(
   cwd: string,
@@ -147,33 +147,32 @@ export function getMarkerFilePath(
 }
 
 /**
- * Get the global state file path (in ~/.claude/) for modes that support it
- * @deprecated Global state is no longer supported. All modes use local-only state in .wise/state/
- * @returns Always returns null
+ * 获取支持全局状态的模式的全局状态文件路径（位于 ~/.claude/ 下）
+ * @deprecated 全局状态已不再支持。所有模式均使用 .wise/state/ 下的本地状态
+ * @returns 始终返回 null
  */
 export function getGlobalStateFilePath(_mode: ExecutionMode): string | null {
-  // Global state is deprecated - all modes now use local-only state
+  // 全局状态已弃用 - 所有模式现在都使用本地状态
   return null;
 }
 
 /**
- * Workflow-slot tombstone TTL. Matches `WORKFLOW_TOMBSTONE_TTL_MS` in
- * `src/hooks/skill-state/index.ts` — kept local here to preserve the
- * "mode-registry uses ONLY file-based detection" invariant (no imports from
- * hook modules that themselves depend on the registry).
+ * 工作流槽位墓碑 TTL。与
+ * `src/hooks/skill-state/index.ts` 中的 `WORKFLOW_TOMBSTONE_TTL_MS` 保持一致 ——
+ * 此处保留为本地常量，以维持
+ * "mode-registry 仅使用基于文件检测"的不变量（不从
+ * 依赖本注册表的钩子模块导入）。
  */
 const WORKFLOW_SLOT_TOMBSTONE_TTL_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Consult the session-local workflow ledger for a tombstoned slot.
+ * 查询会话本地的工作流账本，检查对应槽位是否已设墓碑。
  *
- * Returns `true` when the workflow ledger records the mode as tombstoned
- * (soft-completed) AND the tombstone has not yet TTL-expired. Used to veto
- * stale mode files from crashed sessions that never tore their own state down.
+ * 当工作流账本记录该模式为已设墓碑（软完成）且墓碑尚未超过 TTL 过期时，返回 `true`。
+ * 用于否决崩溃会话遗留的陈旧模式文件（这些会话未能自行清理状态）。
  *
- * Returns `false` for any shape we can't parse, any missing file, any live
- * slot, and any slot whose tombstone already expired — so the legacy
- * mode-file fallback remains authoritative whenever the ledger is silent.
+ * 对于任何无法解析的结构、缺失文件、活跃槽位，以及墓碑已过期的槽位，均返回 `false`
+ * —— 因此当账本无记录时，旧的模式文件兜底逻辑仍是权威。
  */
 function isWorkflowSlotTombstonedForMode(
   cwd: string,
@@ -210,13 +209,11 @@ function isWorkflowSlotTombstonedForMode(
 }
 
 /**
- * Check if a JSON-based mode is active by reading its state file.
+ * 通过读取状态文件判断基于 JSON 的模式是否处于活跃状态。
  *
- * Workflow-slot override: when the session workflow ledger records this mode
- * as tombstoned (soft-completed), the stale per-mode state file is ignored so
- * a fresh invocation can proceed without clearing artifacts manually. Live
- * slots and absent slots both defer to the per-mode state file (legacy
- * fallback preserved during the transition window).
+ * 工作流槽位覆盖：当会话工作流账本记录该模式为已设墓碑（软完成）时，会忽略陈旧的
+ * 单模式状态文件，使新的调用无需手动清理产物即可继续。活跃槽位与缺失槽位
+ * 均以单模式状态文件为准（过渡期内保留旧兜底逻辑）。
  */
 function isJsonModeActive(
   cwd: string,
@@ -228,16 +225,16 @@ function isJsonModeActive(
   }
   const config = MODE_CONFIGS[mode];
 
-  // When sessionId is provided, ONLY check session-scoped path — no legacy fallback.
-  // This prevents cross-session state leakage where one session's legacy file
-  // could cause another session to see mode as active.
+  // 当提供 sessionId 时，仅检查会话作用域路径 —— 不走旧兜底逻辑。
+  // 这可防止跨会话状态泄漏：某会话的旧文件
+  // 不会导致另一会话误判模式为活跃。
   if (sessionId) {
     const sessionStateFile = resolveSessionStatePath(mode, sessionId, cwd);
     try {
       const content = readFileSync(sessionStateFile, "utf-8");
       const state = JSON.parse(content);
 
-      // Validate session identity: state must belong to this session
+      // 校验会话身份：状态必须属于当前会话
       if (state.session_id && state.session_id !== sessionId) {
         return false;
       }
@@ -255,7 +252,7 @@ function isJsonModeActive(
     }
   }
 
-  // No sessionId: check legacy shared path (backward compat)
+  // 无 sessionId：检查旧的共享路径（向后兼容）
   const stateFile = getStateFilePath(cwd, mode);
   try {
     const content = readFileSync(stateFile, "utf-8");
@@ -265,7 +262,7 @@ function isJsonModeActive(
       return state[config.activeProperty] === true;
     }
 
-    // Default: file existence means active
+    // 默认：文件存在即视为活跃
     return true;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
@@ -276,12 +273,12 @@ function isJsonModeActive(
 }
 
 /**
- * Check if a specific mode is currently active
+ * 检查特定模式当前是否处于活跃状态
  *
- * @param mode - The mode to check
- * @param cwd - Working directory
- * @param sessionId - Optional session ID to check session-scoped state
- * @returns true if the mode is active
+ * @param mode - 要检查的模式
+ * @param cwd - 工作目录
+ * @param sessionId - 可选会话 ID，用于检查会话作用域状态
+ * @returns 模式活跃则返回 true
  */
 export function isModeActive(
   mode: ExecutionMode,
@@ -292,8 +289,8 @@ export function isModeActive(
 }
 
 /**
- * Check if a mode has active state (file exists)
- * @param sessionId - When provided, checks session-scoped path only (no legacy fallback)
+ * 检查模式是否具有活跃状态（文件存在）
+ * @param sessionId - 提供时仅检查会话作用域路径（不走旧兜底逻辑）
  */
 export function hasModeState(
   cwd: string,
@@ -305,7 +302,7 @@ export function hasModeState(
 }
 
 /**
- * Get all modes that currently have state files
+ * 获取当前具有状态文件的所有模式
  */
 export function getActiveModes(
   cwd: string,
@@ -323,20 +320,20 @@ export function getActiveModes(
 }
 
 /**
- * Check if any WISE mode is currently active
+ * 检查是否有任意 WISE 模式当前处于活跃状态
  *
- * @param cwd - Working directory
- * @returns true if any mode is active
+ * @param cwd - 工作目录
+ * @returns 有任意模式活跃则返回 true
  */
 export function isAnyModeActive(cwd: string): boolean {
   return getActiveModes(cwd).length > 0;
 }
 
 /**
- * Get the currently active exclusive mode (if any)
+ * 获取当前活跃的互斥模式（若有）
  *
- * @param cwd - Working directory
- * @returns The active mode or null
+ * @param cwd - 工作目录
+ * @returns 活跃的模式或 null
  */
 export function getActiveExclusiveMode(cwd: string): ExecutionMode | null {
   for (const mode of EXCLUSIVE_MODES) {
@@ -348,14 +345,14 @@ export function getActiveExclusiveMode(cwd: string): ExecutionMode | null {
 }
 
 /**
- * Check if a new mode can be started
+ * 检查能否启动新模式
  *
- * @param mode - The mode to start
- * @param cwd - Working directory
- * @returns CanStartResult with allowed status and blocker info
+ * @param mode - 要启动的模式
+ * @param cwd - 工作目录
+ * @returns CanStartResult，包含允许状态与阻塞信息
  */
 export function canStartMode(mode: ExecutionMode, cwd: string): CanStartResult {
-  // Check for mutually exclusive modes across all sessions
+  // 检查所有会话中是否存在互斥模式
   if (EXCLUSIVE_MODES.includes(mode)) {
     for (const exclusiveMode of EXCLUSIVE_MODES) {
       if (
@@ -376,11 +373,11 @@ export function canStartMode(mode: ExecutionMode, cwd: string): CanStartResult {
 }
 
 /**
- * Get status of all modes
+ * 获取所有模式的状态
  *
- * @param cwd - Working directory
- * @param sessionId - Optional session ID to check session-scoped state
- * @returns Array of mode statuses
+ * @param cwd - 工作目录
+ * @param sessionId - 可选会话 ID，用于检查会话作用域状态
+ * @returns 模式状态数组
  */
 export function getAllModeStatuses(
   cwd: string,
@@ -394,15 +391,15 @@ export function getAllModeStatuses(
 }
 
 /**
- * Clear all state files for a mode
+ * 清除某个模式的所有状态文件
  *
- * Deletes:
- * - Local state file (.wise/state/{mode}-state.json)
- * - Session-scoped state file if sessionId provided
- * - Local marker file if applicable
- * - Global state file if applicable (~/.claude/{mode}-state.json)
+ * 删除：
+ * - 本地状态文件（.wise/state/{mode}-state.json）
+ * - 提供 sessionId 时删除会话作用域状态文件
+ * - 适用时删除本地标记文件
+ * - 适用时删除全局状态文件（~/.claude/{mode}-state.json）
  *
- * @returns true if all files were deleted successfully (or didn't exist)
+ * @returns 所有文件删除成功（或本不存在）时返回 true
  */
 export function clearModeState(
   mode: ExecutionMode,
@@ -414,7 +411,7 @@ export function clearModeState(
   const markerFile = getMarkerFilePath(cwd, mode);
   const isSessionScopedClear = Boolean(sessionId);
 
-  // Delete session-scoped state file if sessionId provided
+  // 提供 sessionId 时删除会话作用域状态文件
   if (isSessionScopedClear && sessionId) {
     const sessionStateFile = resolveSessionStatePath(mode, sessionId, cwd);
     try {
@@ -425,8 +422,8 @@ export function clearModeState(
       }
     }
 
-    // Clear session-scoped marker artifacts (e.g., ralph-verification-state.json).
-    // Keep legacy/shared marker files untouched for isolation.
+    // 清理会话作用域的标记产物（如 ralph-verification-state.json）。
+    // 为保持隔离，旧的共享标记文件保持不动。
     if (config.markerFile) {
       const markerStateName = config.markerFile.replace(/\.json$/i, "");
       const sessionMarkerFile = resolveSessionStatePath(
@@ -443,8 +440,8 @@ export function clearModeState(
       }
     }
 
-    // Also try cleaning legacy marker for this mode (best-effort).
-    // Keep isolation by deleting only unowned markers or markers owned by this session.
+    // 同时尽力清理该模式的旧标记（best-effort）。
+    // 为保持隔离，仅删除无主标记或属于当前会话的标记。
     if (markerFile) {
       try {
         const markerRaw = JSON.parse(readFileSync(markerFile, "utf-8")) as {
@@ -462,7 +459,7 @@ export function clearModeState(
           }
         }
       } catch {
-        // If marker is not JSON (or unreadable), best-effort delete for cleanup.
+        // 若标记不是 JSON（或不可读），尽力删除以清理。
         try {
           unlinkSync(markerFile);
         } catch (err) {
@@ -474,7 +471,7 @@ export function clearModeState(
     }
   }
 
-  // Delete local state file (legacy path) for non-session clears
+  // 非会话清理时删除本地状态文件（旧路径）
   const stateFile = getStateFilePath(cwd, mode);
   if (!isSessionScopedClear) {
     try {
@@ -486,10 +483,10 @@ export function clearModeState(
     }
   }
 
-  // Delete marker file if applicable, but respect ownership when session-scoped.
+  // 适用时删除标记文件，但在会话作用域下须尊重归属。
   if (markerFile) {
     if (isSessionScopedClear) {
-      // Only delete if the marker is unowned or owned by this session.
+      // 仅当标记无主或属于当前会话时才删除。
       try {
         const markerRaw = JSON.parse(readFileSync(markerFile, "utf-8")) as {
           session_id?: string;
@@ -506,7 +503,7 @@ export function clearModeState(
           }
         }
       } catch {
-        // Marker is not valid JSON or unreadable — best-effort delete for cleanup.
+        // 标记不是有效 JSON 或不可读 —— 尽力删除以清理。
         try {
           unlinkSync(markerFile);
         } catch (err) {
@@ -526,13 +523,13 @@ export function clearModeState(
     }
   }
 
-  // Note: Global state files are no longer used (local-only state migration)
+  // 注意：全局状态文件已不再使用（仅本地状态迁移）
 
   return success;
 }
 
 /**
- * Clear all mode states (force clear)
+ * 清除所有模式状态（强制清除）
  */
 export function clearAllModeStates(cwd: string): boolean {
   let success = true;
@@ -543,7 +540,7 @@ export function clearAllModeStates(cwd: string): boolean {
     }
   }
 
-  // Clear skill-active-state.json (issue #1033)
+  // 清理 skill-active-state.json（issue #1033）
   const skillStatePath = join(getStateDir(cwd), "skill-active-state.json");
   try {
     unlinkSync(skillStatePath);
@@ -553,7 +550,7 @@ export function clearAllModeStates(cwd: string): boolean {
     }
   }
 
-  // Also clean up session directories
+  // 同时清理会话目录
   try {
     const sessionIds = listSessionIds(cwd);
     for (const sid of sessionIds) {
@@ -568,22 +565,22 @@ export function clearAllModeStates(cwd: string): boolean {
 }
 
 /**
- * Check if a mode is active in any session
+ * 检查某模式是否在任意会话中活跃
  *
- * @param mode - The mode to check
- * @param cwd - Working directory
- * @returns true if the mode is active in any session or legacy path
+ * @param mode - 要检查的模式
+ * @param cwd - 工作目录
+ * @returns 模式在任意会话或旧路径中活跃则返回 true
  */
 export function isModeActiveInAnySession(
   mode: ExecutionMode,
   cwd: string,
 ): boolean {
-  // Check legacy path first
+  // 先检查旧路径
   if (isJsonModeActive(cwd, mode)) {
     return true;
   }
 
-  // Scan all session dirs
+  // 扫描所有会话目录
   const sessionIds = listSessionIds(cwd);
   for (const sid of sessionIds) {
     if (isJsonModeActive(cwd, mode, sid)) {
@@ -595,11 +592,11 @@ export function isModeActiveInAnySession(
 }
 
 /**
- * Get all session IDs that have a specific mode active
+ * 获取具有特定活跃模式的所有会话 ID
  *
- * @param mode - The mode to check
- * @param cwd - Working directory
- * @returns Array of session IDs with this mode active
+ * @param mode - 要检查的模式
+ * @param cwd - 工作目录
+ * @returns 该模式活跃的会话 ID 数组
  */
 export function getActiveSessionsForMode(
   mode: ExecutionMode,
@@ -610,13 +607,13 @@ export function getActiveSessionsForMode(
 }
 
 /**
- * Clear stale session directories
+ * 清理陈旧的会话目录
  *
- * Removes session directories that are either empty or have no recent activity.
+ * 移除为空或近期无活动的会话目录。
  *
- * @param cwd - Working directory
- * @param maxAgeMs - Maximum age in milliseconds (default: 24 hours)
- * @returns Array of removed session IDs
+ * @param cwd - 工作目录
+ * @param maxAgeMs - 最大存活时间（毫秒，默认 24 小时）
+ * @returns 已移除的会话 ID 数组
  */
 export function clearStaleSessionDirs(
   cwd: string,
@@ -630,14 +627,14 @@ export function clearStaleSessionDirs(
     try {
       const files = readdirSync(sessionDir);
 
-      // Remove empty directories
+      // 移除空目录
       if (files.length === 0) {
         rmdirSync(sessionDir);
         removed.push(sid);
         continue;
       }
 
-      // Check modification time of any state file
+      // 检查任意状态文件的修改时间
       let newest = 0;
       for (const f of files) {
         const stat = statSync(join(sessionDir, f));
@@ -646,13 +643,13 @@ export function clearStaleSessionDirs(
         }
       }
 
-      // Remove if stale
+      // 若陈旧则移除
       if (Date.now() - newest > maxAgeMs) {
         rmSync(sessionDir, { recursive: true, force: true });
         removed.push(sid);
       }
     } catch {
-      // Skip on error
+      // 出错时跳过
     }
   }
 
@@ -660,15 +657,15 @@ export function clearStaleSessionDirs(
 }
 
 // ============================================================================
-// MARKER FILE MANAGEMENT
+// 标记文件管理
 // ============================================================================
 
 /**
- * Create a marker file to indicate a mode is active
+ * 创建标记文件以表示某模式处于活跃状态
  *
- * @param mode - The mode being started
- * @param cwd - Working directory
- * @param metadata - Optional metadata to store in marker
+ * @param mode - 正在启动的模式
+ * @param cwd - 工作目录
+ * @param metadata - 可选的要存入标记的元数据
  */
 export function createModeMarker(
   mode: ExecutionMode,
@@ -682,7 +679,7 @@ export function createModeMarker(
   }
 
   try {
-    // Ensure directory exists
+    // 确保目录存在
     const dir = dirname(markerPath);
     mkdirSync(dir, { recursive: true });
 
@@ -699,15 +696,15 @@ export function createModeMarker(
 }
 
 /**
- * Remove a marker file to indicate a mode has stopped
+ * 移除标记文件以表示某模式已停止
  *
- * @param mode - The mode being stopped
- * @param cwd - Working directory
+ * @param mode - 正在停止的模式
+ * @param cwd - 工作目录
  */
 export function removeModeMarker(mode: ExecutionMode, cwd: string): boolean {
   const markerPath = getMarkerFilePath(cwd, mode);
   if (!markerPath) {
-    return true; // No marker to remove
+    return true; // 没有可移除的标记
   }
 
   try {
@@ -723,10 +720,10 @@ export function removeModeMarker(mode: ExecutionMode, cwd: string): boolean {
 }
 
 /**
- * Read metadata from a marker file
+ * 从标记文件读取元数据
  *
- * @param mode - The mode to read
- * @param cwd - Working directory
+ * @param mode - 要读取的模式
+ * @param cwd - 工作目录
  */
 export function readModeMarker(
   mode: ExecutionMode,
@@ -749,16 +746,16 @@ export function readModeMarker(
 }
 
 /**
- * Force remove a marker file regardless of staleness
- * Used for manual cleanup by users
+ * 强制移除标记文件，不考虑陈旧程度
+ * 供用户手动清理使用
  *
- * @param mode - The mode to clean up
- * @param cwd - Working directory
+ * @param mode - 要清理的模式
+ * @param cwd - 工作目录
  */
 export function forceRemoveMarker(mode: ExecutionMode, cwd: string): boolean {
   const markerPath = getMarkerFilePath(cwd, mode);
   if (!markerPath) {
-    return true; // No marker to remove
+    return true; // 没有可移除的标记
   }
 
   try {

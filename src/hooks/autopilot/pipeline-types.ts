@@ -1,30 +1,30 @@
 /**
- * Pipeline Types
+ * 流水线类型
  *
- * Type definitions for the configurable pipeline orchestrator.
- * The pipeline unifies autopilot/ultrawork/ultrapilot into a single
- * configurable sequence: RALPLAN -> EXECUTION -> RALPH -> QA.
+ * 可配置流水线编排器的类型定义。
+ * 该流水线将 autopilot/ultrawork/ultrapilot 统一为单个
+ * 可配置序列：RALPLAN -> EXECUTION -> RALPH -> QA。
  *
  * @see https://github.com/wise-claw/wise/issues/1130
  */
 
 // ============================================================================
-// STAGE IDENTIFIERS
+// 阶段标识符
 // ============================================================================
 
 /**
- * Pipeline stage identifiers in execution order.
- * Each stage is optional and can be skipped via configuration.
+ * 按执行顺序排列的流水线阶段标识符。
+ * 每个阶段都是可选的，可通过配置跳过。
  */
 export type PipelineStageId = "ralplan" | "execution" | "ralph" | "qa";
 
-/** Terminal pipeline states */
+/** 流水线终态 */
 export type PipelineTerminalState = "complete" | "failed" | "cancelled";
 
-/** All possible pipeline phase values (stages + terminal) */
+/** 所有可能的流水线阶段取值（阶段 + 终态） */
 export type PipelinePhase = PipelineStageId | PipelineTerminalState;
 
-/** Status of an individual stage */
+/** 单个阶段的状态 */
 export type StageStatus =
   | "pending"
   | "active"
@@ -32,7 +32,7 @@ export type StageStatus =
   | "failed"
   | "skipped";
 
-/** The canonical stage execution order */
+/** 规范的阶段执行顺序 */
 export const STAGE_ORDER: readonly PipelineStageId[] = [
   "ralplan",
   "execution",
@@ -41,25 +41,25 @@ export const STAGE_ORDER: readonly PipelineStageId[] = [
 ] as const;
 
 // ============================================================================
-// PIPELINE CONFIGURATION
+// 流水线配置
 // ============================================================================
 
-/** Execution backend for the execution stage */
+/** execution 阶段的执行后端 */
 export type ExecutionBackend = "team" | "solo";
 
-/** Verification engine configuration */
+/** 校验引擎配置 */
 export interface VerificationConfig {
-  /** Engine to use for verification (currently only 'ralph') */
+  /** 用于校验的引擎（目前仅 'ralph'） */
   engine: "ralph";
-  /** Maximum verification iterations before giving up */
+  /** 放弃前的最大校验迭代次数 */
   maxIterations: number;
 }
 
 /**
- * User-facing pipeline configuration.
- * Stored in `.wise-config.json` under the `autopilot` key.
+ * 面向用户的流水线配置。
+ * 存储于 `.wise-config.json` 的 `autopilot` 键下。
  *
- * Example:
+ * 示例：
  * ```json
  * {
  *   "autopilot": {
@@ -72,17 +72,17 @@ export interface VerificationConfig {
  * ```
  */
 export interface PipelineConfig {
-  /** Planning stage: 'ralplan' for consensus planning, 'direct' for simple planning, false to skip */
+  /** 规划阶段：'ralplan' 表示共识规划，'direct' 表示简单规划，false 表示跳过 */
   planning: "ralplan" | "direct" | false;
-  /** Execution backend: 'team' for multi-worker, 'solo' for single-session */
+  /** 执行后端：'team' 表示多 worker，'solo' 表示单会话 */
   execution: ExecutionBackend;
-  /** Verification config, or false to skip */
+  /** 校验配置，或 false 表示跳过 */
   verification: VerificationConfig | false;
-  /** Whether to run the QA stage (build/lint/test cycling) */
+  /** 是否运行 QA 阶段（构建/lint/测试循环） */
   qa: boolean;
 }
 
-/** Default pipeline configuration (matches current autopilot behavior) */
+/** 默认流水线配置（与当前 autopilot 行为一致） */
 export const DEFAULT_PIPELINE_CONFIG: PipelineConfig = {
   planning: "ralplan",
   execution: "solo",
@@ -94,91 +94,91 @@ export const DEFAULT_PIPELINE_CONFIG: PipelineConfig = {
 };
 
 // ============================================================================
-// STAGE ADAPTERS
+// 阶段适配器
 // ============================================================================
 
 /**
- * Context passed to stage adapters for prompt generation and state management.
+ * 传递给阶段适配器的上下文，用于生成 prompt 和管理状态。
  */
 export interface PipelineContext {
-  /** Original user idea/task description */
+  /** 原始用户想法/任务描述 */
   idea: string;
-  /** Working directory */
+  /** 工作目录 */
   directory: string;
-  /** Session ID for state isolation */
+  /** 用于状态隔离的会话 ID */
   sessionId?: string;
-  /** Path to the generated specification document */
+  /** 生成的规格说明文档路径 */
   specPath?: string;
-  /** Path to the generated implementation plan */
+  /** 生成的实施计划路径 */
   planPath?: string;
-  /** Path to the shared open questions file */
+  /** 共享的开放问题文件路径 */
   openQuestionsPath?: string;
-  /** The full pipeline configuration */
+  /** 完整的流水线配置 */
   config: PipelineConfig;
 }
 
 /**
- * Interface that each stage adapter must implement.
- * Adapters wrap existing modules (ralplan, team, ralph, ultraqa)
- * into a uniform interface for the pipeline orchestrator.
+ * 每个阶段适配器必须实现的接口。
+ * 适配器将现有模块（ralplan、team、ralph、ultraqa）
+ * 封装为流水线编排器使用的统一接口。
  */
 export interface PipelineStageAdapter {
-  /** Stage identifier */
+  /** 阶段标识符 */
   readonly id: PipelineStageId;
-  /** Human-readable stage name for display */
+  /** 供展示的人类可读阶段名称 */
   readonly name: string;
-  /** Signal string that Claude emits to indicate stage completion */
+  /** Claude 发出的、用于表示阶段完成的信号字符串 */
   readonly completionSignal: string;
-  /** Check if this stage should be skipped based on pipeline config */
+  /** 根据流水线配置判断该阶段是否应被跳过 */
   shouldSkip(config: PipelineConfig): boolean;
-  /** Generate the prompt to inject for this stage */
+  /** 生成要注入该阶段的 prompt */
   getPrompt(context: PipelineContext): string;
-  /** Optional: perform setup actions when entering this stage (e.g. start ralph state) */
+  /** 可选：进入该阶段时执行初始化动作（例如启动 ralph 状态） */
   onEnter?(context: PipelineContext): void;
-  /** Optional: perform cleanup actions when leaving this stage */
+  /** 可选：离开该阶段时执行清理动作 */
   onExit?(context: PipelineContext): void;
 }
 
 // ============================================================================
-// PIPELINE STATE
+// 流水线状态
 // ============================================================================
 
-/** Tracked state for a single pipeline stage */
+/** 单个流水线阶段的跟踪状态 */
 export interface PipelineStageState {
-  /** Stage identifier */
+  /** 阶段标识符 */
   id: PipelineStageId;
-  /** Current status */
+  /** 当前状态 */
   status: StageStatus;
-  /** ISO timestamp when stage started */
+  /** 阶段开始时的 ISO 时间戳 */
   startedAt?: string;
-  /** ISO timestamp when stage completed */
+  /** 阶段完成时的 ISO 时间戳 */
   completedAt?: string;
-  /** Number of iterations within this stage */
+  /** 该阶段内的迭代次数 */
   iterations: number;
-  /** Error message if stage failed */
+  /** 阶段失败时的错误消息 */
   error?: string;
 }
 
 /**
- * Pipeline-specific state that extends the autopilot state.
- * Stored alongside existing autopilot state fields.
+ * 扩展 autopilot 状态的流水线专属状态。
+ * 与现有 autopilot 状态字段一同存储。
  */
 export interface PipelineTracking {
-  /** Pipeline configuration used for this run */
+  /** 本次运行使用的流水线配置 */
   pipelineConfig: PipelineConfig;
-  /** Ordered list of stages and their current status */
+  /** 有序的阶段列表及其当前状态 */
   stages: PipelineStageState[];
-  /** Index of the currently active stage in the stages array */
+  /** stages 数组中当前活跃阶段的索引 */
   currentStageIndex: number;
 }
 
 // ============================================================================
-// DEPRECATION ALIASES
+// 弃用别名
 // ============================================================================
 
 /**
- * Maps deprecated mode names to their pipeline configuration equivalents.
- * Used to translate ultrawork/ultrapilot invocations into autopilot + config.
+ * 将弃用的模式名映射到等价的流水线配置。
+ * 用于把 ultrawork/ultrapilot 调用转换为 autopilot + 配置。
  */
 export const DEPRECATED_MODE_ALIASES: Record<
   string,

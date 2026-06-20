@@ -1,8 +1,8 @@
 /**
- * Git Provider Detection and Registry
+ * Git Provider 检测与注册表
  *
- * Auto-detects git hosting provider from remote URLs and provides
- * access to provider-specific adapters.
+ * 从远程 URL 自动识别 git 托管 provider，并提供对
+ * 各 provider 专属适配器的访问。
  */
 
 import { execSync } from 'node:child_process';
@@ -13,10 +13,10 @@ import { BitbucketProvider } from './bitbucket.js';
 import { AzureDevOpsProvider } from './azure-devops.js';
 import { GiteaProvider } from './gitea.js';
 
-// Singleton provider registry
+// 单例 provider 注册表
 let providerRegistry: Map<ProviderName, GitProvider> | null = null;
 
-// TTL cache for git remote URL lookups keyed on resolved cwd
+// 以解析后的 cwd 为键的 git 远程 URL 查询 TTL 缓存
 const REMOTE_URL_CACHE_TTL_MS = 60_000;
 
 interface CacheEntry {
@@ -27,7 +27,7 @@ interface CacheEntry {
 const remoteUrlCache = new Map<string, CacheEntry>();
 
 /**
- * Reset the remote URL cache. Intended for use in tests.
+ * 重置远程 URL 缓存。专供测试使用。
  */
 export function resetProviderCache(): void {
   remoteUrlCache.clear();
@@ -35,12 +35,12 @@ export function resetProviderCache(): void {
 
 function getCachedRemoteUrl(cwd: string): string | null | undefined {
   const entry = remoteUrlCache.get(cwd);
-  if (!entry) return undefined; // cache miss
+  if (!entry) return undefined; // 缓存未命中
   if (Date.now() > entry.expiresAt) {
     remoteUrlCache.delete(cwd);
-    return undefined; // expired
+    return undefined; // 已过期
   }
-  return entry.url; // may be null (cached "not a git repo")
+  return entry.url; // 可能为 null（缓存了“非 git 仓库”的结果）
 }
 
 function setCachedRemoteUrl(cwd: string, url: string | null): void {
@@ -70,17 +70,17 @@ function getRemoteUrl(cwd?: string): string | null {
 }
 
 /**
- * Detect provider from a git remote URL by matching known hostnames.
+ * 通过匹配已知主机名从 git 远程 URL 识别 provider。
  */
 export function detectProvider(remoteUrl: string): ProviderName {
   const url = remoteUrl.toLowerCase();
 
-  // Extract host portion for accurate matching (strip port if present)
+  // 提取主机名部分以便精确匹配（若有端口则剥离）
   const hostMatch = url.match(/^(?:https?:\/\/|ssh:\/\/[^@]*@|[^@]+@)([^/:]+)/);
   const rawHost = hostMatch ? hostMatch[1].toLowerCase() : '';
-  const host = rawHost.replace(/:\d+$/, ''); // strip port for matching
+  const host = rawHost.replace(/:\d+$/, ''); // 剥离端口用于匹配
 
-  // Azure DevOps (check before generic patterns)
+  // Azure DevOps（需在通用模式之前检查）
   if (host.includes('dev.azure.com') || host.includes('ssh.dev.azure.com') || host.endsWith('.visualstudio.com')) {
     return 'azure-devops';
   }
@@ -90,7 +90,7 @@ export function detectProvider(remoteUrl: string): ProviderName {
     return 'github';
   }
 
-  // GitLab (SaaS)
+  // GitLab（SaaS）
   if (host === 'gitlab.com') {
     return 'gitlab';
   }
@@ -100,7 +100,7 @@ export function detectProvider(remoteUrl: string): ProviderName {
     return 'bitbucket';
   }
 
-  // Self-hosted heuristics — match hostname labels only
+  // 自托管启发式——仅匹配主机名标签
   if (/(^|[.-])gitlab([.-]|$)/.test(host)) {
     return 'gitlab';
   }
@@ -115,13 +115,13 @@ export function detectProvider(remoteUrl: string): ProviderName {
 }
 
 /**
- * Parse a git remote URL into structured components.
- * Supports HTTPS, SSH (SCP-style), and provider-specific formats.
+ * 将 git 远程 URL 解析为结构化组件。
+ * 支持 HTTPS、SSH（SCP 风格）以及 provider 专属格式。
  */
 export function parseRemoteUrl(url: string): RemoteUrlInfo | null {
   const trimmed = url.trim();
 
-  // Azure DevOps HTTPS: https://dev.azure.com/{org}/{project}/_git/{repo}
+  // Azure DevOps HTTPS：https://dev.azure.com/{org}/{project}/_git/{repo}
   const azureHttpsMatch = trimmed.match(
     /https?:\/\/dev\.azure\.com\/([^/]+)\/([^/]+)\/_git\/([^/\s]+?)(?:\.git)?$/
   );
@@ -134,7 +134,7 @@ export function parseRemoteUrl(url: string): RemoteUrlInfo | null {
     };
   }
 
-  // Azure DevOps SSH: git@ssh.dev.azure.com:v3/{org}/{project}/{repo}
+  // Azure DevOps SSH：git@ssh.dev.azure.com:v3/{org}/{project}/{repo}
   const azureSshMatch = trimmed.match(
     /git@ssh\.dev\.azure\.com:v3\/([^/]+)\/([^/]+)\/([^/\s]+?)(?:\.git)?$/
   );
@@ -147,7 +147,7 @@ export function parseRemoteUrl(url: string): RemoteUrlInfo | null {
     };
   }
 
-  // Azure DevOps legacy HTTPS: https://{org}.visualstudio.com/{project}/_git/{repo}
+  // Azure DevOps 旧版 HTTPS：https://{org}.visualstudio.com/{project}/_git/{repo}
   const azureLegacyMatch = trimmed.match(
     /https?:\/\/([^.]+)\.visualstudio\.com\/([^/]+)\/_git\/([^/\s]+?)(?:\.git)?$/
   );
@@ -160,7 +160,7 @@ export function parseRemoteUrl(url: string): RemoteUrlInfo | null {
     };
   }
 
-  // Standard HTTPS: https://host/owner/repo.git (supports nested groups like group/subgroup/repo)
+  // 标准 HTTPS：https://host/owner/repo.git（支持嵌套组，如 group/subgroup/repo）
   const httpsMatch = trimmed.match(
     /https?:\/\/([^/]+)\/(.+?)\/([^/\s]+?)(?:\.git)?$/
   );
@@ -174,7 +174,7 @@ export function parseRemoteUrl(url: string): RemoteUrlInfo | null {
     };
   }
 
-  // SSH URL-style: ssh://git@host[:port]/owner/repo.git (must check before SCP-style)
+  // SSH URL 风格：ssh://git@host[:port]/owner/repo.git（必须在 SCP 风格之前检查）
   const sshUrlMatch = trimmed.match(
     /ssh:\/\/git@([^/:]+)(?::\d+)?\/(.+?)\/([^/\s]+?)(?:\.git)?$/
   );
@@ -188,7 +188,7 @@ export function parseRemoteUrl(url: string): RemoteUrlInfo | null {
     };
   }
 
-  // SSH SCP-style: git@host:owner/repo.git (supports nested groups like group/subgroup/repo)
+  // SSH SCP 风格：git@host:owner/repo.git（支持嵌套组，如 group/subgroup/repo）
   const sshMatch = trimmed.match(
     /git@([^:]+):(.+?)\/([^/\s]+?)(?:\.git)?$/
   );
@@ -206,8 +206,7 @@ export function parseRemoteUrl(url: string): RemoteUrlInfo | null {
 }
 
 /**
- * Detect the git provider for the current working directory
- * by reading the origin remote URL.
+ * 通过读取 origin 远程 URL 识别当前工作目录的 git provider。
  */
 export function detectProviderFromCwd(cwd?: string): ProviderName {
   const url = getRemoteUrl(cwd);
@@ -216,7 +215,7 @@ export function detectProviderFromCwd(cwd?: string): ProviderName {
 }
 
 /**
- * Parse the remote URL for the current working directory.
+ * 解析当前工作目录的远程 URL。
  */
 export function parseRemoteFromCwd(cwd?: string): RemoteUrlInfo | null {
   const url = getRemoteUrl(cwd);
@@ -225,7 +224,7 @@ export function parseRemoteFromCwd(cwd?: string): RemoteUrlInfo | null {
 }
 
 /**
- * Initialize the provider registry with all available providers.
+ * 用所有可用 provider 初始化 provider 注册表。
  */
 function initRegistry(): Map<ProviderName, GitProvider> {
   if (providerRegistry) return providerRegistry;
@@ -243,8 +242,8 @@ function initRegistry(): Map<ProviderName, GitProvider> {
 }
 
 /**
- * Get a provider instance by name.
- * Returns null if the provider is not registered.
+ * 按名称获取 provider 实例。
+ * 若该 provider 未注册则返回 null。
  */
 export function getProvider(name: ProviderName): GitProvider | null {
   const registry = initRegistry();
@@ -252,8 +251,8 @@ export function getProvider(name: ProviderName): GitProvider | null {
 }
 
 /**
- * Get a provider for the current working directory.
- * Detects the provider from the git remote URL and returns its adapter.
+ * 获取当前工作目录对应的 provider。
+ * 从 git 远程 URL 识别 provider 并返回其适配器。
  */
 export function getProviderFromCwd(cwd?: string): GitProvider | null {
   const name = detectProviderFromCwd(cwd);
@@ -261,5 +260,5 @@ export function getProviderFromCwd(cwd?: string): GitProvider | null {
   return getProvider(name);
 }
 
-// Re-export types for convenience
+// 为方便使用而重新导出类型
 export type { ProviderName, RemoteUrlInfo, GitProvider, PRInfo, IssueInfo } from './types.js';

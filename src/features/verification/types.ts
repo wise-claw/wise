@@ -1,11 +1,11 @@
 /**
- * Verification Types
+ * 验证类型
  *
- * Common types for verification protocol used across ralph, ultrawork, and autopilot
+ * ralph、ultrawork 和 autopilot 共用的验证协议通用类型
  */
 
 /**
- * Types of verification evidence
+ * 验证证据类型
  */
 export type VerificationEvidenceType =
   | 'build_success'
@@ -17,141 +17,141 @@ export type VerificationEvidenceType =
   | 'error_free';
 
 /**
- * Proof of verification for a specific check
+ * 特定检查的验证证据
  */
 export interface VerificationEvidence {
-  /** Type of evidence */
+  /** 证据类型 */
   type: VerificationEvidenceType;
-  /** Whether the check passed */
+  /** 检查是否通过 */
   passed: boolean;
-  /** Command that was run to verify (if applicable) */
+  /** 用于验证的执行命令（如适用） */
   command?: string;
-  /** Output from the verification command */
+  /** 验证命令的输出 */
   output?: string;
-  /** Error message if check failed */
+  /** 检查失败时的错误信息 */
   error?: string;
-  /** Timestamp when evidence was collected */
+  /** 证据采集时间戳 */
   timestamp: Date;
-  /** Additional metadata */
+  /** 额外的元数据 */
   metadata?: Record<string, unknown>;
 }
 
 /**
- * A single verification check requirement
+ * 单个验证检查需求
  */
 export interface VerificationCheck {
-  /** Unique identifier for this check */
+  /** 该检查的唯一标识 */
   id: string;
-  /** Human-readable name */
+  /** 人类可读的名称 */
   name: string;
-  /** Description of what this check verifies */
+  /** 该检查所验证内容的描述 */
   description: string;
-  /** Type of evidence this check produces */
+  /** 该检查产生的证据类型 */
   evidenceType: VerificationEvidenceType;
-  /** Whether this check is required for completion */
+  /** 该检查是否为完成所必需 */
   required: boolean;
-  /** Command to run for verification (if applicable) */
+  /** 用于验证的执行命令（如适用） */
   command?: string;
-  /** Whether this check has been completed */
+  /** 该检查是否已完成 */
   completed: boolean;
-  /** Evidence collected for this check */
+  /** 为该检查采集的证据 */
   evidence?: VerificationEvidence;
 }
 
 /**
- * Complete verification protocol definition
+ * 完整的验证协议定义
  */
 export interface VerificationProtocol {
-  /** Protocol name (e.g., "ralph", "autopilot", "ultrawork") */
+  /** 协议名称（如 "ralph"、"autopilot"、"ultrawork"） */
   name: string;
-  /** Description of what this protocol verifies */
+  /** 该协议所验证内容的描述 */
   description: string;
-  /** List of verification checks to perform */
+  /** 要执行的验证检查列表 */
   checks: VerificationCheck[];
-  /** Whether all required checks must pass */
+  /** 是否所有必需检查都必须通过 */
   strictMode: boolean;
-  /** Optional custom validation function */
+  /** 可选的自定义校验函数 */
   customValidator?: (checklist: VerificationChecklist) => Promise<ValidationResult>;
 }
 
 /**
- * Current state of verification checks
+ * 验证检查的当前状态
  */
 export interface VerificationChecklist {
-  /** Protocol being followed */
+  /** 正在遵循的协议 */
   protocol: VerificationProtocol;
-  /** Timestamp when verification started */
+  /** 验证开始的时间戳 */
   startedAt: Date;
-  /** Timestamp when verification completed (if finished) */
+  /** 验证完成的时间戳（若已完成） */
   completedAt?: Date;
-  /** All checks with their current status */
+  /** 所有检查及其当前状态 */
   checks: VerificationCheck[];
-  /** Overall completion status */
+  /** 整体完成状态 */
   status: 'pending' | 'in_progress' | 'complete' | 'failed';
-  /** Summary of results */
+  /** 结果摘要 */
   summary?: VerificationSummary;
 }
 
 /**
- * Summary of verification results
+ * 验证结果摘要
  */
 export interface VerificationSummary {
-  /** Total number of checks */
+  /** 检查总数 */
   total: number;
-  /** Number of checks passed */
+  /** 通过的检查数 */
   passed: number;
-  /** Number of checks failed */
+  /** 失败的检查数 */
   failed: number;
-  /** Number of checks skipped (non-required) */
+  /** 跳过的检查数（非必需） */
   skipped: number;
-  /** Whether all required checks passed */
+  /** 是否所有必需检查都通过 */
   allRequiredPassed: boolean;
-  /** List of failed check IDs */
+  /** 失败检查的 ID 列表 */
   failedChecks: string[];
-  /** Overall verdict */
+  /** 整体结论 */
   verdict: 'approved' | 'rejected' | 'incomplete';
 }
 
 /**
- * Result of validation
+ * 校验结果
  */
 export interface ValidationResult {
-  /** Whether validation passed */
+  /** 校验是否通过 */
   valid: boolean;
-  /** Validation message */
+  /** 校验信息 */
   message: string;
-  /** List of issues found */
+  /** 发现的问题列表 */
   issues: string[];
-  /** Recommendations for fixing issues */
+  /** 修复问题的建议 */
   recommendations?: string[];
 }
 
 /**
- * Options for running verification
+ * 运行验证的选项
  */
 export interface VerificationOptions {
-  /** Whether to run checks in parallel */
+  /** 是否并行执行检查 */
   parallel?: boolean;
-  /** Timeout per check in milliseconds */
+  /** 每个检查的超时时间（毫秒） */
   timeout?: number;
-  /** Whether to stop on first failure */
+  /** 是否在首次失败时停止 */
   failFast?: boolean;
-  /** Whether to skip non-required checks */
+  /** 是否跳过非必需检查 */
   skipOptional?: boolean;
-  /** Custom working directory */
+  /** 自定义工作目录 */
   cwd?: string;
 }
 
 /**
- * Report format options
+ * 报告格式选项
  */
 export interface ReportOptions {
-  /** Include detailed evidence in report */
+  /** 报告中是否包含详细证据 */
   includeEvidence?: boolean;
-  /** Include command output in report */
+  /** 报告中是否包含命令输出 */
   includeOutput?: boolean;
-  /** Format for report */
+  /** 报告格式 */
   format?: 'text' | 'markdown' | 'json';
-  /** Whether to colorize output (for terminal) */
+  /** 是否对输出着色（用于终端） */
   colorize?: boolean;
 }

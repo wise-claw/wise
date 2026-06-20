@@ -1,13 +1,13 @@
 /**
- * Notepad Support
+ * Notepad 支持
  *
- * Implements compaction-resilient memory persistence using notepad.md format.
- * Provides a three-tier memory system:
- * 1. Priority Context - Always loaded, critical discoveries (max 500 chars)
- * 2. Working Memory - Session notes, auto-pruned after 7 days
- * 3. MANUAL - User content, never auto-pruned
+ * 基于 notepad.md 格式实现抗压缩的内存持久化。
+ * 提供三层内存系统：
+ * 1. Priority Context - 始终加载，关键发现（最多 500 字符）
+ * 2. Working Memory - 会话笔记，7 天后自动清理
+ * 3. MANUAL - 用户内容，从不自动清理
  *
- * Structure:
+ * 结构：
  * ```markdown
  * # Notepad
  * <!-- Auto-managed by WISE. Manual edits preserved in MANUAL section. -->
@@ -30,47 +30,47 @@ import { atomicWriteFileSync } from "../../lib/atomic-write.js";
 import { lockPathFor, withFileLockSync } from "../../lib/file-lock.js";
 
 // ============================================================================
-// Types
+// 类型
 // ============================================================================
 
 export interface NotepadConfig {
-  /** Maximum characters for Priority Context section */
+  /** Priority Context 分区的最大字符数 */
   priorityMaxChars: number;
-  /** Days to keep Working Memory entries before pruning */
+  /** 清理前保留 Working Memory 条目的天数 */
   workingMemoryDays: number;
-  /** Maximum total file size in bytes */
+  /** 最大文件总大小（字节） */
   maxTotalSize: number;
 }
 
 export interface NotepadStats {
-  /** Whether notepad.md exists */
+  /** notepad.md 是否存在 */
   exists: boolean;
-  /** Total file size in bytes */
+  /** 文件总大小（字节） */
   totalSize: number;
-  /** Priority Context section size in bytes */
+  /** Priority Context 分区大小（字节） */
   prioritySize: number;
-  /** Number of Working Memory entries */
+  /** Working Memory 条目数 */
   workingMemoryEntries: number;
-  /** ISO timestamp of oldest Working Memory entry */
+  /** 最旧 Working Memory 条目的 ISO 时间戳 */
   oldestEntry: string | null;
 }
 
 export interface PriorityContextResult {
-  /** Whether the operation succeeded */
+  /** 操作是否成功 */
   success: boolean;
-  /** Warning message if content exceeds limit */
+  /** 内容超限时的警告消息 */
   warning?: string;
 }
 
 export interface PruneResult {
-  /** Number of entries pruned */
+  /** 已清理的条目数 */
   pruned: number;
-  /** Number of entries remaining */
+  /** 剩余条目数 */
   remaining: number;
 }
 
 // ============================================================================
-// Constants
+// 常量
 // ============================================================================
 
 export const NOTEPAD_FILENAME = "notepad.md";
@@ -110,18 +110,18 @@ function getSectionRegexSet(header: string): SectionRegexSet {
 }
 
 // ============================================================================
-// File Operations
+// 文件操作
 // ============================================================================
 
 /**
- * Get the path to notepad.md in .wise subdirectory
+ * 获取 .wise 子目录下的 notepad.md 路径
  */
 export function getNotepadPath(directory: string): string {
   return join(getWiseRoot(directory), NOTEPAD_FILENAME);
 }
 
 /**
- * Initialize notepad.md if it doesn't exist
+ * 若 notepad.md 不存在则初始化
  */
 export function initNotepad(directory: string): boolean {
   const wiseDir = getWiseRoot(directory);
@@ -135,7 +135,7 @@ export function initNotepad(directory: string): boolean {
 
   const notepadPath = getNotepadPath(directory);
   if (existsSync(notepadPath)) {
-    return true; // Already exists
+    return true; // 已存在
   }
 
   const content = `# Notepad
@@ -161,7 +161,7 @@ ${MANUAL_HEADER}
 }
 
 /**
- * Read entire notepad content
+ * 读取整个 notepad 内容
  */
 export function readNotepad(directory: string): string | null {
   const notepadPath = getNotepadPath(directory);
@@ -177,17 +177,17 @@ export function readNotepad(directory: string): string | null {
 }
 
 /**
- * Extract a section from notepad content using regex
+ * 使用正则从 notepad 内容中提取分区
  */
 function extractSection(content: string, header: string): string | null {
-  // Match from header to next section (## followed by space, at start of line)
-  // We need to match ## at the start of a line, not ### which is a subsection
+  // 从标题匹配到下一分区（## 后跟空格，位于行首）
+  // 需要匹配行首的 ##，而非作为子分区的 ###
   const match = content.match(getSectionRegexSet(header).extract);
   if (!match) {
     return null;
   }
 
-  // Clean up the content - remove HTML comments and trim
+  // 清理内容 - 移除 HTML 注释并 trim
   let section = match[1];
   section = section.replace(/<!--[\s\S]*?-->/g, "").trim();
 
@@ -195,7 +195,7 @@ function extractSection(content: string, header: string): string | null {
 }
 
 /**
- * Replace a section in notepad content
+ * 替换 notepad 内容中的某个分区
  */
 function replaceSection(
   content: string,
@@ -204,7 +204,7 @@ function replaceSection(
 ): string {
   const { replace, comment: commentPattern } = getSectionRegexSet(header);
 
-  // Preserve comment if it exists
+  // 若存在注释则保留
   const commentMatch = content.match(commentPattern);
   const preservedComment = commentMatch ? commentMatch[1] + "\n" : "";
 
@@ -212,11 +212,11 @@ function replaceSection(
 }
 
 // ============================================================================
-// Section Access
+// 分区访问
 // ============================================================================
 
 /**
- * Get Priority Context section only (for injection)
+ * 仅获取 Priority Context 分区（用于注入）
  */
 export function getPriorityContext(directory: string): string | null {
   const content = readNotepad(directory);
@@ -228,7 +228,7 @@ export function getPriorityContext(directory: string): string | null {
 }
 
 /**
- * Get Working Memory section
+ * 获取 Working Memory 分区
  */
 export function getWorkingMemory(directory: string): string | null {
   const content = readNotepad(directory);
@@ -240,7 +240,7 @@ export function getWorkingMemory(directory: string): string | null {
 }
 
 /**
- * Get MANUAL section
+ * 获取 MANUAL 分区
  */
 export function getManualSection(directory: string): string | null {
   const content = readNotepad(directory);
@@ -252,18 +252,18 @@ export function getManualSection(directory: string): string | null {
 }
 
 // ============================================================================
-// Section Updates
+// 分区更新
 // ============================================================================
 
 /**
- * Add/update Priority Context (replaces content, warns if over limit)
+ * 新增/更新 Priority Context（替换内容，超限时发出警告）
  */
 export function setPriorityContext(
   directory: string,
   content: string,
   config: NotepadConfig = DEFAULT_CONFIG,
 ): PriorityContextResult {
-  // Initialize if needed
+  // 需要时初始化
   if (!existsSync(getNotepadPath(directory))) {
     if (!initNotepad(directory)) {
       return { success: false };
@@ -276,13 +276,13 @@ export function setPriorityContext(
     return withFileLockSync(lockPathFor(notepadPath), () => {
       let notepadContent = readFileSync(notepadPath, "utf-8");
 
-      // Check size
+      // 检查大小
       const warning =
         content.length > config.priorityMaxChars
           ? `Priority Context exceeds ${config.priorityMaxChars} chars (${content.length} chars). Consider condensing.`
           : undefined;
 
-      // Replace the section
+      // 替换该分区
       notepadContent = replaceSection(notepadContent, PRIORITY_HEADER, content);
 
       atomicWriteFileSync(notepadPath, notepadContent);
@@ -294,13 +294,13 @@ export function setPriorityContext(
 }
 
 /**
- * Add entry to Working Memory with timestamp
+ * 向 Working Memory 添加带时间戳的条目
  */
 export function addWorkingMemoryEntry(
   directory: string,
   content: string,
 ): boolean {
-  // Initialize if needed
+  // 需要时初始化
   if (!existsSync(getNotepadPath(directory))) {
     if (!initNotepad(directory)) {
       return false;
@@ -313,21 +313,21 @@ export function addWorkingMemoryEntry(
     return withFileLockSync(lockPathFor(notepadPath), () => {
       let notepadContent = readFileSync(notepadPath, "utf-8");
 
-      // Get current Working Memory content
+      // 获取当前 Working Memory 内容
       const currentMemory =
         extractSection(notepadContent, WORKING_MEMORY_HEADER) || "";
 
-      // Format timestamp
+      // 格式化时间戳
       const now = new Date();
       const timestamp = now.toISOString().slice(0, 16).replace("T", " "); // YYYY-MM-DD HH:MM
 
-      // Add new entry
+      // 添加新条目
       const newEntry = `### ${timestamp}\n${content}\n`;
       const updatedMemory = currentMemory
         ? currentMemory + "\n" + newEntry
         : newEntry;
 
-      // Replace the section
+      // 替换该分区
       notepadContent = replaceSection(
         notepadContent,
         WORKING_MEMORY_HEADER,
@@ -343,10 +343,10 @@ export function addWorkingMemoryEntry(
 }
 
 /**
- * Add to MANUAL section
+ * 添加到 MANUAL 分区
  */
 export function addManualEntry(directory: string, content: string): boolean {
-  // Initialize if needed
+  // 需要时初始化
   if (!existsSync(getNotepadPath(directory))) {
     if (!initNotepad(directory)) {
       return false;
@@ -359,10 +359,10 @@ export function addManualEntry(directory: string, content: string): boolean {
     return withFileLockSync(lockPathFor(notepadPath), () => {
       let notepadContent = readFileSync(notepadPath, "utf-8");
 
-      // Get current MANUAL content
+      // 获取当前 MANUAL 内容
       const currentManual = extractSection(notepadContent, MANUAL_HEADER) || "";
 
-      // Add new entry with timestamp
+      // 添加带时间戳的新条目
       const now = new Date();
       const timestamp = now.toISOString().slice(0, 16).replace("T", " "); // YYYY-MM-DD HH:MM
       const newEntry = `### ${timestamp}\n${content}\n`;
@@ -370,7 +370,7 @@ export function addManualEntry(directory: string, content: string): boolean {
         ? currentManual + "\n" + newEntry
         : newEntry;
 
-      // Replace the section
+      // 替换该分区
       notepadContent = replaceSection(notepadContent, MANUAL_HEADER, updatedManual);
 
       atomicWriteFileSync(notepadPath, notepadContent);
@@ -382,11 +382,11 @@ export function addManualEntry(directory: string, content: string): boolean {
 }
 
 // ============================================================================
-// Pruning
+// 清理
 // ============================================================================
 
 /**
- * Prune Working Memory entries older than N days
+ * 清理超过 N 天的 Working Memory 条目
  */
 export function pruneOldEntries(
   directory: string,
@@ -406,7 +406,7 @@ export function pruneOldEntries(
         return { pruned: 0, remaining: 0 } as PruneResult;
       }
 
-      // Parse entries
+      // 解析条目
       const entryRegex =
         /### (\d{4}-\d{2}-\d{2} \d{2}:\d{2})\n([\s\S]*?)(?=### |$)/g;
       const entries: Array<{ timestamp: string; content: string }> = [];
@@ -420,11 +420,11 @@ export function pruneOldEntries(
         match = entryRegex.exec(workingMemory);
       }
 
-      // Calculate cutoff date
+      // 计算截止日期
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - daysOld);
 
-      // Filter entries
+      // 过滤条目
       const kept = entries.filter((entry) => {
         const entryDate = new Date(entry.timestamp);
         return entryDate >= cutoff;
@@ -432,7 +432,7 @@ export function pruneOldEntries(
 
       const pruned = entries.length - kept.length;
 
-      // Rebuild Working Memory section
+      // 重建 Working Memory 分区
       const newContent = kept
         .map((entry) => `### ${entry.timestamp}\n${entry.content}`)
         .join("\n\n");
@@ -452,11 +452,11 @@ export function pruneOldEntries(
 }
 
 // ============================================================================
-// Stats and Info
+// 统计信息
 // ============================================================================
 
 /**
- * Get notepad stats
+ * 获取 notepad 统计信息
  */
 export function getNotepadStats(directory: string): NotepadStats {
   const notepadPath = getNotepadPath(directory);
@@ -475,7 +475,7 @@ export function getNotepadStats(directory: string): NotepadStats {
   const priorityContext = extractSection(content, PRIORITY_HEADER) || "";
   const workingMemory = extractSection(content, WORKING_MEMORY_HEADER) || "";
 
-  // Count entries — support both legacy ### and new HTML comment delimiter formats
+  // 统计条目数 — 同时支持旧版 ### 和新版 HTML 注释分隔符格式
   const wmMatches = workingMemory.match(
     /<\!-- WM:\d{4}-\d{2}-\d{2} \d{2}:\d{2} -->/g,
   );
@@ -483,10 +483,10 @@ export function getNotepadStats(directory: string): NotepadStats {
   const entryMatches = wmMatches ?? legacyMatches;
   const entryCount = entryMatches ? entryMatches.length : 0;
 
-  // Find oldest entry
+  // 查找最旧条目
   let oldestEntry: string | null = null;
   if (entryMatches && entryMatches.length > 0) {
-    // Extract just the timestamp part
+    // 仅提取时间戳部分
     const timestamps = entryMatches.map((m) =>
       m.startsWith("<!--") ? m.replace(/^<\!-- WM:| -->$/g, "") : m.replace("### ", "")
     );
@@ -504,11 +504,11 @@ export function getNotepadStats(directory: string): NotepadStats {
 }
 
 // ============================================================================
-// Context Formatting
+// 上下文格式化
 // ============================================================================
 
 /**
- * Format context for injection into session
+ * 格式化上下文以注入会话
  */
 export function formatNotepadContext(directory: string): string | null {
   const notepadPath = getNotepadPath(directory);
@@ -537,7 +537,7 @@ export function formatNotepadContext(directory: string): string | null {
 }
 
 /**
- * Format full notepad for display
+ * 格式化完整 notepad 以供展示
  */
 export function formatFullNotepad(directory: string): string | null {
   const content = readNotepad(directory);

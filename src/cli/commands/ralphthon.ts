@@ -1,12 +1,12 @@
 /**
- * wise ralphthon CLI subcommand
+ * wise ralphthon CLI 子命令
  *
- * Autonomous hackathon lifecycle:
- *   wise ralphthon "task"                  Start new ralphthon session
- *   wise ralphthon --resume                Resume existing session
- *   wise ralphthon --skip-interview "task" Skip deep-interview, use task directly
- *   wise ralphthon --max-waves 5           Set max hardening waves
- *   wise ralphthon --poll-interval 60      Set poll interval in seconds
+ * 自主 hackathon 生命周期：
+ *   wise ralphthon "task"                  启动新的 ralphthon 会话
+ *   wise ralphthon --resume                恢复已有会话
+ *   wise ralphthon --skip-interview "task" 跳过 deep-interview，直接使用任务
+ *   wise ralphthon --max-waves 5           设置最大硬化轮数
+ *   wise ralphthon --poll-interval 60      设置轮询间隔（秒）
  */
 
 import chalk from "chalk";
@@ -34,7 +34,7 @@ import type {
 import { RALPHTHON_DEFAULTS } from "../../ralphthon/types.js";
 
 // ============================================================================
-// Help Text
+// 帮助文本
 // ============================================================================
 
 const RALPHTHON_HELP = `
@@ -59,11 +59,11 @@ Examples:
 `;
 
 // ============================================================================
-// Argument Parsing
+// 参数解析
 // ============================================================================
 
 /**
- * Parse ralphthon CLI arguments
+ * 解析 ralphthon CLI 参数
  */
 export function parseRalphthonArgs(args: string[]): RalphthonCliOptions {
   const options: RalphthonCliOptions = {
@@ -199,7 +199,7 @@ export function buildDefaultSkipInterviewPrdParams(task: string): {
 }
 
 // ============================================================================
-// Event Handler
+// 事件处理器
 // ============================================================================
 
 function createEventLogger(): (event: OrchestratorEvent) => void {
@@ -262,7 +262,7 @@ function createEventLogger(): (event: OrchestratorEvent) => void {
 }
 
 // ============================================================================
-// Tmux Helpers
+// Tmux 辅助函数
 // ============================================================================
 
 function getCurrentTmuxSession(): string | null {
@@ -290,17 +290,17 @@ function isInsideTmux(): boolean {
 }
 
 // ============================================================================
-// Main Command
+// 主命令
 // ============================================================================
 
 /**
- * Execute the ralphthon CLI command
+ * 执行 ralphthon CLI 命令
  */
 export async function ralphthonCommand(args: string[]): Promise<void> {
   const options = parseRalphthonArgs(args);
   const cwd = process.cwd();
 
-  // Resume mode
+  // 恢复模式
   if (options.resume) {
     const state = readRalphthonState(cwd);
     if (!state || !state.active) {
@@ -317,7 +317,7 @@ export async function ralphthonCommand(args: string[]): Promise<void> {
     const eventLogger = createEventLogger();
     const { stop } = startOrchestratorLoop(cwd, state.sessionId, eventLogger);
 
-    // Handle graceful shutdown
+    // 处理优雅关闭
     const shutdown = () => {
       console.log(chalk.yellow("\nStopping ralphthon orchestrator..."));
       stop();
@@ -329,7 +329,7 @@ export async function ralphthonCommand(args: string[]): Promise<void> {
     return;
   }
 
-  // New session — need task description
+  // 新会话 — 需要任务描述
   if (!options.task) {
     console.error(
       chalk.red('Task description required. Usage: wise ralphthon "your task"'),
@@ -338,7 +338,7 @@ export async function ralphthonCommand(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  // Must be inside tmux
+  // 必须位于 tmux 内
   if (!isInsideTmux()) {
     console.error(
       chalk.red(
@@ -356,7 +356,7 @@ export async function ralphthonCommand(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  // Check for existing session
+  // 检查是否已有会话
   const existingState = readRalphthonState(cwd);
   if (existingState?.active) {
     console.error(
@@ -383,7 +383,7 @@ export async function ralphthonCommand(args: string[]): Promise<void> {
   );
   console.log(chalk.gray(`Skip interview: ${options.skipInterview}`));
 
-  // Phase 1: Interview (unless skipped)
+  // 阶段 1：访谈（除非已跳过）
   if (!options.skipInterview) {
     console.log(chalk.cyan("\nPhase 1: Deep Interview — generating PRD..."));
     console.log(
@@ -392,14 +392,14 @@ export async function ralphthonCommand(args: string[]): Promise<void> {
       ),
     );
 
-    // Inject deep-interview command to the leader pane
-    // The orchestrator will wait for the PRD to appear
+    // 向 leader 面板注入 deep-interview 命令
+    // 编排器将等待 PRD 出现
     const interviewPrompt = buildRalphthonInterviewPrompt(
       options.task,
       options,
     );
 
-    // Initialize state in interview phase
+    // 在访谈阶段初始化状态
     const state = initOrchestrator(
       cwd,
       tmuxSession,
@@ -411,7 +411,7 @@ export async function ralphthonCommand(args: string[]): Promise<void> {
     state.phase = "interview";
     writeRalphthonState(cwd, state, sessionId);
 
-    // Send the deep-interview prompt to the leader pane
+    // 向 leader 面板发送 deep-interview prompt
     if (!sendKeysToPane(leaderPane, interviewPrompt)) {
       console.log(
         chalk.red("Failed to inject deep-interview prompt to leader pane."),
@@ -422,9 +422,9 @@ export async function ralphthonCommand(args: string[]): Promise<void> {
 
     console.log(chalk.gray("Waiting for PRD generation..."));
 
-    // Poll for PRD file to appear
+    // 轮询等待 PRD 文件出现
     const prdPath = getRalphthonPrdPath(cwd);
-    const maxWaitMs = 600_000; // 10 minutes max wait for interview
+    const maxWaitMs = 600_000; // 访谈最长等待 10 分钟
     const pollMs = 5_000;
     let waited = 0;
 
@@ -447,7 +447,7 @@ export async function ralphthonCommand(args: string[]): Promise<void> {
       process.exit(1);
     }
   } else {
-    // Skip interview — create a simple PRD from the task
+    // 跳过访谈 — 根据任务创建一个简单的 PRD
     console.log(chalk.cyan("\nSkipping interview — creating PRD from task..."));
 
     const defaultPrd = buildDefaultSkipInterviewPrdParams(options.task);
@@ -471,13 +471,13 @@ export async function ralphthonCommand(args: string[]): Promise<void> {
     );
   }
 
-  // Phase 2: Execution — start the orchestrator loop
+  // 阶段 2：执行 — 启动编排器循环
   console.log(chalk.cyan("\nPhase 2: Execution — ralph loop active"));
 
   const eventLogger = createEventLogger();
   const { stop } = startOrchestratorLoop(cwd, sessionId, eventLogger);
 
-  // Handle graceful shutdown
+  // 处理优雅关闭
   const shutdown = () => {
     console.log(chalk.yellow("\nStopping ralphthon orchestrator..."));
     stop();
@@ -487,12 +487,12 @@ export async function ralphthonCommand(args: string[]): Promise<void> {
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
 
-  // Keep process alive
+  // 保持进程存活
   console.log(chalk.gray("Orchestrator running. Press Ctrl+C to stop."));
 }
 
 // ============================================================================
-// Helpers
+// 辅助函数
 // ============================================================================
 
 function sleep(ms: number): Promise<void> {

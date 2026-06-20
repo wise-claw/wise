@@ -1,10 +1,9 @@
 /**
- * Context Collector
+ * 上下文收集器
  *
- * Manages registration and retrieval of context entries
- * from multiple sources for a session.
+ * 负责某个 session 中来自多个来源的上下文条目的注册与读取。
  *
- * Ported from oh-my-opencode's context-injector.
+ * 移植自 oh-my-opencode 的 context-injector。
  */
 
 import type {
@@ -14,7 +13,7 @@ import type {
   RegisterContextOptions,
 } from './types.js';
 
-/** Priority ordering - lower number = higher priority */
+/** 优先级排序——数字越小优先级越高 */
 const PRIORITY_ORDER: Record<ContextPriority, number> = {
   critical: 0,
   high: 1,
@@ -22,18 +21,18 @@ const PRIORITY_ORDER: Record<ContextPriority, number> = {
   low: 3,
 };
 
-/** Separator between merged context entries */
+/** 合并后的上下文条目之间的分隔符 */
 const CONTEXT_SEPARATOR = '\n\n---\n\n';
 
 /**
- * Collects and manages context entries for sessions.
+ * 收集并管理各 session 的上下文条目。
  */
 export class ContextCollector {
   private sessions: Map<string, Map<string, ContextEntry>> = new Map();
 
   /**
-   * Register a context entry for a session.
-   * If an entry with the same source:id already exists, it will be replaced.
+   * 为某个 session 注册上下文条目。
+   * 若已存在相同 source:id 的条目，将被替换。
    */
   register(sessionId: string, options: RegisterContextOptions): void {
     if (!this.sessions.has(sessionId)) {
@@ -56,7 +55,7 @@ export class ContextCollector {
   }
 
   /**
-   * Get pending context for a session without consuming it.
+   * 获取某个 session 的待处理上下文，但不消费它。
    */
   getPending(sessionId: string): PendingContext {
     const sessionMap = this.sessions.get(sessionId);
@@ -80,8 +79,8 @@ export class ContextCollector {
   }
 
   /**
-   * Get and consume pending context for a session.
-   * After consumption, the session's context is cleared.
+   * 获取并消费某个 session 的待处理上下文。
+   * 消费后，该 session 的上下文将被清空。
    */
   consume(sessionId: string): PendingContext {
     const pending = this.getPending(sessionId);
@@ -90,14 +89,14 @@ export class ContextCollector {
   }
 
   /**
-   * Clear all context for a session.
+   * 清空某个 session 的全部上下文。
    */
   clear(sessionId: string): void {
     this.sessions.delete(sessionId);
   }
 
   /**
-   * Check if a session has pending context.
+   * 检查某个 session 是否有待处理上下文。
    */
   hasPending(sessionId: string): boolean {
     const sessionMap = this.sessions.get(sessionId);
@@ -105,7 +104,7 @@ export class ContextCollector {
   }
 
   /**
-   * Get count of entries for a session.
+   * 获取某个 session 的条目数量。
    */
   getEntryCount(sessionId: string): number {
     const sessionMap = this.sessions.get(sessionId);
@@ -113,7 +112,7 @@ export class ContextCollector {
   }
 
   /**
-   * Remove a specific entry from a session.
+   * 从某个 session 中移除指定条目。
    */
   removeEntry(sessionId: string, source: string, id: string): boolean {
     const sessionMap = this.sessions.get(sessionId);
@@ -124,14 +123,14 @@ export class ContextCollector {
   }
 
   /**
-   * Get all active session IDs.
+   * 获取所有活跃 session 的 ID。
    */
   getActiveSessions(): string[] {
     return [...this.sessions.keys()];
   }
 
   /**
-   * Sort entries by priority (higher first) then by timestamp (earlier first).
+   * 按优先级（高优先）再按时间戳（早优先）对条目排序。
    */
   private sortEntries(entries: ContextEntry[]): ContextEntry[] {
     return entries.sort((a, b) => {
@@ -142,5 +141,5 @@ export class ContextCollector {
   }
 }
 
-/** Global singleton context collector instance */
+/** 全局单例上下文收集器实例 */
 export const contextCollector = new ContextCollector();

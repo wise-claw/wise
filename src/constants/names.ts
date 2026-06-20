@@ -1,11 +1,11 @@
 /**
- * Shared Constants Registry
+ * 共享常量注册表
  *
- * Canonical string constants for modes, tool categories, and hook events.
- * Eliminates scattered string literals across the codebase.
+ * 模式、工具类别与钩子事件的规范字符串常量。
+ * 消除代码库中散落的字符串字面量。
  */
 
-// Mode names
+// 模式名称
 export const MODES = {
   AUTOPILOT: 'autopilot',
   RALPH: 'ralph',
@@ -16,7 +16,7 @@ export const MODES = {
 } as const;
 export type ModeName = typeof MODES[keyof typeof MODES];
 
-// Tool categories
+// 工具类别
 export const TOOL_CATEGORIES = {
   LSP: 'lsp',
   AST: 'ast',
@@ -35,7 +35,7 @@ export const TOOL_CATEGORIES = {
 } as const;
 export type ToolCategory = typeof TOOL_CATEGORIES[keyof typeof TOOL_CATEGORIES];
 
-// Hook event names
+// 钩子事件名称
 export const HOOK_EVENTS = {
   PRE_TOOL_USE: 'PreToolUse',
   POST_TOOL_USE: 'PostToolUse',

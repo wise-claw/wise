@@ -3,10 +3,10 @@ import {
   resolveOpenQuestionsPlanPath,
 } from "../../config/plan-output.js";
 /**
- * Autopilot Prompt Generation
+ * Autopilot 提示词生成
  *
- * Generates phase-specific prompts that include Task tool invocations
- * for Claude to execute. This is the core of the agent invocation mechanism.
+ * 生成阶段专用提示词，其中包含供 Claude 执行的 Task 工具调用。
+ * 这是代理调用机制的核心。
  */
 import type { PluginConfig } from "../../shared/types.js";
 
@@ -27,8 +27,8 @@ function resolvePromptOpenQuestionsPath(
 }
 
 /**
- * Generate the expansion phase prompt (Phase 0)
- * Analyst extracts requirements, Architect creates technical spec
+ * 生成扩展阶段提示词（阶段 0）
+ * Analyst 提取需求，Architect 创建技术规格说明
  */
 export function getExpansionPrompt(
   idea: string,
@@ -108,8 +108,8 @@ When the spec is saved, signal: EXPANSION_COMPLETE
 }
 
 /**
- * Generate the direct planning prompt (Phase 1)
- * Uses Architect instead of Planner to create plan directly from spec
+ * 生成直接规划阶段提示词（阶段 1）
+ * 使用 Architect 而非 Planner 直接根据规格说明创建计划
  */
 export function getDirectPlanningPrompt(
   specPath: string,
@@ -196,7 +196,7 @@ When Critic approves: PLANNING_COMPLETE
 }
 
 /**
- * Generate the execution phase prompt (Phase 2)
+ * 生成执行阶段提示词（阶段 2）
  */
 export function getExecutionPrompt(planPath: string): string {
   return `## AUTOPILOT PHASE 2: EXECUTION
@@ -243,7 +243,7 @@ When all tasks from the plan are complete: EXECUTION_COMPLETE
 }
 
 /**
- * Generate the QA phase prompt (Phase 3)
+ * 生成 QA 阶段提示词（阶段 3）
  */
 export function getQAPrompt(): string {
   return `## AUTOPILOT PHASE 3: QUALITY ASSURANCE
@@ -306,7 +306,7 @@ When all checks pass: QA_COMPLETE
 }
 
 /**
- * Generate the validation phase prompt (Phase 4)
+ * 生成校验阶段提示词（阶段 4）
  */
 export function getValidationPrompt(specPath: string): string {
   return `## AUTOPILOT PHASE 4: VALIDATION
@@ -389,7 +389,7 @@ When all approve: AUTOPILOT_COMPLETE
 }
 
 /**
- * Escape special characters for embedding in prompts
+ * 对特殊字符进行转义，以便嵌入提示词
  */
 function escapeForPrompt(text: string): string {
   return text
@@ -400,7 +400,7 @@ function escapeForPrompt(text: string): string {
 }
 
 /**
- * Get the prompt for the current phase
+ * 获取当前阶段的提示词
  */
 export function getPhasePrompt(
   phase: string,

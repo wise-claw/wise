@@ -1,13 +1,13 @@
 /**
- * RALPH Stage Adapter
+ * RALPH 阶段适配器
  *
- * Wraps the existing ralph verification module into the pipeline stage adapter interface.
+ * 将已有的 ralph 校验模块封装到流水线阶段适配器接口中。
  *
- * The ralph stage performs iterative verification of the implementation:
- * - Functional completeness review
- * - Security review
- * - Code quality review
- * - Fixes issues found and re-verifies
+ * ralph 阶段对实现进行迭代式校验：
+ * - 功能完整性审查
+ * - 安全审查
+ * - 代码质量审查
+ * - 修复发现的问题并重新校验
  */
 
 import type { PipelineStageAdapter, PipelineConfig, PipelineContext } from '../pipeline-types.js';

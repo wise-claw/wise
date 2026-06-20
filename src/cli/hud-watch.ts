@@ -11,8 +11,7 @@ export interface HudWatchLoopOptions {
 }
 
 /**
- * Run the HUD in watch mode until an explicit shutdown signal or parent-exit
- * condition is observed.
+ * 以 watch 模式运行 HUD，直到观察到显式的关闭信号或父进程退出条件为止。
  */
 export async function runHudWatchLoop(options: HudWatchLoopOptions): Promise<void> {
   const registerShutdownHandlers = options.registerShutdownHandlers ?? registerStandaloneShutdownHandlers;

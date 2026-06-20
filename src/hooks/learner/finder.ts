@@ -1,8 +1,8 @@
 /**
- * Skill Finder
+ * 技能查找器
  *
- * Discovers skill files using hybrid search (user + project).
- * Project skills override user skills with same ID.
+ * 通过混合搜索（用户 + 项目）发现技能文件。
+ * 项目技能会覆盖同 ID 的用户技能。
  */
 
 import { existsSync, readdirSync, realpathSync, mkdirSync } from 'fs';
@@ -11,7 +11,7 @@ import { USER_SKILLS_DIR, PROJECT_SKILLS_SUBDIR, PROJECT_AGENT_SKILLS_SUBDIR, SK
 import type { SkillFileCandidate } from './types.js';
 
 /**
- * Recursively find all skill files in a directory.
+ * 递归查找目录中的所有技能文件。
  */
 function findSkillFilesRecursive(dir: string, results: string[], depth: number = 0): void {
   if (!existsSync(dir)) return;
@@ -36,7 +36,7 @@ function findSkillFilesRecursive(dir: string, results: string[], depth: number =
 }
 
 /**
- * Resolve symlinks safely with fallback.
+ * 安全地解析符号链接，失败时兜底。
  */
 function safeRealpathSync(filePath: string): string {
   try {
@@ -47,8 +47,8 @@ function safeRealpathSync(filePath: string): string {
 }
 
 /**
- * Check if a resolved path is within a boundary directory.
- * Used to prevent symlink escapes.
+ * 检查解析后的路径是否在边界目录内。
+ * 用于防止符号链接逃逸。
  */
 function isWithinBoundary(realPath: string, boundary: string): boolean {
   const normalizedReal = normalize(realPath);
@@ -58,8 +58,8 @@ function isWithinBoundary(realPath: string, boundary: string): boolean {
 }
 
 /**
- * Find all skill files for a given project.
- * Returns project skills first (higher priority), then user skills.
+ * 查找指定项目的所有技能文件。
+ * 优先返回项目技能（优先级更高），然后是用户技能。
  */
 export function findSkillFiles(
   projectRoot: string | null,
@@ -69,7 +69,7 @@ export function findSkillFiles(
   const seenRealPaths = new Set<string>();
   const scope = options?.scope ?? 'all';
 
-  // 1. Search project-level skills (if scope allows)
+  // 1. 搜索项目级技能（若作用域允许）
   if (projectRoot && (scope === 'project' || scope === 'all')) {
     const projectSkillDirs = [
       join(projectRoot, PROJECT_SKILLS_SUBDIR),
@@ -83,7 +83,7 @@ export function findSkillFiles(
       for (const filePath of projectFiles) {
         const realPath = safeRealpathSync(filePath);
         if (seenRealPaths.has(realPath)) continue;
-        // Symlink boundary check
+        // 符号链接边界检查
         if (!isWithinBoundary(realPath, projectSkillsDir)) {
           if (DEBUG_ENABLED) {
             console.warn('[learner] Symlink escape blocked:', filePath);
@@ -102,7 +102,7 @@ export function findSkillFiles(
     }
   }
 
-  // 2. Search user-level skills from both directories (if scope allows)
+  // 2. 从两个目录搜索用户级技能（若作用域允许）
   if (scope === 'user' || scope === 'all') {
     const userDirs = [GLOBAL_SKILLS_DIR, USER_SKILLS_DIR];
 
@@ -113,7 +113,7 @@ export function findSkillFiles(
       for (const filePath of userFiles) {
         const realPath = safeRealpathSync(filePath);
         if (seenRealPaths.has(realPath)) continue;
-        // Symlink boundary check
+        // 符号链接边界检查
         if (!isWithinBoundary(realPath, userDir)) {
           if (DEBUG_ENABLED) {
             console.warn('[learner] Symlink escape blocked:', filePath);
@@ -136,7 +136,7 @@ export function findSkillFiles(
 }
 
 /**
- * Get skills directory path for a scope.
+ * 获取指定作用域的技能目录路径。
  */
 export function getSkillsDir(scope: 'user' | 'project', projectRoot?: string, sourceDir?: string): string {
   if (sourceDir) return sourceDir;
@@ -150,7 +150,7 @@ export function getSkillsDir(scope: 'user' | 'project', projectRoot?: string, so
 }
 
 /**
- * Ensure skills directory exists.
+ * 确保技能目录存在。
  */
 export function ensureSkillsDir(scope: 'user' | 'project', projectRoot?: string): boolean {
   const dir = getSkillsDir(scope, projectRoot);

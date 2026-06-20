@@ -1,14 +1,14 @@
 /**
- * Factcheck Guard - Main Entry Point
+ * Factcheck 守卫 - 主入口
  *
- * Portable factcheck engine that validates a claims payload against
- * configurable policies. Ported from rolldav/portable-wise-guards (issue #1155).
+ * 可移植的 factcheck 引擎，根据可配置的策略校验 claims 负载。
+ * 移植自 rolldav/portable-wise-guards（issue #1155）。
  *
- * Modes:
- *   - strict:   All gates must be true, cwd mismatch is FAIL
- *   - declared:  Warns on false gates if source files exist
- *   - manual:   Same as declared
- *   - quick:    Skips cwd parity check by default
+ * 模式：
+ *   - strict:   所有 gate 必须为 true，cwd 不一致为 FAIL
+ *   - declared: 若存在源文件，则对 false gate 发出告警
+ *   - manual:   同 declared
+ *   - quick:    默认跳过 cwd 一致性检查
  */
 
 import type {
@@ -40,7 +40,7 @@ export type {
 export { loadGuardsConfig, shouldUseStrictMode } from './config.js';
 
 // ---------------------------------------------------------------------------
-// Severity ranking
+// 严重级别排序
 // ---------------------------------------------------------------------------
 
 function severityRank(value: Severity): number {
@@ -50,17 +50,17 @@ function severityRank(value: Severity): number {
 }
 
 // ---------------------------------------------------------------------------
-// Main check runner
+// 主检查运行器
 // ---------------------------------------------------------------------------
 
 /**
- * Run the portable factcheck logic against a claims payload.
+ * 对 claims 负载运行可移植的 factcheck 逻辑。
  *
- * @param claims     - The claims payload to validate
- * @param mode       - Validation mode: strict | declared | manual | quick
- * @param policy     - Factcheck policy (loaded from config or provided)
- * @param runtimeCwd - Runtime working directory (defaults to process.cwd())
- * @returns Factcheck result with verdict, mismatches, notes, and evidence
+ * @param claims     - 待校验的 claims 负载
+ * @param mode       - 校验模式：strict | declared | manual | quick
+ * @param policy     - Factcheck 策略（从配置加载或直接提供）
+ * @param runtimeCwd - 运行时工作目录（默认为 process.cwd()）
+ * @returns 包含判定结果、不匹配项、备注和证据的 Factcheck 结果
  */
 export function runChecks(
   claims: Record<string, unknown>,
@@ -71,7 +71,7 @@ export function runChecks(
   const mismatches: Mismatch[] = [];
   const notes: string[] = [];
 
-  // A. Missing required fields
+  // A. 缺失必需字段
   const missingFields = checkMissingFields(claims);
   if (missingFields.length > 0) {
     mismatches.push({
@@ -81,7 +81,7 @@ export function runChecks(
     });
   }
 
-  // A. Missing required gates
+  // A. 缺失必需 gate
   const missingGates = checkMissingGates(claims);
   if (missingGates.length > 0) {
     mismatches.push({
@@ -91,7 +91,7 @@ export function runChecks(
     });
   }
 
-  // B. Gate value checks
+  // B. gate 值检查
   const falseGates = getFalseGates(claims);
   const srcFiles = sourceFileCount(claims);
 
@@ -117,13 +117,13 @@ export function runChecks(
     }
   }
 
-  // H/C. Path checks
+  // H/C. 路径检查
   mismatches.push(...checkPaths(claims, policy));
 
-  // H. Command checks
+  // H. 命令检查
   mismatches.push(...checkCommands(claims, policy));
 
-  // CWD parity
+  // CWD 一致性
   const claimsCwd = String(claims.cwd ?? '').trim();
   const cwdMismatch = checkCwdParity(
     claimsCwd,
@@ -135,7 +135,7 @@ export function runChecks(
     mismatches.push(cwdMismatch);
   }
 
-  // Compute verdict from worst severity
+  // 根据最严重的级别计算判定结果
   const maxRank = mismatches.reduce(
     (max, m) => Math.max(max, severityRank(m.severity)),
     0,
@@ -158,7 +158,7 @@ export function runChecks(
 }
 
 /**
- * Convenience wrapper: load config and run checks in one call.
+ * 便捷封装：加载配置并在一次调用中运行检查。
  */
 export function runFactcheck(
   claims: Record<string, unknown>,

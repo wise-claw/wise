@@ -1,9 +1,9 @@
 /**
- * Document Writer Agent
+ * 文档写手 Agent
  *
- * Technical writer who crafts clear, comprehensive documentation.
+ * 技术写手，撰写清晰、全面的文档。
  *
- * Ported from oh-my-opencode's agent definitions.
+ * 从 oh-my-opencode 的 agent 定义移植。
  */
 
 import type { AgentConfig, AgentPromptMetadata } from './types.js';

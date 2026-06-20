@@ -1,10 +1,10 @@
 /**
- * Agent Utilities
+ * Agent 工具函数
  *
- * Shared utilities for agent creation and management.
- * Includes prompt builders and configuration helpers.
+ * 用于 agent 创建与管理的共享工具。
+ * 包含 prompt 构建器与配置辅助函数。
  *
- * Ported from oh-my-opencode's agent utils.
+ * 从 oh-my-opencode 的 agent utils 移植。
  */
 
 import { readFileSync } from 'fs';
@@ -19,40 +19,40 @@ import type {
   ModelType
 } from './types.js';
 // ============================================================
-// DYNAMIC PROMPT LOADING
+// 动态 prompt 加载
 // ============================================================
 
 /**
- * Build-time injected agent prompts map.
- * esbuild replaces this with a { role: "prompt content" } object during bridge builds.
- * In dev/test (unbundled), this remains undefined and we fall back to runtime file reads.
+ * 构建时注入的 agent prompts 映射。
+ * esbuild 在 bridge 构建期间将其替换为 { role: "prompt content" } 对象。
+ * 在开发/测试（未打包）环境中，它保持 undefined，我们兜底为运行时文件读取。
  */
 declare const __AGENT_PROMPTS__: Record<string, string> | undefined;
 
 /**
- * Get the package root directory (where agents/ folder lives).
- * Handles both ESM (import.meta.url) and CJS bundle (__dirname) contexts.
- * In CJS bundles, __dirname is always reliable and should take precedence.
- * This avoids path skew when import.meta.url is shimmed during bundling.
+ * 获取包根目录（agents/ 文件夹所在位置）。
+ * 同时处理 ESM (import.meta.url) 与 CJS bundle (__dirname) 上下文。
+ * 在 CJS bundle 中，__dirname 始终可靠，应优先使用。
+ * 这样可避免打包过程中 import.meta.url 被 shim 时产生的路径偏差。
  */
 function getPackageDir(): string {
-  // __dirname is available in bundled CJS and in some test transpilation contexts.
+  // __dirname 在打包后的 CJS 以及某些测试转译上下文中可用。
   if (typeof __dirname !== 'undefined' && __dirname) {
     const currentDirName = basename(__dirname);
     const parentDirName = basename(dirname(__dirname));
 
-    // Bundled CLI path: bridge/cli.cjs -> package root is one level up.
+    // 打包后的 CLI 路径：bridge/cli.cjs -> 包根目录在上一级。
     if (currentDirName === 'bridge') {
       return join(__dirname, '..');
     }
 
-    // Source/dist module path (src/agents or dist/agents) -> package root is two levels up.
+    // 源码/dist 模块路径（src/agents 或 dist/agents）-> 包根目录在上两级。
     if (currentDirName === 'agents' && (parentDirName === 'src' || parentDirName === 'dist')) {
       return join(__dirname, '..', '..');
     }
   }
 
-  // ESM path (works in dev via ts/dist)
+  // ESM 路径（在开发环境下通过 ts/dist 生效）
   try {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
@@ -60,18 +60,18 @@ function getPackageDir(): string {
     if (currentDirName === 'bridge') {
       return join(__dirname, '..');
     }
-    // From src/agents/ or dist/agents/ go up to package root
+    // 从 src/agents/ 或 dist/agents/ 向上回到包根目录
     return join(__dirname, '..', '..');
   } catch {
-    // import.meta.url unavailable — last resort
+    // import.meta.url 不可用 — 最后手段
   }
 
-  // Last resort
+  // 最后手段
   return process.cwd();
 }
 
 /**
- * Strip YAML frontmatter from markdown content.
+ * 从 markdown 内容中剥离 YAML frontmatter。
  */
 function stripFrontmatter(content: string): string {
   const match = content.match(/^---[\s\S]*?---\s*([\s\S]*)$/);
@@ -79,35 +79,35 @@ function stripFrontmatter(content: string): string {
 }
 
 /**
- * Load an agent prompt from /agents/{agentName}.md
- * Uses build-time embedded prompts when available (CJS bundles),
- * falls back to runtime file reads (dev/test environments).
+ * 从 /agents/{agentName}.md 加载 agent prompt
+ * 可用时优先使用构建时内嵌的 prompt（CJS bundle），
+ * 兜底为运行时文件读取（开发/测试环境）。
  *
- * Security: Validates agent name to prevent path traversal attacks
+ * 安全性：校验 agent 名以防止路径遍历攻击
  */
 export function loadAgentPrompt(agentName: string): string {
-  // Security: Validate agent name contains only safe characters (alphanumeric and hyphens)
-  // This prevents path traversal attacks like "../../etc/passwd"
+  // 安全性：校验 agent 名仅含安全字符（字母数字与连字符）
+  // 这可防止类似 "../../etc/passwd" 的路径遍历攻击
   if (!/^[a-z0-9-]+$/i.test(agentName)) {
     throw new Error(`Invalid agent name: contains disallowed characters`);
   }
 
-  // Prefer build-time embedded prompts (always available in CJS bundles)
+  // 优先使用构建时内嵌的 prompt（CJS bundle 中始终可用）
   try {
     if (typeof __AGENT_PROMPTS__ !== 'undefined' && __AGENT_PROMPTS__ !== null) {
       const prompt = __AGENT_PROMPTS__[agentName];
       if (prompt) return prompt;
     }
   } catch {
-    // __AGENT_PROMPTS__ not defined — fall through to runtime file read
+    // __AGENT_PROMPTS__ 未定义 — 继续走向运行时文件读取
   }
 
-  // Runtime fallback: read from filesystem (dev/test environments)
+  // 运行时兜底：从文件系统读取（开发/测试环境）
   try {
     const agentsDir = join(getPackageDir(), 'agents');
     const agentPath = join(agentsDir, `${agentName}.md`);
 
-    // Security: Verify resolved path is within the agents directory
+    // 安全性：校验解析后的路径是否位于 agents 目录内
     const resolvedPath = resolve(agentPath);
     const resolvedAgentsDir = resolve(agentsDir);
     const rel = relative(resolvedAgentsDir, resolvedPath);
@@ -118,7 +118,7 @@ export function loadAgentPrompt(agentName: string): string {
     const content = readFileSync(agentPath, 'utf-8');
     return stripFrontmatter(content);
   } catch (error) {
-    // Don't leak internal paths in error messages
+    // 不要在错误信息中泄露内部路径
     const message = error instanceof Error && error.message.includes('Invalid agent name')
       ? error.message
       : 'Agent prompt file not found';
@@ -128,8 +128,8 @@ export function loadAgentPrompt(agentName: string): string {
 }
 
 /**
- * Create tool restrictions configuration
- * Returns an object that can be spread into agent config to restrict tools
+ * 创建工具限制配置
+ * 返回一个可展开到 agent 配置中以限制工具的对象
  */
 export function createAgentToolRestrictions(
   blockedTools: string[]
@@ -142,7 +142,7 @@ export function createAgentToolRestrictions(
 }
 
 /**
- * Merge agent configuration with overrides
+ * 将 agent 配置与覆盖项合并
  */
 export function mergeAgentConfig(
   base: AgentConfig,
@@ -164,7 +164,7 @@ export function mergeAgentConfig(
 }
 
 /**
- * Build delegation table section for WISE prompt
+ * 为 WISE prompt 构建委派表小节
  */
 export function buildDelegationTable(availableAgents: AvailableAgent[]): string {
   if (availableAgents.length === 0) {
@@ -192,7 +192,7 @@ ${rows.join('\n')}`;
 }
 
 /**
- * Build use/avoid section for an agent
+ * 为某个 agent 构建 use/avoid 小节
  */
 export function buildUseAvoidSection(metadata: AgentPromptMetadata): string {
   const sections: string[] = [];
@@ -211,7 +211,7 @@ ${metadata.avoidWhen.map(a => `- ${a}`).join('\n')}`);
 }
 
 /**
- * Create environment context for agents
+ * 为 agent 创建环境上下文
  */
 export function createEnvContext(): string {
   const now = new Date();
@@ -234,7 +234,7 @@ export function createEnvContext(): string {
 }
 
 /**
- * Get all available agents as AvailableAgent descriptors
+ * 以 AvailableAgent 描述符的形式获取所有可用 agent
  */
 export function getAvailableAgents(
   agents: Record<string, AgentConfig>
@@ -249,7 +249,7 @@ export function getAvailableAgents(
 }
 
 /**
- * Build key triggers section for WISE prompt
+ * 为 WISE prompt 构建关键触发器小节
  */
 export function buildKeyTriggersSection(
   availableAgents: AvailableAgent[]
@@ -272,7 +272,7 @@ ${triggers.join('\n')}`;
 }
 
 /**
- * Validate agent configuration
+ * 校验 agent 配置
  */
 export function validateAgentConfig(config: AgentConfig): string[] {
   const errors: string[] = [];
@@ -289,16 +289,16 @@ export function validateAgentConfig(config: AgentConfig): string[] {
     errors.push('Agent prompt is required');
   }
 
-  // Note: tools is now optional - agents get all tools by default if omitted
+  // 注意：tools 现为可选 — 若省略，agent 默认获得全部工具
 
   return errors;
 }
 
 /**
- * Parse disallowedTools from agent markdown frontmatter
+ * 从 agent markdown frontmatter 中解析 disallowedTools
  */
 export function parseDisallowedTools(agentName: string): string[] | undefined {
-  // Security: Validate agent name contains only safe characters (alphanumeric and hyphens)
+  // 安全性：校验 agent 名仅含安全字符（字母数字与连字符）
   if (!/^[a-z0-9-]+$/i.test(agentName)) {
     return undefined;
   }
@@ -307,7 +307,7 @@ export function parseDisallowedTools(agentName: string): string[] | undefined {
     const agentsDir = join(getPackageDir(), 'agents');
     const agentPath = join(agentsDir, `${agentName}.md`);
 
-    // Security: Verify resolved path is within the agents directory
+    // 安全性：校验解析后的路径是否位于 agents 目录内
     const resolvedPath = resolve(agentPath);
     const resolvedAgentsDir = resolve(agentsDir);
     const rel = relative(resolvedAgentsDir, resolvedPath);
@@ -317,15 +317,15 @@ export function parseDisallowedTools(agentName: string): string[] | undefined {
 
     const content = readFileSync(agentPath, 'utf-8');
 
-    // Extract frontmatter
+    // 提取 frontmatter
     const match = content.match(/^---[\s\S]*?---/);
     if (!match) return undefined;
 
-    // Look for disallowedTools line
+    // 查找 disallowedTools 行
     const disallowedMatch = match[0].match(/^disallowedTools:\s*(.+)/m);
     if (!disallowedMatch) return undefined;
 
-    // Parse comma-separated list
+    // 解析逗号分隔的列表
     return disallowedMatch[1].split(',').map(t => t.trim()).filter(Boolean);
   } catch {
     return undefined;
@@ -333,16 +333,16 @@ export function parseDisallowedTools(agentName: string): string[] | undefined {
 }
 
 /**
- * Standard path for open questions file
+ * open questions 文件的标准路径
  */
 export const OPEN_QUESTIONS_PATH = '.wise/plans/open-questions.md';
 
 /**
- * Format open questions for appending to the standard open-questions.md file.
+ * 格式化 open questions，以便追加到标准的 open-questions.md 文件。
  *
- * @param topic - The plan or analysis topic name
- * @param questions - Array of { question, reason } objects
- * @returns Formatted markdown string ready to append
+ * @param topic - 计划或分析主题名
+ * @param questions - { question, reason } 对象数组
+ * @returns 可直接追加的已格式化 markdown 字符串
  */
 export function formatOpenQuestions(
   topic: string,
@@ -359,7 +359,7 @@ export function formatOpenQuestions(
 }
 
 /**
- * Deep merge utility for configurations
+ * 用于配置的深度合并工具
  */
 export function deepMerge<T extends Record<string, unknown>>(
   target: T,

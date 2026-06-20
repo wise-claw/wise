@@ -248,7 +248,7 @@ describe('Installer Constants', () => {
 
     it('should contain essential sections', () => {
       const essentialSections = [
-        'Multi-Agent Orchestration',
+        '智能多智能体编排',
         'delegation_rules',
         'skills',
         'cancellation',
@@ -300,7 +300,7 @@ describe('Installer Constants', () => {
 
       // Verify skills section exists with trigger patterns
       expect(CLAUDE_MD_CONTENT).toContain('skills');
-      expect(CLAUDE_MD_CONTENT).toContain('trigger');
+      expect(CLAUDE_MD_CONTENT).toContain('触发');
     });
 
     it('should contain XML behavioral tags', () => {
@@ -316,8 +316,8 @@ describe('Installer Constants', () => {
       expect(AGENT_DEFINITIONS['code-reviewer.md']).toContain('Never approve your own authoring output');
       expect(AGENT_DEFINITIONS['verifier.md']).toContain('Verification is a separate reviewer pass');
       expect(AGENT_DEFINITIONS['verifier.md']).toContain('Never self-approve or bless work produced in the same active context');
-      expect(CLAUDE_MD_CONTENT).toContain('Keep authoring and review as separate passes');
-      expect(CLAUDE_MD_CONTENT).toContain('Never self-approve in the same active context');
+      expect(CLAUDE_MD_CONTENT).toContain('将创作与评审作为独立两轮');
+      expect(CLAUDE_MD_CONTENT).toContain('切勿在同一活跃上下文中自我批准');
     });
   });
 

@@ -26,8 +26,8 @@ const TIER_ENV_KEYS: Record<ModelTier, readonly string[]> = {
 };
 
 /**
- * Canonical Claude family defaults.
- * Keep these date-less so version bumps are a one-line edit per family.
+ * Claude 家族的规范默认值。
+ * 保持不带日期，以便版本升级时每个家族只需改一行。
  */
 export const CLAUDE_FAMILY_DEFAULTS: Record<ClaudeModelFamily, string> = {
   HAIKU: 'claude-haiku-4-5',
@@ -36,14 +36,14 @@ export const CLAUDE_FAMILY_DEFAULTS: Record<ClaudeModelFamily, string> = {
   FABLE: 'claude-fable-5',
 };
 
-/** Canonical tier->model mapping used as built-in defaults */
+/** 用作内置默认值的规范 层级->模型 映射 */
 export const BUILTIN_TIER_MODEL_DEFAULTS: Record<ModelTier, string> = {
   LOW: CLAUDE_FAMILY_DEFAULTS.HAIKU,
   MEDIUM: CLAUDE_FAMILY_DEFAULTS.SONNET,
   HIGH: CLAUDE_FAMILY_DEFAULTS.OPUS,
 };
 
-/** Canonical Claude high-reasoning variants by family */
+/** 按家族划分的 Claude 高推理变体规范 */
 export const CLAUDE_FAMILY_HIGH_VARIANTS: Record<ClaudeModelFamily, string> = {
   HAIKU: `${CLAUDE_FAMILY_DEFAULTS.HAIKU}-high`,
   SONNET: `${CLAUDE_FAMILY_DEFAULTS.SONNET}-high`,
@@ -51,38 +51,38 @@ export const CLAUDE_FAMILY_HIGH_VARIANTS: Record<ClaudeModelFamily, string> = {
   FABLE: `${CLAUDE_FAMILY_DEFAULTS.FABLE}-high`,
 };
 
-/** Built-in defaults for external provider models */
+/** 外部 provider 模型的内置默认值 */
 export const BUILTIN_EXTERNAL_MODEL_DEFAULTS = {
   codexModel: 'gpt-5.3-codex',
   geminiModel: 'gemini-3.1-pro-preview',
 } as const;
 
 /**
- * Centralized Model ID Constants
+ * 集中化的模型 ID 常量
  *
- * All default model IDs are defined here so they can be overridden
- * via environment variables without editing source code.
+ * 所有默认模型 ID 都定义在此处，以便无需修改源码即可通过
+ * 环境变量覆盖。
  *
- * Environment variables (highest precedence):
- *   WISE_MODEL_HIGH    - Model ID for HIGH tier (opus-class)
- *   WISE_MODEL_MEDIUM  - Model ID for MEDIUM tier (sonnet-class)
- *   WISE_MODEL_LOW     - Model ID for LOW tier (haiku-class)
+ * 环境变量（最高优先级）：
+ *   WISE_MODEL_HIGH    - HIGH 层级的模型 ID（opus 级别）
+ *   WISE_MODEL_MEDIUM  - MEDIUM 层级的模型 ID（sonnet 级别）
+ *   WISE_MODEL_LOW     - LOW 层级的模型 ID（haiku 级别）
  *
- * User config (~/.config/claude-wise/config.jsonc) can also override
- * via `routing.tierModels` or per-agent `agents.<name>.model`.
+ * 用户配置（~/.config/claude-wise/config.jsonc）也可通过
+ * `routing.tierModels` 或按 agent 的 `agents.<name>.model` 覆盖。
  */
 
 /**
- * Resolve the default model ID for a tier.
+ * 解析某层级的默认模型 ID。
  *
- * Resolution order:
- * 1. WISE tier env vars (WISE_MODEL_HIGH / WISE_MODEL_MEDIUM / WISE_MODEL_LOW)
- * 2. Claude Code provider env vars (for example Bedrock app-profile model IDs)
- * 3. Anthropic family-default env vars
- * 4. Built-in fallback
+ * 解析顺序：
+ * 1. WISE 层级环境变量（WISE_MODEL_HIGH / WISE_MODEL_MEDIUM / WISE_MODEL_LOW）
+ * 2. Claude Code provider 环境变量（例如 Bedrock 应用配置模型 ID）
+ * 3. Anthropic 家族默认环境变量
+ * 4. 内置兜底值
  *
- * User/project config overrides are applied later by the config loader
- * via deepMerge, so they take precedence over these defaults.
+ * 用户/项目配置覆盖由配置加载器稍后通过 deepMerge 应用，
+ * 因此优先级高于这些默认值。
  */
 function readEnvValue(key: string): string | undefined {
   const value = process.env[key]?.trim();
@@ -170,8 +170,8 @@ export function getDefaultModelLow(): string {
 }
 
 /**
- * Get all default tier models as a record.
- * Each call reads current env vars, so changes are reflected immediately.
+ * 以 record 形式获取所有默认层级模型。
+ * 每次调用都会读取当前环境变量，因此变更会立即反映。
  */
 export function getDefaultTierModels(): Record<ModelTier, string> {
   return {
@@ -182,8 +182,8 @@ export function getDefaultTierModels(): Record<ModelTier, string> {
 }
 
 /**
- * Resolve a Claude family from an arbitrary model ID.
- * Supports Anthropic IDs and provider-prefixed forms (e.g. vertex_ai/...).
+ * 从任意模型 ID 解析出 Claude 家族。
+ * 支持 Anthropic ID 及带 provider 前缀的形式（如 vertex_ai/...）。
  */
 export function resolveClaudeFamily(modelId: string): ClaudeModelFamily | null {
   const lower = modelId.toLowerCase();
@@ -198,15 +198,15 @@ export function resolveClaudeFamily(modelId: string): ClaudeModelFamily | null {
 }
 
 /**
- * Resolve a canonical Claude high variant from a Claude model ID.
- * Returns null for non-Claude model IDs.
+ * 从 Claude 模型 ID 解析出规范的 Claude 高推理变体。
+ * 非 Claude 模型 ID 返回 null。
  */
 export function getClaudeHighVariantFromModel(modelId: string): string | null {
   const family = resolveClaudeFamily(modelId);
   return family ? CLAUDE_FAMILY_HIGH_VARIANTS[family] : null;
 }
 
-/** Get built-in default model for an external provider */
+/** 获取外部 provider 的内置默认模型 */
 export function getBuiltinExternalDefaultModel(provider: 'codex' | 'gemini'): string {
   return provider === 'codex'
     ? BUILTIN_EXTERNAL_MODEL_DEFAULTS.codexModel
@@ -232,54 +232,53 @@ function hasBedrockModelId(modelIds: readonly string[]): boolean {
 }
 
 /**
- * Detect whether Claude Code is running on AWS Bedrock.
+ * 检测 Claude Code 是否运行在 AWS Bedrock 上。
  *
- * Claude Code sets CLAUDE_CODE_USE_BEDROCK=1 when configured for Bedrock.
- * As a fallback, Bedrock model IDs use prefixed formats like:
+ * Claude Code 在配置为 Bedrock 时设置 CLAUDE_CODE_USE_BEDROCK=1。
+ * 作为兜底，Bedrock 模型 ID 使用如下前缀格式：
  *   - us.anthropic.claude-sonnet-4-6-v1:0
  *   - global.anthropic.claude-sonnet-4-6-v1:0
  *   - anthropic.claude-3-haiku-20240307-v1:0
  *
- * On Bedrock, passing bare tier names (sonnet/opus/haiku) to spawned
- * agents causes 400 errors because the provider expects full Bedrock
- * model IDs with region/inference-profile prefixes.
+ * 在 Bedrock 上，向派生的 agent 传入裸层级名称（sonnet/opus/haiku）会导致
+ * 400 错误，因为 provider 期望带区域/推理配置前缀的完整 Bedrock 模型 ID。
  */
 export function isBedrock(): boolean {
-  // Primary signal: Claude Code's own env var
+  // 主信号：Claude Code 自身的环境变量
   if (process.env.CLAUDE_CODE_USE_BEDROCK === '1') {
     return true;
   }
 
-  // Fallback: detect Bedrock model ID patterns in the active model env value.
-  // Direct session model env vars win over lower-precedence tier defaults, so a
-  // stale tier/default env must not mark a standard Claude session as Bedrock.
-  // Covers region prefixes (us, eu, ap), cross-region (global), and bare (anthropic.)
+  // 兜底：在当前生效的模型环境变量值中检测 Bedrock 模型 ID 模式。
+  // 直连会话模型环境变量优先级高于低优先级的层级默认值，因此过期的
+  // 层级/默认环境变量不得将标准 Claude 会话误判为 Bedrock。
+  // 覆盖区域前缀（us、eu、ap）、跨区域（global）以及裸格式（anthropic.）。
   return hasBedrockModelId(getProviderDetectionModelEnvValues());
 }
 
 /**
- * Check whether a model ID is a provider-specific identifier that should NOT
- * be normalized to a bare alias (sonnet/opus/haiku).
+ * 检查某模型 ID 是否为 provider 专属标识符，不应被规范化为裸别名
+ * （sonnet/opus/haiku）。
  *
- * Provider-specific IDs include:
- *   - Bedrock prefixed: us.anthropic.claude-*, global.anthropic.claude-*, anthropic.claude-*
- *   - Bedrock ARN: arn:aws:bedrock:...
- *   - Vertex AI: vertex_ai/...
+ * provider 专属 ID 包括：
+ *   - Bedrock 前缀：us.anthropic.claude-*、global.anthropic.claude-*、anthropic.claude-*
+ *   - Bedrock ARN：arn:aws:bedrock:...
+ *   - Vertex AI：vertex_ai/...
  *
- * These IDs must be passed through to the CLI as-is because normalizing them
- * to aliases like "sonnet" causes Claude Code to expand them to Anthropic API
- * model names (e.g. claude-sonnet-4-6) which are invalid on Bedrock/Vertex.
+ * 这些 ID 必须原样透传给 CLI，因为将它们规范化为 "sonnet" 之类的别名会使
+ * Claude Code 将其展开为 Anthropic API 模型名（如 claude-sonnet-4-6），而
+ * 这在 Bedrock/Vertex 上是非法的。
  */
 export function isProviderSpecificModelId(modelId: string): boolean {
-  // Bedrock prefixed formats (region.anthropic.claude-*, anthropic.claude-*)
+  // Bedrock 前缀格式（region.anthropic.claude-*、anthropic.claude-*）
   if (/^((us|eu|ap|global)\.anthropic\.|anthropic\.claude)/i.test(modelId)) {
     return true;
   }
-  // Bedrock ARN formats
+  // Bedrock ARN 格式
   if (/^arn:aws(-[^:]+)?:bedrock:/i.test(modelId)) {
     return true;
   }
-  // Vertex AI prefixed format
+  // Vertex AI 前缀格式
   if (modelId.toLowerCase().startsWith('vertex_ai/')) {
     return true;
   }
@@ -287,45 +286,44 @@ export function isProviderSpecificModelId(modelId: string): boolean {
 }
 
 /**
- * Detect whether a model ID has a Claude Code extended-context window suffix
- * (e.g., `[1m]`, `[200k]`) that is NOT a valid Bedrock API identifier.
+ * 检测某模型 ID 是否带有 Claude Code 扩展上下文窗口后缀
+ * （如 `[1m]`、`[200k]`），该后缀并非合法的 Bedrock API 标识符。
  *
- * The `[1m]` suffix is a Claude Code internal annotation for the 1M context
- * window variant. It is valid for the parent session's API path but is
- * rejected by the sub-agent spawning runtime, which strips it to a bare
- * Anthropic model ID (e.g., `claude-sonnet-4-6`) that is invalid on Bedrock.
+ * `[1m]` 后缀是 Claude Code 针对 1M 上下文窗口变体的内部标注。它对父会话的
+ * API 路径有效，但会被子 agent 派生运行时拒绝，运行时会将其剥离为裸的
+ * Anthropic 模型 ID（如 `claude-sonnet-4-6`），这在 Bedrock 上是非法的。
  */
 export function hasExtendedContextSuffix(modelId: string): boolean {
   return /\[\d+[mk]\]$/i.test(modelId);
 }
 
 /**
- * Check whether a model ID is safe to pass as the `model` parameter when
- * spawning sub-agents on non-standard providers (Bedrock, Vertex AI).
+ * 检查某模型 ID 在非标准 provider（Bedrock、Vertex AI）上派生子 agent 时，
+ * 作为 `model` 参数传入是否安全。
  *
- * A model ID is sub-agent safe if it is provider-specific (full Bedrock or
- * Vertex AI format) AND does not carry a Claude Code context-window suffix
- * like `[1m]` that the sub-agent runtime cannot handle.
+ * 当模型 ID 是 provider 专属（完整 Bedrock 或 Vertex AI 格式），且不带有子
+ * agent 运行时无法处理的 Claude Code 上下文窗口后缀（如 `[1m]`）时，即为
+ * 子 agent 安全。
  */
 export function isSubagentSafeModelId(modelId: string): boolean {
   return isProviderSpecificModelId(modelId) && !hasExtendedContextSuffix(modelId);
 }
 
 /**
- * Detect whether Claude Code is running on Google Vertex AI.
+ * 检测 Claude Code 是否运行在 Google Vertex AI 上。
  *
- * Claude Code sets CLAUDE_CODE_USE_VERTEX=1 when configured for Vertex AI.
- * Vertex model IDs typically use a "vertex_ai/" prefix.
+ * Claude Code 在配置为 Vertex AI 时设置 CLAUDE_CODE_USE_VERTEX=1。
+ * Vertex 模型 ID 通常使用 "vertex_ai/" 前缀。
  *
- * On Vertex, passing bare tier names causes errors because the provider
- * expects full Vertex model paths.
+ * 在 Vertex 上，传入裸层级名称会报错，因为 provider 期望完整的 Vertex
+ * 模型路径。
  */
 export function isVertexAI(): boolean {
   if (process.env.CLAUDE_CODE_USE_VERTEX === '1') {
     return true;
   }
 
-  // Fallback: detect vertex_ai/ prefix in the active model env value.
+  // 兜底：在当前生效的模型环境变量值中检测 vertex_ai/ 前缀。
   return hasVertexModelId(getProviderDetectionModelEnvValues());
 }
 
@@ -345,49 +343,49 @@ function hasNonClaudeModelId(modelIds: readonly string[]): boolean {
 }
 
 /**
- * Detect whether WISE should avoid passing Claude-specific model tier
- * names (sonnet/opus/haiku) to the Agent tool.
+ * 检测 WISE 是否应避免向 Agent 工具传入 Claude 专属的模型层级名称
+ * （sonnet/opus/haiku）。
  *
- * Returns true when:
- * - User explicitly set WISE_ROUTING_FORCE_INHERIT=true
- * - Running on AWS Bedrock — needs full Bedrock model IDs, not bare tier names
- * - Running on Google Vertex AI — needs full Vertex model paths
- * - A non-Claude model ID is detected (CC Switch, LiteLLM, etc.)
- * - A custom ANTHROPIC_BASE_URL points to a non-Anthropic endpoint
+ * 当满足以下任一条件时返回 true：
+ * - 用户显式设置了 WISE_ROUTING_FORCE_INHERIT=true
+ * - 运行在 AWS Bedrock 上——需要完整 Bedrock 模型 ID，而非裸层级名称
+ * - 运行在 Google Vertex AI 上——需要完整 Vertex 模型路径
+ * - 检测到非 Claude 模型 ID（CC Switch、LiteLLM 等）
+ * - 自定义 ANTHROPIC_BASE_URL 指向非 Anthropic 端点
  */
 export function isNonClaudeProvider(): boolean {
-  // Explicit opt-in: user has already set forceInherit via env var
+  // 显式启用：用户已通过环境变量设置 forceInherit
   if (process.env.WISE_ROUTING_FORCE_INHERIT === 'true') {
     return true;
   }
 
-  // AWS Bedrock: Claude via AWS, but needs full Bedrock model IDs
+  // AWS Bedrock：经 AWS 使用 Claude，但需要完整 Bedrock 模型 ID
   if (isBedrock()) {
     return true;
   }
 
-  // Google Vertex AI: Claude via GCP, needs full Vertex model paths
+  // Google Vertex AI：经 GCP 使用 Claude，需要完整 Vertex 模型路径
   if (isVertexAI()) {
     return true;
   }
 
-  // Check the active model env value for non-Claude model IDs.
-  // Direct CLAUDE_MODEL/ANTHROPIC_MODEL env vars intentionally short-circuit
-  // lower-precedence tier defaults so stale tier envs do not force inheritance.
-  // Note: this check comes AFTER Bedrock/Vertex because their model IDs
-  // contain "claude" and would incorrectly return false here.
+  // 检查当前生效的模型环境变量值是否为非 Claude 模型 ID。
+  // 直连 CLAUDE_MODEL/ANTHROPIC_MODEL 环境变量有意短路低优先级的层级默认值，
+  // 以防过期的层级环境变量强制触发继承。
+  // 注意：此检查在 Bedrock/Vertex 之后进行，因为它们的模型 ID 含有
+  // "claude"，否则会在此错误地返回 false。
   if (hasNonClaudeModelId(getProviderDetectionModelEnvValues())) {
     return true;
   }
 
-  // Custom base URL suggests a proxy/gateway (CC Switch, LiteLLM, OneAPI, etc.)
+  // 自定义 base URL 暗示是代理/网关（CC Switch、LiteLLM、OneAPI 等）
   const baseUrl = process.env.ANTHROPIC_BASE_URL || '';
   if (baseUrl) {
-    // Validate URL for SSRF protection
+    // 校验 URL 以防范 SSRF
     const validation = validateAnthropicBaseUrl(baseUrl);
     if (!validation.allowed) {
       console.error(`[SSRF Guard] Rejecting ANTHROPIC_BASE_URL: ${validation.reason}`);
-      // Treat invalid URLs as non-Claude to prevent potential SSRF
+      // 将无效 URL 视为非 Claude，以防潜在 SSRF
       return true;
     }
     if (!baseUrl.includes('anthropic.com')) {
@@ -399,10 +397,9 @@ export function isNonClaudeProvider(): boolean {
 }
 
 /**
- * Detect whether provider state should globally force Agent/Task calls to
- * inherit the parent session model. Tier model env overrides intentionally do
- * not trigger this by themselves: they are configured per-tier defaults for
- * WISE routing, not proof that every delegated agent should drop its model.
+ * 检测 provider 状态是否应全局强制 Agent/Task 调用继承父会话模型。
+ * 层级模型环境变量覆盖有意不单独触发此项：它们是 WISE 路由按层级配置的默认值，
+ * 并不能证明每个委派的 agent 都应放弃自己的模型。
  */
 export function shouldAutoForceInherit(): boolean {
   if (process.env.WISE_ROUTING_FORCE_INHERIT === 'true') {

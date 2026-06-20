@@ -1,14 +1,14 @@
 /**
- * Scientist Agent - Data Analysis & Research Execution
+ * Scientist Agent - 数据分析与研究执行
  *
- * Specialized agent for executing data analysis workflows using Python.
- * Performs EDA, statistical analysis, and generates actionable findings.
+ * 专用 agent，使用 Python 执行数据分析工作流。
+ * 执行 EDA、统计分析，并生成可执行的发现。
  *
- * Enables:
- * - Exploratory data analysis on CSV, JSON, Parquet files
- * - Statistical computations and hypothesis testing
- * - Data transformations and feature engineering
- * - Generating structured findings with evidence
+ * 支持：
+ * - 对 CSV、JSON、Parquet 文件进行探索性数据分析
+ * - 统计计算与假设检验
+ * - 数据转换与特征工程
+ * - 生成带有证据的结构化发现
  */
 
 import type { AgentConfig, AgentPromptMetadata } from './types.js';

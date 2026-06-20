@@ -1,8 +1,8 @@
 /**
- * Transactional Transition Helper
+ * 事务式转换辅助器
  *
- * Executes a series of steps atomically: if any step fails,
- * all previously completed steps are rolled back in reverse order.
+ * 以原子方式执行一系列步骤：若任一步骤失败，
+ * 所有先前已完成的步骤都按逆序回滚。
  */
 
 export interface TransitionStep {
@@ -18,8 +18,8 @@ export interface TransitionResult {
 }
 
 /**
- * Execute a sequence of transition steps transactionally.
- * If any step fails, all previously completed steps are rolled back in reverse order.
+ * 以事务方式执行一系列转换步骤。
+ * 若任一步骤失败，所有先前已完成的步骤都按逆序回滚。
  */
 export async function executeTransition(steps: TransitionStep[]): Promise<TransitionResult> {
   const completed: TransitionStep[] = [];
@@ -28,9 +28,9 @@ export async function executeTransition(steps: TransitionStep[]): Promise<Transi
       await step.execute();
       completed.push(step);
     } catch (error) {
-      // Rollback in reverse order
+      // 按逆序回滚
       for (const done of completed.reverse()) {
-        try { await done.rollback(); } catch { /* best-effort rollback */ }
+        try { await done.rollback(); } catch { /* 尽力回滚 */ }
       }
       return { success: false, failedStep: step.name, error: String(error) };
     }

@@ -1,10 +1,10 @@
 // src/planning/artifacts.ts
 
 /**
- * Planning artifacts reader.
+ * 计划制品读取器。
  *
- * Reads .wise/plans/ directory for PRD and test-spec files,
- * and extracts approved execution launch hints embedded in PRD markdown.
+ * 读取 .wise/plans/ 目录中的 PRD 与 test-spec 文件，
+ * 并提取嵌入在 PRD markdown 中的已批准执行启动提示。
  */
 
 import { readdirSync, readFileSync, existsSync } from "fs";
@@ -112,8 +112,8 @@ function hasCompletePlanningPair(
 }
 
 /**
- * Read planning artifacts from .wise/.omx plans directories.
- * Returns paths to all PRD and test-spec files found.
+ * 从 .wise/.omx plans 目录读取计划制品。
+ * 返回所有找到的 PRD 与 test-spec 文件路径。
  */
 export function readPlanningArtifacts(cwd: string): PlanningArtifacts {
   let entries: string[];
@@ -147,8 +147,8 @@ export function readPlanningArtifacts(cwd: string): PlanningArtifacts {
 }
 
 /**
- * Returns true when the latest PRD and latest test spec contain
- * the required non-empty quality-gate sections.
+ * 当最新的 PRD 与最新的 test spec 包含
+ * 必需的非空质量门禁小节时返回 true。
  */
 export function isPlanningComplete(artifacts: PlanningArtifacts): boolean {
   const latestPrdPath = selectLatestPlanningArtifactPath(artifacts.prdPaths);
@@ -246,8 +246,8 @@ function parseFlags(flagStr: string): { linkedRalph: boolean } {
 }
 
 /**
- * Read the latest PRD file and extract an embedded launch hint for the given mode.
- * Returns null when no hint is found.
+ * 读取最新 PRD 文件并提取给定模式的嵌入启动提示。
+ * 未找到提示时返回 null。
  */
 export function readApprovedExecutionLaunchHint(
   cwd: string,

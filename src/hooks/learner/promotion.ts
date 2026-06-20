@@ -1,7 +1,7 @@
 /**
- * Ralph-Progress Promotion
+ * Ralph-Progress 提升器
  *
- * Promotes learnings from ralph-progress to full skills.
+ * 将 ralph-progress 中的学习成果提升为正式技能。
  */
 
 import { readProgress } from '../ralph/index.js';
@@ -10,18 +10,18 @@ import type { SkillExtractionRequest } from './types.js';
 import type { WriteSkillResult } from './writer.js';
 
 export interface PromotionCandidate {
-  /** The learning text */
+  /** 学习成果文本 */
   learning: string;
-  /** Story ID it came from */
+  /** 来源 Story ID */
   storyId: string;
-  /** Timestamp */
+  /** 时间戳 */
   timestamp: string;
-  /** Suggested triggers (extracted from text) */
+  /** 建议的触发器（从文本中提取） */
   suggestedTriggers: string[];
 }
 
 /**
- * Extract trigger keywords from learning text.
+ * 从学习成果文本中提取触发器关键词。
  */
 function extractTriggers(text: string): string[] {
   const technicalKeywords = [
@@ -35,7 +35,7 @@ function extractTriggers(text: string): string[] {
 }
 
 /**
- * Get promotion candidates from ralph-progress learnings.
+ * 从 ralph-progress 学习成果中获取提升候选项。
  */
 export function getPromotionCandidates(
   directory: string,
@@ -48,12 +48,12 @@ export function getPromotionCandidates(
 
   const candidates: PromotionCandidate[] = [];
 
-  // Get recent entries with learnings
+  // 获取含学习成果的近期条目
   const recentEntries = progress.entries.slice(-limit);
 
   for (const entry of recentEntries) {
     for (const learning of entry.learnings) {
-      // Skip very short learnings
+      // 跳过过短的学习成果
       if (learning.length < 20) continue;
 
       candidates.push({
@@ -65,12 +65,12 @@ export function getPromotionCandidates(
     }
   }
 
-  // Sort by number of triggers (more specific = better candidate)
+  // 按触发器数量排序（越具体越是优质候选项）
   return candidates.sort((a, b) => b.suggestedTriggers.length - a.suggestedTriggers.length);
 }
 
 /**
- * Promote a learning to a full skill.
+ * 将学习成果提升为正式技能。
  */
 export function promoteLearning(
   candidate: PromotionCandidate,
@@ -90,7 +90,7 @@ export function promoteLearning(
 }
 
 /**
- * List learnings that could be promoted.
+ * 列出可被提升的学习成果。
  */
 export function listPromotableLearnings(directory: string): string {
   const candidates = getPromotionCandidates(directory);

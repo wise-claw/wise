@@ -1,16 +1,16 @@
 /**
  * Wise
  *
- * A self-evolving multi-agent orchestration system for the Claude Agent SDK.
+ * 面向 Claude Agent SDK 的自进化多智能体编排系统。
  *
- * Main features:
- * - Self-evolving: Agents evolve based on feedback and context
- * - Multi-agent orchestration: Delegates to specialized subagents
- * - Parallel execution: Background agents run concurrently
- * - LSP/AST tools: IDE-like capabilities for agents
- * - Context management: Auto-injection from context files
- * - Continuation enforcement: Ensures tasks complete before stopping
- * - Magic keywords: Special triggers for enhanced behaviors
+ * 主要特性：
+ * - 自进化：智能体基于反馈与上下文持续演进
+ * - 多智能体编排：委派给专业化子智能体
+ * - 并行执行：后台智能体并发运行
+ * - LSP/AST 工具：为智能体提供 IDE 级能力
+ * - 上下文管理：从上下文文件自动注入
+ * - 续跑强制：确保任务在停止前完成
+ * - 魔法关键词：用于增强行为的特殊触发器
  */
 
 import { loadConfig, findContextFiles, loadContextFromFiles } from './config/loader.js';
@@ -44,18 +44,18 @@ export {
   type TaskExecutionDecision
 } from './features/background-tasks.js';
 export {
-  // Auto-update types
+  // 自动更新类型
   type VersionMetadata,
   type ReleaseInfo,
   type UpdateCheckResult,
   type UpdateResult,
-  // Auto-update constants
+  // 自动更新常量
   REPO_OWNER,
   REPO_NAME,
   GITHUB_API_URL,
   CLAUDE_CONFIG_DIR,
   VERSION_FILE,
-  // Auto-update functions
+  // 自动更新函数
   getInstalledVersion,
   saveVersionMetadata,
   checkForUpdates,
@@ -67,12 +67,12 @@ export {
 } from './features/auto-update.js';
 export * from './shared/index.js';
 
-// Hooks module exports
+// 钩子模块导出
 export * from './hooks/index.js';
 
-// Features module exports (boulder-state, context-injector)
+// 特性模块导出（boulder-state、context-injector）
 export {
-  // Boulder State
+  // Boulder 状态
   type BoulderState,
   type PlanProgress,
   type PlanSummary,
@@ -95,7 +95,7 @@ export {
   getPlanSummaries,
   hasBoulder,
   getActivePlanPath,
-  // Context Injector
+  // 上下文注入器
   ContextCollector,
   contextCollector,
   injectPendingContext,
@@ -113,9 +113,9 @@ export {
 } from './features/index.js';
 export { searchSessionHistory, parseSinceSpec, type SessionHistoryMatch, type SessionHistorySearchOptions, type SessionHistorySearchReport } from './features/index.js';
 
-// Agent module exports (modular agent system)
+// 智能体模块导出（模块化智能体系统）
 export {
-  // Types
+  // 类型
   type ModelType,
   type AgentCost,
   type AgentCategory,
@@ -130,7 +130,7 @@ export {
   isGptModel,
   isClaudeModel,
   getDefaultModelForCategory,
-  // Utilities
+  // 工具方法
   createAgentToolRestrictions,
   mergeAgentConfig,
   buildDelegationTable,
@@ -141,7 +141,7 @@ export {
   validateAgentConfig,
   deepMerge,
   loadAgentPrompt,
-  // Individual agents with metadata (rebranded intuitive names)
+  // 带元数据的独立智能体（重命名为直观名称）
   architectAgent,
   ARCHITECT_PROMPT_METADATA,
   exploreAgent,
@@ -163,10 +163,10 @@ export {
   PLANNER_PROMPT_METADATA,
 } from './agents/index.js';
 
-/** @deprecated Use documentSpecialistAgent instead */
+/** @deprecated 请改用 documentSpecialistAgent */
 export { documentSpecialistAgent as researcherAgent } from './agents/document-specialist.js';
 
-// Command expansion utilities for SDK integration
+// 用于 SDK 集成的命令展开工具
 export {
   expandCommand,
   expandCommandPrompt,
@@ -180,7 +180,7 @@ export {
   type ExpandedCommand
 } from './commands/index.js';
 
-// Installer exports
+// 安装器导出
 export {
   install,
   isInstalled,
@@ -195,28 +195,28 @@ export {
 } from './installer/index.js';
 
 /**
- * Options for creating a WISE session
+ * 创建 WISE 会话的选项
  */
 export interface WiseOptions {
-  /** Custom configuration (merged with loaded config) */
+  /** 自定义配置（与已加载配置合并） */
   config?: Partial<PluginConfig>;
-  /** Working directory (default: process.cwd()) */
+  /** 工作目录（默认：process.cwd()） */
   workingDirectory?: string;
-  /** Skip loading config files */
+  /** 跳过加载配置文件 */
   skipConfigLoad?: boolean;
-  /** Skip context file injection */
+  /** 跳过上下文文件注入 */
   skipContextInjection?: boolean;
-  /** Custom system prompt addition */
+  /** 自定义系统 prompt 追加内容 */
   customSystemPrompt?: string;
-  /** API key (default: from ANTHROPIC_API_KEY env) */
+  /** API key（默认：取自 ANTHROPIC_API_KEY 环境变量） */
   apiKey?: string;
 }
 
 /**
- * Result of creating a WISE session
+ * 创建 WISE 会话的结果
  */
 export interface WiseSession {
-  /** The query options to pass to Claude Agent SDK */
+  /** 传给 Claude Agent SDK 的查询选项 */
   queryOptions: {
     options: {
       systemPrompt: string;
@@ -226,25 +226,24 @@ export interface WiseSession {
       permissionMode: string;
     };
   };
-  /** Session state */
+  /** 会话状态 */
   state: SessionState;
-  /** Loaded configuration */
+  /** 已加载的配置 */
   config: PluginConfig;
-  /** Process a prompt (applies magic keywords) */
+  /** 处理 prompt（应用魔法关键词） */
   processPrompt: (prompt: string) => string;
-  /** Get detected magic keywords in a prompt */
+  /** 获取 prompt 中检测到的魔法关键词 */
   detectKeywords: (prompt: string) => string[];
-  /** Background task manager for controlling async execution */
+  /** 用于控制异步执行的后台任务管理器 */
   backgroundTasks: BackgroundTaskManager;
-  /** Check if a command should run in background (convenience method) */
+  /** 判断命令是否应后台运行（便捷方法） */
   shouldRunInBackground: (command: string) => TaskExecutionDecision;
 }
 
 /**
- * Create a WISE orchestration session
+ * 创建 WISE 编排会话
  *
- * This prepares all the configuration and options needed
- * to run a query with the Claude Agent SDK.
+ * 准备运行 Claude Agent SDK 查询所需的全部配置与选项。
  *
  * @example
  * ```typescript
@@ -253,7 +252,7 @@ export interface WiseSession {
  *
  * const session = createWiseSession();
  *
- * // Use with Claude Agent SDK
+ * // 与 Claude Agent SDK 配合使用
  * for await (const message of query({
  *   prompt: session.processPrompt("ultrawork refactor the authentication module"),
  *   ...session.queryOptions
@@ -263,14 +262,14 @@ export interface WiseSession {
  * ```
  */
 export function createWiseSession(options?: WiseOptions): WiseSession {
-  // Load configuration
+  // 加载配置
   const loadedConfig = options?.skipConfigLoad ? {} : loadConfig();
   const config: PluginConfig = {
     ...loadedConfig,
     ...options?.config
   };
 
-  // Find and load context files
+  // 查找并加载上下文文件
   let contextAddition = '';
   if (!options?.skipContextInjection && config.features?.autoContextInjection !== false) {
     const contextFiles = findContextFiles(options?.workingDirectory);
@@ -279,35 +278,35 @@ export function createWiseSession(options?: WiseOptions): WiseSession {
     }
   }
 
-  // Build system prompt
+  // 构建 system prompt
   let systemPrompt = appendSkininthegamebrosGuidance(wiseSystemPrompt, 'system');
 
-  // Add continuation enforcement
+  // 追加续跑强制
   if (config.features?.continuationEnforcement !== false) {
     systemPrompt += continuationSystemPromptAddition;
   }
 
-  // Add custom system prompt
+  // 追加自定义 system prompt
   if (options?.customSystemPrompt) {
     systemPrompt += `\n\n## Custom Instructions\n\n${options.customSystemPrompt}`;
   }
 
-  // Add context from files
+  // 追加来自文件的上下文
   if (contextAddition) {
     systemPrompt += contextAddition;
   }
 
-  // Get agent definitions
+  // 获取智能体定义
   const agents = getAgentDefinitions({ config });
 
-  // Build MCP servers configuration
+  // 构建 MCP server 配置
   const externalMcpServers = getDefaultMcpServers({
     exaApiKey: config.mcpServers?.exa?.apiKey,
     enableExa: config.mcpServers?.exa?.enabled,
     enableContext7: config.mcpServers?.context7?.enabled
   });
 
-  // Build allowed tools list
+  // 构建允许的工具列表
   const allowedTools: string[] = [
     'Read', 'Glob', 'Grep', 'WebSearch', 'WebFetch', 'Task', 'TodoWrite'
   ];
@@ -324,12 +323,12 @@ export function createWiseSession(options?: WiseOptions): WiseSession {
     allowedTools.push('Write');
   }
 
-  // Add MCP tool names
+  // 追加 MCP 工具名
   for (const serverName of Object.keys(externalMcpServers)) {
     allowedTools.push(`mcp__${serverName}__*`);
   }
 
-  // Add WISE custom tools in MCP format (LSP, AST, python_repl)
+  // 以 MCP 格式追加 WISE 自定义工具（LSP、AST、python_repl）
   const wiseTools = getWiseToolNames({
     includeLsp: config.features?.lspTools !== false,
     includeAst: config.features?.astTools !== false,
@@ -337,17 +336,17 @@ export function createWiseSession(options?: WiseOptions): WiseSession {
   });
   allowedTools.push(...wiseTools);
 
-  // Create magic keyword processor
+  // 创建魔法关键词处理器
   const processPrompt = createMagicKeywordProcessor(config.magicKeywords);
 
-  // Initialize session state
+  // 初始化会话状态
   const state: SessionState = {
     activeAgents: new Map(),
     backgroundTasks: [],
     contextFiles: findContextFiles(options?.workingDirectory)
   };
 
-  // Create background task manager
+  // 创建后台任务管理器
   const backgroundTaskManager = createBackgroundTaskManager(state, config);
 
   return {
@@ -377,7 +376,7 @@ export function createWiseSession(options?: WiseOptions): WiseSession {
 }
 
 /**
- * Quick helper to process a prompt with WISE enhancements
+ * 用 WISE 增强处理 prompt 的快捷助手
  */
 export function enhancePrompt(prompt: string, config?: PluginConfig): string {
   const processor = createMagicKeywordProcessor(config?.magicKeywords);
@@ -385,7 +384,7 @@ export function enhancePrompt(prompt: string, config?: PluginConfig): string {
 }
 
 /**
- * Get the system prompt for the orchestrator (for direct use)
+ * 获取编排器的 system prompt（可直接使用）
  */
 export function getWiseSystemPrompt(options?: {
   includeContinuation?: boolean;

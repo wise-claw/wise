@@ -1,11 +1,11 @@
 /**
- * Skill Bridge Module
+ * 技能桥接模块
  *
- * Exports a focused API for skill-injector.mjs to use via esbuild bundle.
- * This module bridges the TypeScript learner infrastructure with the standalone hook script.
+ * 导出聚焦的 API，供 skill-injector.mjs 经 esbuild 打包后使用。
+ * 本模块将 TypeScript learner 基础设施与独立钩子脚本桥接起来。
  *
- * Bundled to: dist/hooks/skill-bridge.cjs
- * Usage: const bridge = require('../dist/hooks/skill-bridge.cjs');
+ * 打包至：dist/hooks/skill-bridge.cjs
+ * 用法：const bridge = require('../dist/hooks/skill-bridge.cjs');
  */
 
 import {
@@ -22,7 +22,7 @@ import { WisePaths } from "../../lib/worktree-paths.js";
 import { parseYamlMetadata } from "./parser.js";
 import { expandTriggers } from "./transliteration-map.js";
 
-// Re-export constants
+// 重新导出常量
 export const USER_SKILLS_DIR = join(
   homedir(),
   ".claude",
@@ -34,30 +34,30 @@ export const PROJECT_SKILLS_SUBDIR = WisePaths.SKILLS;
 export const PROJECT_AGENT_SKILLS_SUBDIR = join(".agents", "skills");
 export const SKILL_EXTENSION = ".md";
 
-/** Session TTL: 1 hour */
+/** 会话 TTL：1 小时 */
 const SESSION_TTL_MS = 60 * 60 * 1000;
 
-/** Maximum recursion depth for directory traversal */
+/** 目录遍历的最大递归深度 */
 const MAX_RECURSION_DEPTH = 10;
 
-/** Levenshtein cache size limit */
+/** Levenshtein 缓存大小上限 */
 const LEVENSHTEIN_CACHE_SIZE = 1000;
 
-/** Skill metadata cache TTL in milliseconds (30 seconds) */
+/** 技能元数据缓存 TTL（毫秒，30 秒） */
 const SKILL_CACHE_TTL_MS = 30 * 1000;
 
 const MAX_CACHE_ENTRIES = 50;
 
 // =============================================================================
-// Performance Caches
+// 性能缓存
 // =============================================================================
 
-/** LRU cache for Levenshtein distance calculations */
+/** 用于 Levenshtein 距离计算的 LRU 缓存 */
 const levenshteinCache = new Map<string, number>();
 
 /**
- * Get cached Levenshtein distance or compute and cache it.
- * Uses canonical key ordering to maximize cache hits.
+ * 获取缓存的 Levenshtein 距离，若无则计算并缓存。
+ * 使用规范化键顺序以最大化缓存命中。
  */
 function getCachedLevenshtein(str1: string, str2: string): number {
   const key = str1 < str2 ? `${str1}|${str2}` : `${str2}|${str1}`;
@@ -79,7 +79,7 @@ function getCachedLevenshtein(str1: string, str2: string): number {
   return result;
 }
 
-/** Cached skill metadata for faster matching */
+/** 缓存的技能元数据，用于加速匹配 */
 interface CachedSkillData {
   path: string;
   name: string;
@@ -97,11 +97,11 @@ interface CachedSkillEntry {
   timestamp: number;
 }
 
-/** Skill metadata cache keyed by project root */
+/** 按项目根目录键控的技能元数据缓存 */
 let skillMetadataCache: Map<string, CachedSkillEntry> | null = null;
 
 /**
- * Get cached skill metadata or refresh if stale.
+ * 获取缓存的技能元数据，若过期则刷新。
  */
 function getSkillMetadataCache(projectRoot: string): CachedSkillData[] {
   if (!skillMetadataCache) {
@@ -117,7 +117,7 @@ function getSkillMetadataCache(projectRoot: string): CachedSkillData[] {
     return cached.skills;
   }
 
-  // Refresh cache
+  // 刷新缓存
   const candidates = findSkillFiles(projectRoot);
   const skills: CachedSkillData[] = [];
 
@@ -147,7 +147,7 @@ function getSkillMetadataCache(projectRoot: string): CachedSkillData[] {
         scope: candidate.scope,
       });
     } catch {
-      // Ignore file read errors
+      // 忽略文件读取错误
     }
   }
 
@@ -161,14 +161,14 @@ function getSkillMetadataCache(projectRoot: string): CachedSkillData[] {
 }
 
 /**
- * Clear skill metadata cache (for testing).
+ * 清除技能元数据缓存（用于测试）。
  */
 export function clearSkillMetadataCache(): void {
   skillMetadataCache = null;
 }
 
 /**
- * Clear Levenshtein cache (for testing).
+ * 清除 Levenshtein 缓存（用于测试）。
  */
 export function clearLevenshteinCache(): void {
   levenshteinCache.clear();
@@ -182,18 +182,18 @@ function summarizeSkillContent(content: string): string {
   return (firstUsefulLine || content.replace(/\s+/g, " ").trim()).slice(0, 240);
 }
 
-/** State file path */
+/** 状态文件路径 */
 const STATE_FILE = `${WisePaths.STATE}/skill-sessions.json`;
 
 // =============================================================================
-// Types
+// 类型
 // =============================================================================
 
 export interface SkillFileCandidate {
   path: string;
   realPath: string;
   scope: "user" | "project";
-  /** The root directory this skill was found in */
+  /** 发现该技能的根目录 */
   sourceDir: string;
 }
 
@@ -235,18 +235,18 @@ interface SessionState {
 }
 
 // =============================================================================
-// Session Cache (File-Based)
+// 会话缓存（基于文件）
 // =============================================================================
 
 /**
- * Get state file path for a project.
+ * 获取某项目的状态文件路径。
  */
 function getStateFilePath(projectRoot: string): string {
   return join(projectRoot, STATE_FILE);
 }
 
 /**
- * Read session state from file.
+ * 从文件读取会话状态。
  */
 function readSessionState(projectRoot: string): SessionState {
   const stateFile = getStateFilePath(projectRoot);
@@ -256,13 +256,13 @@ function readSessionState(projectRoot: string): SessionState {
       return JSON.parse(content);
     }
   } catch {
-    // Ignore read/parse errors
+    // 忽略读取/解析错误
   }
   return { sessions: {} };
 }
 
 /**
- * Write session state to file.
+ * 将会话状态写入文件。
  */
 function writeSessionState(projectRoot: string, state: SessionState): void {
   const stateFile = getStateFilePath(projectRoot);
@@ -270,12 +270,12 @@ function writeSessionState(projectRoot: string, state: SessionState): void {
     mkdirSync(dirname(stateFile), { recursive: true });
     writeFileSync(stateFile, JSON.stringify(state, null, 2), "utf-8");
   } catch {
-    // Ignore write errors (non-critical)
+    // 忽略写入错误（非关键）
   }
 }
 
 /**
- * Get paths of skills already injected in this session.
+ * 获取本会话已注入的技能路径。
  */
 export function getInjectedSkillPaths(
   sessionId: string,
@@ -286,7 +286,7 @@ export function getInjectedSkillPaths(
 
   if (!session) return [];
 
-  // Check TTL
+  // 检查 TTL
   if (Date.now() - session.timestamp > SESSION_TTL_MS) {
     return [];
   }
@@ -295,7 +295,7 @@ export function getInjectedSkillPaths(
 }
 
 /**
- * Mark skills as injected for this session.
+ * 将技能标记为本会话已注入。
  */
 export function markSkillsInjected(
   sessionId: string,
@@ -305,17 +305,17 @@ export function markSkillsInjected(
   const state = readSessionState(projectRoot);
   const now = Date.now();
 
-  // Prune expired sessions
+  // 清理过期会话
   for (const [id, session] of Object.entries(state.sessions)) {
     if (now - session.timestamp > SESSION_TTL_MS) {
       delete state.sessions[id];
     }
   }
 
-  // Get existing paths for this session
+  // 获取本会话已有路径
   const existing = state.sessions[sessionId]?.injectedPaths ?? [];
 
-  // Merge with new paths (dedupe)
+  // 与新路径合并（去重）
   state.sessions[sessionId] = {
     injectedPaths: [...new Set([...existing, ...paths])],
     timestamp: now,
@@ -325,11 +325,11 @@ export function markSkillsInjected(
 }
 
 // =============================================================================
-// File Discovery (Recursive)
+// 文件发现（递归）
 // =============================================================================
 
 /**
- * Recursively find all skill files in a directory.
+ * 递归查找某目录下的所有技能文件。
  */
 function findSkillFilesRecursive(
   dir: string,
@@ -351,12 +351,12 @@ function findSkillFilesRecursive(
       }
     }
   } catch {
-    // Permission denied or other errors - silently skip
+    // 权限拒绝或其他错误 - 静默跳过
   }
 }
 
 /**
- * Resolve symlinks safely with fallback.
+ * 安全解析符号链接，失败则兜底。
  */
 function safeRealpathSync(filePath: string): string {
   try {
@@ -367,7 +367,7 @@ function safeRealpathSync(filePath: string): string {
 }
 
 /**
- * Check if a resolved path is within a boundary directory.
+ * 检查解析后的路径是否位于边界目录内。
  */
 function isWithinBoundary(realPath: string, boundary: string): boolean {
   const normalizedReal = safeRealpathSync(realPath)
@@ -383,9 +383,9 @@ function isWithinBoundary(realPath: string, boundary: string): boolean {
 }
 
 /**
- * Find all skill files for a given project.
- * Returns project skills first (higher priority), then user skills.
- * Now supports RECURSIVE discovery (subdirectories included).
+ * 查找某项目的所有技能文件。
+ * 先返回项目技能（更高优先级），再返回用户技能。
+ * 现支持递归发现（含子目录）。
  */
 export function findSkillFiles(
   projectRoot: string,
@@ -395,7 +395,7 @@ export function findSkillFiles(
   const seenRealPaths = new Set<string>();
   const scope = options?.scope ?? "all";
 
-  // 1. Search project-level skills (higher priority)
+  // 1. 搜索项目级技能（更高优先级）
   if (scope === "project" || scope === "all") {
     const projectSkillDirs = [
       join(projectRoot, PROJECT_SKILLS_SUBDIR),
@@ -422,7 +422,7 @@ export function findSkillFiles(
     }
   }
 
-  // 2. Search user-level skills from both directories (lower priority)
+  // 2. 从两个目录搜索用户级技能（更低优先级）
   if (scope === "user" || scope === "all") {
     const userDirs = [GLOBAL_SKILLS_DIR, USER_SKILLS_DIR];
     for (const userDir of userDirs) {
@@ -449,18 +449,18 @@ export function findSkillFiles(
 }
 
 // =============================================================================
-// Parsing
+// 解析
 // =============================================================================
 
 /**
- * Parse YAML frontmatter and content from a skill file.
+ * 从技能文件解析 YAML frontmatter 与内容。
  */
 export function parseSkillFile(content: string): ParseResult | null {
   const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/;
   const match = content.match(frontmatterRegex);
 
   if (!match) {
-    // No frontmatter - still valid, use filename as name
+    // 无 frontmatter - 仍有效，用文件名作为名称
     return {
       metadata: {},
       content: content.trim(),
@@ -492,22 +492,22 @@ export function parseSkillFile(content: string): ParseResult | null {
 }
 
 // =============================================================================
-// Matching
+// 匹配
 // =============================================================================
 
 /**
- * Calculate Levenshtein distance using O(n) space with 2 rows.
+ * 使用两行、O(n) 空间计算 Levenshtein 距离。
  */
 function levenshteinDistance(str1: string, str2: string): number {
   const m = str1.length;
   const n = str2.length;
 
-  // Optimize by making n the smaller dimension
+  // 优化：让 n 为较小维度
   if (m < n) {
     return levenshteinDistance(str2, str1);
   }
 
-  // Use 2 rows instead of full matrix for O(n) space
+  // 用两行而非完整矩阵，实现 O(n) 空间
   let prev = new Array<number>(n + 1);
   let curr = new Array<number>(n + 1);
 
@@ -529,13 +529,13 @@ function levenshteinDistance(str1: string, str2: string): number {
 }
 
 /**
- * Fuzzy match a trigger against prompt text.
- * Returns confidence score 0-100.
+ * 将触发器与 prompt 文本进行模糊匹配。
+ * 返回 0-100 的置信度评分。
  */
 function fuzzyMatchTrigger(prompt: string, trigger: string): number {
   const words = prompt.split(/\s+/).filter((w) => w.length > 0);
 
-  // Exact word match
+  // 精确单词匹配
   for (const word of words) {
     if (word === trigger) return 100;
     if (word.includes(trigger) || trigger.includes(word)) {
@@ -555,11 +555,11 @@ function fuzzyMatchTrigger(prompt: string, trigger: string): number {
 }
 
 /**
- * Find matching skills for injection based on prompt triggers.
+ * 基于 prompt 触发器查找可注入的匹配技能。
  *
- * Options:
- * - fuzzyThreshold: minimum score for fuzzy match (default: 60)
- * - maxResults: maximum skills to return (default: 5)
+ * 选项：
+ * - fuzzyThreshold：模糊匹配的最低评分（默认：60）
+ * - maxResults：返回技能的最大数量（默认：5）
  */
 export function matchSkillsForInjection(
   prompt: string,
@@ -574,7 +574,7 @@ export function matchSkillsForInjection(
     getInjectedSkillPaths(sessionId, projectRoot),
   );
 
-  // Use cached skill metadata instead of re-reading files each time
+  // 使用缓存的技能元数据，而非每次重新读取文件
   const cachedSkills = getSkillMetadataCache(projectRoot);
   const matches: MatchedSkill[] = [];
 
@@ -613,7 +613,7 @@ export function matchSkillsForInjection(
     }
   }
 
-  // Sort by score (descending) and limit
+  // 按评分降序排序并限制数量
   matches.sort((a, b) => b.score - a.score);
   return matches.slice(0, maxResults);
 }

@@ -1,8 +1,8 @@
 /**
- * Notepad Wisdom Module
+ * Notepad Wisdom 模块
  *
- * Plan-scoped notepad system for capturing learnings, decisions, issues, and problems.
- * Creates wisdom files at: .wise/notepads/{plan-name}/
+ * 计划维度的 notepad 系统，用于记录 learnings、decisions、issues、problems。
+ * wisdom 文件创建于：.wise/notepads/{plan-name}/
  */
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync, appendFileSync } from 'fs';
@@ -10,7 +10,7 @@ import { join, dirname } from 'path';
 import type { WisdomEntry, WisdomCategory, PlanWisdom } from './types.js';
 import { NOTEPAD_BASE_PATH } from '../boulder-state/constants.js';
 
-// Constants
+// 常量
 const WISDOM_FILES = {
   learnings: 'learnings.md',
   decisions: 'decisions.md',
@@ -19,15 +19,15 @@ const WISDOM_FILES = {
 } as const;
 
 /**
- * Sanitize plan name to prevent path traversal
+ * 清理计划名以防止路径穿越
  */
 function sanitizePlanName(planName: string): string {
-  // Remove any path separators and dangerous characters
+  // 移除路径分隔符与危险字符
   return planName.replace(/[^a-zA-Z0-9_-]/g, '-');
 }
 
 /**
- * Get the notepad directory for a specific plan
+ * 获取指定计划的 notepad 目录
  */
 function getNotepadDir(planName: string, directory: string): string {
   const sanitized = sanitizePlanName(planName);
@@ -35,7 +35,7 @@ function getNotepadDir(planName: string, directory: string): string {
 }
 
 /**
- * Get the full path to a wisdom file
+ * 获取 wisdom 文件的完整路径
  */
 function getWisdomFilePath(
   planName: string,
@@ -47,19 +47,19 @@ function getWisdomFilePath(
 }
 
 /**
- * Initialize notepad directory for a plan
- * Creates .wise/notepads/{plan-name}/ with 4 empty markdown files
+ * 初始化计划的 notepad 目录
+ * 创建 .wise/notepads/{plan-name}/ 及 4 个空的 markdown 文件
  */
 export function initPlanNotepad(planName: string, directory: string = process.cwd()): boolean {
   const notepadDir = getNotepadDir(planName, directory);
 
   try {
-    // Create the notepad directory
+    // 创建 notepad 目录
     if (!existsSync(notepadDir)) {
       mkdirSync(notepadDir, { recursive: true });
     }
 
-    // Create all wisdom files if they don't exist
+    // 如不存在则创建所有 wisdom 文件
     const categories: WisdomCategory[] = ['learnings', 'decisions', 'issues', 'problems'];
 
     for (const category of categories) {
@@ -79,7 +79,7 @@ export function initPlanNotepad(planName: string, directory: string = process.cw
 }
 
 /**
- * Read all wisdom entries from a specific category
+ * 读取指定类别的所有 wisdom 条目
  */
 function readWisdomCategory(
   planName: string,
@@ -96,7 +96,7 @@ function readWisdomCategory(
     const content = readFileSync(filePath, 'utf-8');
     const entries: WisdomEntry[] = [];
 
-    // Parse entries in format: ## YYYY-MM-DD HH:MM:SS\ncontent\n
+    // 解析格式如下的条目：## YYYY-MM-DD HH:MM:SS\ncontent\n
     const entryRegex = /^## (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\n([\s\S]*?)(?=\n## \d{4}-\d{2}-\d{2}|$)/gm;
     let match;
 
@@ -115,8 +115,8 @@ function readWisdomCategory(
 }
 
 /**
- * Read all wisdom from a plan's notepad
- * Returns concatenated wisdom from all 4 categories
+ * 读取计划 notepad 的所有 wisdom
+ * 返回 4 个类别拼接后的 wisdom
  */
 export function readPlanWisdom(planName: string, directory: string = process.cwd()): PlanWisdom {
   return {
@@ -129,7 +129,7 @@ export function readPlanWisdom(planName: string, directory: string = process.cwd
 }
 
 /**
- * Add a timestamped entry to a wisdom category
+ * 向 wisdom 类别添加带时间戳的条目
  */
 function addWisdomEntry(
   planName: string,
@@ -139,7 +139,7 @@ function addWisdomEntry(
 ): boolean {
   const filePath = getWisdomFilePath(planName, category, directory);
 
-  // Ensure notepad is initialized
+  // 确保 notepad 已初始化
   if (!existsSync(dirname(filePath))) {
     initPlanNotepad(planName, directory);
   }
@@ -157,7 +157,7 @@ function addWisdomEntry(
 }
 
 /**
- * Add a learning entry
+ * 添加 learning 条目
  */
 export function addLearning(
   planName: string,
@@ -168,7 +168,7 @@ export function addLearning(
 }
 
 /**
- * Add a decision entry
+ * 添加 decision 条目
  */
 export function addDecision(
   planName: string,
@@ -179,7 +179,7 @@ export function addDecision(
 }
 
 /**
- * Add an issue entry
+ * 添加 issue 条目
  */
 export function addIssue(
   planName: string,
@@ -190,7 +190,7 @@ export function addIssue(
 }
 
 /**
- * Add a problem entry
+ * 添加 problem 条目
  */
 export function addProblem(
   planName: string,
@@ -201,7 +201,7 @@ export function addProblem(
 }
 
 /**
- * Get a formatted string of all wisdom for a plan
+ * 获取计划所有 wisdom 的格式化字符串
  */
 export function getWisdomSummary(planName: string, directory: string = process.cwd()): string {
   const wisdom = readPlanWisdom(planName, directory);
@@ -226,5 +226,5 @@ export function getWisdomSummary(planName: string, directory: string = process.c
   return sections.join('\n\n');
 }
 
-// Re-export types
+// 重新导出类型
 export type { WisdomEntry, WisdomCategory, PlanWisdom } from './types.js';

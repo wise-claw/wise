@@ -1,8 +1,8 @@
 /**
- * Tiered Prompt Adaptations
+ * 分层 prompt 适配
  *
- * Provides model-specific prompt adaptations for Opus, Sonnet, and Haiku.
- * Each tier has prompts optimized for that model's capabilities.
+ * 为 Opus、Sonnet、Haiku 提供针对各模型定制的 prompt 适配。
+ * 每个 tier 都有针对该模型能力优化的 prompt。
  */
 
 import type { ComplexityTier, PromptAdaptationStrategy } from '../types.js';
@@ -12,13 +12,13 @@ import { adaptPromptForOpus, OPUS_PROMPT_PREFIX, OPUS_PROMPT_SUFFIX } from './op
 import { adaptPromptForSonnet, SONNET_PROMPT_PREFIX, SONNET_PROMPT_SUFFIX } from './sonnet.js';
 import { adaptPromptForHaiku, HAIKU_PROMPT_PREFIX, HAIKU_PROMPT_SUFFIX } from './haiku.js';
 
-// Re-export tier-specific modules
+// 重新导出各 tier 专用模块
 export * from './opus.js';
 export * from './sonnet.js';
 export * from './haiku.js';
 
 /**
- * Adapt a prompt for a specific complexity tier
+ * 将 prompt 适配到指定的复杂度 tier
  */
 export function adaptPromptForTier(prompt: string, tier: ComplexityTier): string {
   switch (tier) {
@@ -32,14 +32,14 @@ export function adaptPromptForTier(prompt: string, tier: ComplexityTier): string
 }
 
 /**
- * Get the prompt strategy for a tier
+ * 获取某个 tier 的 prompt 策略
  */
 export function getPromptStrategy(tier: ComplexityTier): PromptAdaptationStrategy {
   return TIER_PROMPT_STRATEGIES[tier];
 }
 
 /**
- * Get prompt prefix for a tier
+ * 获取某个 tier 的 prompt 前缀
  */
 export function getPromptPrefix(tier: ComplexityTier): string {
   switch (tier) {
@@ -53,7 +53,7 @@ export function getPromptPrefix(tier: ComplexityTier): string {
 }
 
 /**
- * Get prompt suffix for a tier
+ * 获取某个 tier 的 prompt 后缀
  */
 export function getPromptSuffix(tier: ComplexityTier): string {
   switch (tier) {
@@ -67,7 +67,7 @@ export function getPromptSuffix(tier: ComplexityTier): string {
 }
 
 /**
- * Create a delegation prompt with tier-appropriate framing
+ * 创建带有适合该 tier 框架的委派 prompt
  */
 export function createDelegationPrompt(
   tier: ComplexityTier,
@@ -119,7 +119,7 @@ export function createDelegationPrompt(
 }
 
 /**
- * Tier-specific instructions for common task types
+ * 针对常见任务类型的各 tier 专用指令
  */
 export const TIER_TASK_INSTRUCTIONS: Record<ComplexityTier, Record<string, string>> = {
   HIGH: {
@@ -146,7 +146,7 @@ export const TIER_TASK_INSTRUCTIONS: Record<ComplexityTier, Record<string, strin
 };
 
 /**
- * Get task-specific instructions for a tier
+ * 获取某个 tier 针对特定任务的指令
  */
 export function getTaskInstructions(tier: ComplexityTier, taskType: string): string {
   return TIER_TASK_INSTRUCTIONS[tier][taskType] ?? TIER_TASK_INSTRUCTIONS[tier].implement;

@@ -1,10 +1,10 @@
 /**
- * Background Agent Feature
+ * Background Agent 功能
  *
- * Manages background tasks for the WISE multi-agent system.
- * Provides concurrency control and task state management.
+ * 为 WISE 多智能体系统管理后台任务。
+ * 提供并发控制与任务状态管理。
  *
- * Adapted from oh-my-opencode's background-agent feature.
+ * 改编自 oh-my-opencode 的 background-agent 功能。
  */
 
 export * from './types.js';

@@ -1,16 +1,16 @@
 /**
- * Comment Checker Filters
+ * 注释检查器过滤器
  *
- * Filters to determine which comments should be flagged vs skipped.
+ * 用于判断哪些注释应被标记、哪些应被跳过的过滤器。
  *
- * Adapted from oh-my-opencode's comment-checker hook.
+ * 改编自 oh-my-opencode 的 comment-checker 钩子。
  */
 
 import { BDD_KEYWORDS, TYPE_CHECKER_PREFIXES } from './constants.js';
 import type { CommentInfo, FilterResult, CommentFilter } from './types.js';
 
 /**
- * Filter for shebang comments (#!/usr/bin/env ...)
+ * shebang 注释过滤器 (#!/usr/bin/env ...)
  */
 export function filterShebangComments(comment: CommentInfo): FilterResult {
   const text = comment.text.trim();
@@ -21,23 +21,23 @@ export function filterShebangComments(comment: CommentInfo): FilterResult {
 }
 
 /**
- * Filter for BDD (Behavior-Driven Development) comments
+ * BDD（行为驱动开发）注释过滤器
  */
 export function filterBddComments(comment: CommentInfo): FilterResult {
-  // Don't filter docstrings
+  // 不过滤文档字符串
   if (comment.isDocstring) {
     return { shouldSkip: false };
   }
 
   const text = comment.text.toLowerCase().trim();
 
-  // Check for BDD keywords
+  // 检查 BDD 关键字
   for (const keyword of BDD_KEYWORDS) {
     if (text.startsWith(`#${keyword}`) || text.startsWith(`// ${keyword}`)) {
       return { shouldSkip: true, reason: `BDD keyword: ${keyword}` };
     }
     if (text.includes(keyword)) {
-      // More lenient check for keywords anywhere in comment
+      // 更宽松地检查注释中任意位置的关键字
       const words = text.split(/\s+/);
       if (words.some(w => BDD_KEYWORDS.has(w.replace(/[^a-z&]/g, '')))) {
         return { shouldSkip: true, reason: `BDD keyword detected` };
@@ -49,7 +49,7 @@ export function filterBddComments(comment: CommentInfo): FilterResult {
 }
 
 /**
- * Filter for type checker and linter directive comments
+ * 类型检查器与 linter 指令注释过滤器
  */
 export function filterDirectiveComments(comment: CommentInfo): FilterResult {
   const text = comment.text.toLowerCase().trim();
@@ -64,17 +64,17 @@ export function filterDirectiveComments(comment: CommentInfo): FilterResult {
 }
 
 /**
- * Filter for docstring comments in non-public functions
- * (More lenient - only flags excessive docstrings)
+ * 非公开函数中的文档字符串注释过滤器
+ *（更宽松——仅标记过度的文档字符串）
  */
 export function filterDocstringComments(_comment: CommentInfo): FilterResult {
-  // We don't skip docstrings by default - they should be reviewed
-  // This filter is here for extensibility
+  // 默认不跳过文档字符串——它们应被审查
+  // 此过滤器用于可扩展性
   return { shouldSkip: false };
 }
 
 /**
- * Filter for copyright/license headers
+ * 版权/许可证头过滤器
  */
 export function filterCopyrightComments(comment: CommentInfo): FilterResult {
   const text = comment.text.toLowerCase();
@@ -100,7 +100,7 @@ export function filterCopyrightComments(comment: CommentInfo): FilterResult {
 }
 
 /**
- * Filter for TODO/FIXME comments (these are acceptable)
+ * TODO/FIXME 注释过滤器（这些是可接受的）
  */
 export function filterTodoComments(comment: CommentInfo): FilterResult {
   const text = comment.text.toUpperCase();
@@ -116,7 +116,7 @@ export function filterTodoComments(comment: CommentInfo): FilterResult {
 }
 
 /**
- * All filters in order of application
+ * 按应用顺序排列的全部过滤器
  */
 const ALL_FILTERS: CommentFilter[] = [
   filterShebangComments,
@@ -128,8 +128,8 @@ const ALL_FILTERS: CommentFilter[] = [
 ];
 
 /**
- * Apply all filters to a list of comments
- * Returns only comments that should be flagged
+ * 对注释列表应用全部过滤器
+ * 仅返回应被标记的注释
  */
 export function applyFilters(comments: CommentInfo[]): CommentInfo[] {
   return comments.filter((comment) => {

@@ -1,14 +1,14 @@
 /**
- * Delegation Categories Types
+ * 委派类别类型
  *
- * Category-based delegation system that layers on top of ComplexityTier.
- * Categories provide semantic grouping with tier, temperature, and thinking budget.
+ * 基于 ComplexityTier 之上构建的类别化委派系统。
+ * 类别提供语义分组，并附带 tier、temperature 与思考预算。
  */
 
 import type { ComplexityTier } from '../model-routing/types.js';
 
 /**
- * Semantic categories for delegation that map to complexity tiers + configuration
+ * 用于委派的语义类别，映射到复杂度 tier + 配置
  */
 export type DelegationCategory =
   | 'visual-engineering'
@@ -20,44 +20,44 @@ export type DelegationCategory =
   | 'unspecified-high';
 
 /**
- * Thinking budget levels
+ * 思考预算级别
  */
 export type ThinkingBudget = 'low' | 'medium' | 'high' | 'max';
 
 /**
- * Configuration for a delegation category
+ * 委派类别的配置
  */
 export interface CategoryConfig {
-  /** Complexity tier (LOW/MEDIUM/HIGH) */
+  /** 复杂度 tier（LOW/MEDIUM/HIGH） */
   tier: ComplexityTier;
-  /** Temperature for model sampling (0-1) */
+  /** 模型采样的 temperature（0-1） */
   temperature: number;
-  /** Thinking budget level */
+  /** 思考预算级别 */
   thinkingBudget: ThinkingBudget;
-  /** Optional prompt appendix for this category */
+  /** 该类别的可选 prompt 附言 */
   promptAppend?: string;
-  /** Human-readable description */
+  /** 人类可读的描述 */
   description: string;
 }
 
 /**
- * Resolved category with full configuration
+ * 带完整配置的已解析类别
  */
 export interface ResolvedCategory extends CategoryConfig {
-  /** The category identifier */
+  /** 类别标识符 */
   category: DelegationCategory;
 }
 
 /**
- * Context for category resolution
+ * 类别解析的上下文
  */
 export interface CategoryContext {
-  /** Task description */
+  /** 任务描述 */
   taskPrompt: string;
-  /** Agent type being delegated to */
+  /** 被委派的目标代理类型 */
   agentType?: string;
-  /** Explicitly specified category (overrides detection) */
+  /** 显式指定的类别（覆盖检测） */
   explicitCategory?: DelegationCategory;
-  /** Explicitly specified tier (bypasses categories) */
+  /** 显式指定的 tier（绕过类别） */
   explicitTier?: ComplexityTier;
 }

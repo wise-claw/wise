@@ -1,11 +1,11 @@
 /**
- * Background Agent Manager
+ * Background Agent 管理器
  *
- * Manages background tasks for the WISE system.
- * This is a simplified version that tracks tasks launched via Claude Code's
- * native Task tool with run_in_background: true.
+ * 为 WISE 系统管理后台任务。
+ * 这是一个简化版本，跟踪通过 Claude Code 原生 Task 工具
+ * 以 run_in_background: true 启动的任务。
  *
- * Adapted from oh-my-opencode's background-agent feature.
+ * 改编自 oh-my-opencode 的 background-agent 功能。
  */
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
@@ -22,14 +22,14 @@ import type {
   ResumeContext,
 } from './types.js';
 
-/** Default task timeout: 30 minutes */
+/** 默认任务超时：30 分钟 */
 const DEFAULT_TASK_TTL_MS = 30 * 60 * 1000;
 
-/** Storage directory for task state */
+/** 任务状态存储目录 */
 const BACKGROUND_TASKS_DIR = join(getClaudeConfigDir(), '.wise', 'background-tasks');
 
 /**
- * Manages background tasks for the WISE system.
+ * 为 WISE 系统管理后台任务。
  */
 export class BackgroundManager {
   private tasks: Map<string, BackgroundTask> = new Map();
@@ -47,7 +47,7 @@ export class BackgroundManager {
   }
 
   /**
-   * Ensure storage directory exists
+   * 确保存储目录存在
    */
   private ensureStorageDir(): void {
     if (!existsSync(BACKGROUND_TASKS_DIR)) {
@@ -56,7 +56,7 @@ export class BackgroundManager {
   }
 
   /**
-   * Generate a unique task ID
+   * 生成唯一任务 ID
    */
   private generateTaskId(): string {
     const timestamp = Date.now().toString(36);
@@ -65,14 +65,14 @@ export class BackgroundManager {
   }
 
   /**
-   * Get storage path for a task
+   * 获取某个任务的存储路径
    */
   private getTaskPath(taskId: string): string {
     return join(BACKGROUND_TASKS_DIR, `${taskId}.json`);
   }
 
   /**
-   * Persist a task to disk
+   * 将任务持久化到磁盘
    */
   private persistTask(task: BackgroundTask): void {
     const path = this.getTaskPath(task.id);
@@ -80,7 +80,7 @@ export class BackgroundManager {
   }
 
   /**
-   * Remove persisted task from disk
+   * 从磁盘移除已持久化的任务
    */
   private unpersistTask(taskId: string): void {
     const path = this.getTaskPath(taskId);
@@ -90,7 +90,7 @@ export class BackgroundManager {
   }
 
   /**
-   * Load persisted tasks from disk
+   * 从磁盘加载已持久化的任务
    */
   private loadPersistedTasks(): void {
     if (!existsSync(BACKGROUND_TASKS_DIR)) return;
@@ -106,7 +106,7 @@ export class BackgroundManager {
           const content = readFileSync(path, 'utf-8');
           const task = JSON.parse(content) as BackgroundTask;
 
-          // Restore dates
+          // 还原日期对象
           task.startedAt = new Date(task.startedAt);
           if (task.queuedAt) {
             task.queuedAt = new Date(task.queuedAt);
@@ -123,32 +123,32 @@ export class BackgroundManager {
 
           this.tasks.set(task.id, task);
         } catch {
-          // Skip invalid task files
+          // 跳过无效的任务文件
         }
       }
     } catch {
-      // Ignore errors reading directory
+      // 忽略读取目录时的错误
     }
   }
 
   /**
-   * Start periodic pruning of stale tasks
+   * 启动对僵尸任务的周期性清理
    */
   private startPruning(): void {
     if (this.pruneInterval) return;
 
     this.pruneInterval = setInterval(() => {
       this.pruneStaleTasksAndNotifications();
-    }, 60000); // Every minute
+    }, 60000); // 每分钟一次
 
-    // Don't keep the process alive just for pruning
+    // 不要仅为清理而让进程保持存活
     if (this.pruneInterval.unref) {
       this.pruneInterval.unref();
     }
   }
 
   /**
-   * Stop periodic pruning
+   * 停止周期性清理
    */
   private stopPruning(): void {
     if (this.pruneInterval) {
@@ -158,7 +158,7 @@ export class BackgroundManager {
   }
 
   /**
-   * Remove stale tasks that have exceeded their TTL
+   * 移除已超过 TTL 的僵尸任务
    */
   private pruneStaleTasksAndNotifications(): void {
     const now = Date.now();
@@ -181,7 +181,7 @@ export class BackgroundManager {
       }
     }
 
-    // Prune old notifications
+    // 清理旧通知
     for (const [sessionId, notifications] of this.notifications.entries()) {
       const validNotifications = notifications.filter((task) => {
         const age = now - task.startedAt.getTime();
@@ -195,32 +195,32 @@ export class BackgroundManager {
       }
     }
 
-    // Detect stale sessions (no recent activity)
+    // 检测僵尸会话（无近期活动）
     this.detectAndHandleStaleSessions();
   }
 
   /**
-   * Detect sessions with no recent activity and handle them
-   * Marks stale tasks as errored even without a callback configured (Bug #9 fix)
+   * 检测无近期活动的会话并处理
+   * 即使未配置回调也将僵尸任务标记为出错（Bug #9 修复）
    */
   private detectAndHandleStaleSessions(): void {
     const now = Date.now();
-    const threshold = this.config.staleThresholdMs ?? 5 * 60 * 1000; // 5 min default
+    const threshold = this.config.staleThresholdMs ?? 5 * 60 * 1000; // 默认 5 分钟
 
     for (const task of this.tasks.values()) {
-      // Only check running tasks (not queued, completed, etc.)
+      // 仅检查运行中的任务（不含 queued、completed 等）
       if (task.status !== 'running') continue;
 
-      // Check last activity (progress.lastUpdate or startedAt as fallback)
+      // 检查最近活动（progress.lastUpdate，兜底用 startedAt）
       const lastActivity = task.progress?.lastUpdate ?? task.startedAt;
       const timeSinceActivity = now - lastActivity.getTime();
 
       if (timeSinceActivity > threshold) {
-        // Invoke callback if configured (allows caller to auto-interrupt)
+        // 若配置了回调则调用（允许调用方自动中断）
         if (this.config.onStaleSession) {
           this.config.onStaleSession(task);
         } else {
-          // Default behavior: mark as error after 2x threshold with no activity
+          // 默认行为：无活动时间超过 2 倍阈值后标记为出错
           if (timeSinceActivity > threshold * 2) {
             task.status = 'error';
             task.error = `Task stale: no activity for ${Math.round(timeSinceActivity / 60000)} minutes`;
@@ -240,12 +240,12 @@ export class BackgroundManager {
   }
 
   /**
-   * Register a new background task
+   * 注册新的后台任务
    */
   async launch(input: LaunchInput): Promise<BackgroundTask> {
     const concurrencyKey = input.agent;
 
-    // Count running and queued tasks for capacity check
+    // 统计运行中和排队中的任务以做容量检查
     const runningTasks = Array.from(this.tasks.values()).filter(
       (t) => t.status === 'running'
     );
@@ -255,7 +255,7 @@ export class BackgroundManager {
     const runningCount = runningTasks.length;
     const queuedCount = queuedTasks.length;
 
-    // Check maxTotalTasks (running + queued = tasks in flight)
+    // 检查 maxTotalTasks（running + queued = 进行中的任务）
     const maxTotal = this.config.maxTotalTasks ?? 10;
     const tasksInFlight = runningCount + queuedCount;
 
@@ -267,7 +267,7 @@ export class BackgroundManager {
       );
     }
 
-    // Check explicit maxQueueSize if configured
+    // 若配置了显式的 maxQueueSize 则检查
     const maxQueueSize = this.config.maxQueueSize;
     if (maxQueueSize !== undefined && queuedCount >= maxQueueSize) {
       throw new Error(
@@ -280,7 +280,7 @@ export class BackgroundManager {
     const taskId = this.generateTaskId();
     const sessionId = `ses_${this.generateTaskId()}`;
 
-    // Create task in QUEUED state FIRST (non-blocking - visible immediately)
+    // 先以 QUEUED 状态创建任务（非阻塞 - 立即可见）
     const task: BackgroundTask = {
       id: taskId,
       sessionId,
@@ -290,23 +290,23 @@ export class BackgroundManager {
       agent: input.agent,
       status: 'queued',
       queuedAt: new Date(),
-      startedAt: new Date(), // Placeholder for backward compat, updated when running
+      startedAt: new Date(), // 向后兼容的占位值，进入 running 时更新
       progress: {
         toolCalls: 0,
         lastUpdate: new Date(),
       },
       concurrencyKey,
-      parentModel: input.model, // Preserve parent model
+      parentModel: input.model, // 保留父模型
     };
 
-    // Store immediately so task is visible while waiting for slot
+    // 立即存储，使任务在等待槽位期间可见
     this.tasks.set(taskId, task);
     this.persistTask(task);
 
-    // Wait for concurrency slot (may resolve immediately or block)
+    // 等待并发槽位（可能立即解决或阻塞）
     await this.concurrencyManager.acquire(concurrencyKey);
 
-    // Transition to RUNNING once slot acquired
+    // 获取槽位后转为 RUNNING 状态
     task.status = 'running';
     task.startedAt = new Date();
     this.persistTask(task);
@@ -315,7 +315,7 @@ export class BackgroundManager {
   }
 
   /**
-   * Resume an existing background task
+   * 恢复已有的后台任务
    */
   async resume(input: ResumeInput): Promise<BackgroundTask> {
     const existingTask = this.findBySession(input.sessionId);
@@ -339,8 +339,8 @@ export class BackgroundManager {
   }
 
   /**
-   * Get resume context for a session
-   * Used by the resume_session tool to prepare continuation prompts
+   * 获取某会话的恢复上下文
+   * 供 resume_session 工具用于准备续接 prompt
    */
   getResumeContext(sessionId: string): ResumeContext | null {
     const task = this.findBySession(sessionId);
@@ -360,14 +360,14 @@ export class BackgroundManager {
   }
 
   /**
-   * Get a task by ID
+   * 按 ID 获取任务
    */
   getTask(id: string): BackgroundTask | undefined {
     return this.tasks.get(id);
   }
 
   /**
-   * Find a task by session ID
+   * 按会话 ID 查找任务
    */
   findBySession(sessionId: string): BackgroundTask | undefined {
     for (const task of this.tasks.values()) {
@@ -379,7 +379,7 @@ export class BackgroundManager {
   }
 
   /**
-   * Get all tasks for a parent session
+   * 获取某父会话的全部任务
    */
   getTasksByParentSession(sessionId: string): BackgroundTask[] {
     const result: BackgroundTask[] = [];
@@ -392,21 +392,21 @@ export class BackgroundManager {
   }
 
   /**
-   * Get all tasks (including nested)
+   * 获取全部任务（含嵌套）
    */
   getAllTasks(): BackgroundTask[] {
     return Array.from(this.tasks.values());
   }
 
   /**
-   * Get all running tasks
+   * 获取所有运行中的任务
    */
   getRunningTasks(): BackgroundTask[] {
     return Array.from(this.tasks.values()).filter((t) => t.status === 'running');
   }
 
   /**
-   * Update task status
+   * 更新任务状态
    */
   updateTaskStatus(
     taskId: string,
@@ -435,7 +435,7 @@ export class BackgroundManager {
   }
 
   /**
-   * Update task progress
+   * 更新任务进度
    */
   updateTaskProgress(taskId: string, progress: Partial<TaskProgress>): void {
     const task = this.tasks.get(taskId);
@@ -450,7 +450,7 @@ export class BackgroundManager {
   }
 
   /**
-   * Mark a task for notification to parent session
+   * 标记任务需向父会话通知
    */
   markForNotification(task: BackgroundTask): void {
     const queue = this.notifications.get(task.parentSessionId) ?? [];
@@ -459,21 +459,21 @@ export class BackgroundManager {
   }
 
   /**
-   * Get pending notifications for a session
+   * 获取某会话的待处理通知
    */
   getPendingNotifications(sessionId: string): BackgroundTask[] {
     return this.notifications.get(sessionId) ?? [];
   }
 
   /**
-   * Clear notifications for a session
+   * 清除某会话的通知
    */
   clearNotifications(sessionId: string): void {
     this.notifications.delete(sessionId);
   }
 
   /**
-   * Clear notifications for a specific task
+   * 清除某具体任务的通知
    */
   private clearNotificationsForTask(taskId: string): void {
     for (const [sessionId, tasks] of this.notifications.entries()) {
@@ -487,7 +487,7 @@ export class BackgroundManager {
   }
 
   /**
-   * Remove a task completely
+   * 完整移除一个任务
    */
   removeTask(taskId: string): void {
     const task = this.tasks.get(taskId);
@@ -501,7 +501,7 @@ export class BackgroundManager {
   }
 
   /**
-   * Format duration for display
+   * 格式化时长用于展示
    */
   formatDuration(start: Date, end?: Date): string {
     const duration = (end ?? new Date()).getTime() - start.getTime();
@@ -518,7 +518,7 @@ export class BackgroundManager {
   }
 
   /**
-   * Generate a status summary for all tasks
+   * 生成所有任务的状态摘要
    */
   getStatusSummary(): string {
     const running = this.getRunningTasks();
@@ -552,7 +552,7 @@ export class BackgroundManager {
   }
 
   /**
-   * Cleanup manager (stop pruning, clear state)
+   * 清理管理器（停止清理周期、清空状态）
    */
   cleanup(): void {
     this.stopPruning();
@@ -561,11 +561,11 @@ export class BackgroundManager {
   }
 }
 
-/** Singleton instance */
+/** 单例实例 */
 let instance: BackgroundManager | undefined;
 
 /**
- * Get the singleton background manager instance
+ * 获取后台管理器的单例实例
  */
 export function getBackgroundManager(config?: BackgroundTaskConfig): BackgroundManager {
   if (!instance) {
@@ -575,7 +575,7 @@ export function getBackgroundManager(config?: BackgroundTaskConfig): BackgroundM
 }
 
 /**
- * Reset the singleton (for testing)
+ * 重置单例（用于测试）
  */
 export function resetBackgroundManager(): void {
   if (instance) {

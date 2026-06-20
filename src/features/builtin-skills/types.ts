@@ -1,15 +1,15 @@
 /**
- * Builtin Skills Types
+ * 内建技能类型定义
  *
- * Type definitions for the builtin skills system.
+ * 内建技能系统的类型定义。
  *
- * Adapted from oh-my-opencode's builtin-skills feature.
+ * 改编自 oh-my-opencode 的 builtin-skills 特性。
  */
 
 import type { SkillPipelineMetadata } from '../../utils/skill-pipeline.js';
 
 /**
- * Configuration for MCP server integration with a skill
+ * 技能与 MCP server 集成的配置
  */
 export interface SkillMcpConfig {
   [serverName: string]: {
@@ -20,55 +20,55 @@ export interface SkillMcpConfig {
 }
 
 /**
- * A builtin skill definition
+ * 内建技能定义
  */
 export interface BuiltinSkill {
-  /** Unique skill name */
+  /** 技能的唯一名称 */
   name: string;
-  /** Aliases available for canonical skill entries */
+  /** 规范技能条目可用的别名 */
   aliases?: string[];
-  /** Canonical skill name when this entry is an alias */
+  /** 当本条目为别名时，对应的规范技能名称 */
   aliasOf?: string;
-  /** Whether this entry is a deprecated compatibility alias */
+  /** 本条目是否为已弃用的兼容别名 */
   deprecatedAlias?: boolean;
-  /** Human-readable deprecation guidance */
+  /** 人类可读的弃用说明 */
   deprecationMessage?: string;
-  /** Short description of the skill */
+  /** 技能的简短描述 */
   description: string;
-  /** Full template content for the skill */
+  /** 技能的完整模板内容 */
   template: string;
-  /** License information (optional) */
+  /** 许可证信息（可选） */
   license?: string;
-  /** Compatibility notes (optional) */
+  /** 兼容性说明（可选） */
   compatibility?: string;
-  /** Additional metadata (optional) */
+  /** 额外元数据（可选） */
   metadata?: Record<string, unknown>;
-  /** Allowed tools for this skill (optional) */
+  /** 本技能允许使用的工具（可选） */
   allowedTools?: string[];
-  /** Agent to use with this skill (optional) */
+  /** 配合本技能使用的 agent（可选） */
   agent?: string;
-  /** Model to use with this skill (optional) */
+  /** 配合本技能使用的 model（可选） */
   model?: string;
-  /** Whether this is a subtask skill (optional) */
+  /** 是否为子任务技能（可选） */
   subtask?: boolean;
-  /** Hint for arguments (optional) */
+  /** 参数提示（可选） */
   argumentHint?: string;
-  /** Optional skill-to-skill pipeline metadata */
+  /** 可选的技能到技能流水线元数据 */
   pipeline?: SkillPipelineMetadata;
-  /** MCP server configuration (optional) */
+  /** MCP server 配置（可选） */
   mcpConfig?: SkillMcpConfig;
 }
 
 /**
- * Skill registry for runtime access
+ * 用于运行时访问的技能注册表
  */
 export interface SkillRegistry {
-  /** Get all registered skills */
+  /** 获取所有已注册技能 */
   getAll(): BuiltinSkill[];
-  /** Get a skill by name */
+  /** 按名称获取技能 */
   get(name: string): BuiltinSkill | undefined;
-  /** Register a new skill */
+  /** 注册新技能 */
   register(skill: BuiltinSkill): void;
-  /** Check if a skill exists */
+  /** 检查技能是否存在 */
   has(name: string): boolean;
 }

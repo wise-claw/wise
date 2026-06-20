@@ -3,12 +3,12 @@
 /**
  * Wise CLI
  *
- * Command-line interface for the WISE multi-agent system.
+ * WISE 多 agent 系统的命令行接口。
  *
- * Commands:
- * - run: Start an interactive session
- * - config: Show or edit configuration
- * - setup: Sync all WISE components (hooks, agents, skills)
+ * 命令：
+ * - run：启动交互式会话
+ * - config：显示或编辑配置
+ * - setup：同步所有 WISE 组件（hooks、agents、skills）
  */
 
 import { Command } from 'commander';
@@ -67,11 +67,10 @@ import { runHudWatchLoop } from './hud-watch.js';
 const version = getRuntimePackageVersion();
 
 /**
- * Apply a --plugin-dir option value: resolve to absolute path, warn if it
- * disagrees with a pre-existing WISE_PLUGIN_ROOT env var, then set the env var
- * so all subsequent code in this process sees the correct plugin root.
+ * 应用 --plugin-dir 选项值：解析为绝对路径，若与已存在的 WISE_PLUGIN_ROOT 环境变量不一致则告警，
+ * 然后设置该环境变量，使本进程中后续所有代码都能看到正确的 plugin 根目录。
  *
- * No-op when `rawPath` is undefined/empty (option was not passed).
+ * 当 `rawPath` 为 undefined/空（未传入该选项）时为空操作。
  */
 export function applyPluginDirOption(rawPath: string | undefined): void {
   if (!rawPath) return;
@@ -95,17 +94,17 @@ export function applyPluginDirOption(rawPath: string | undefined): void {
 
 const program = new Command();
 
-// Win32 platform warning - WISE requires tmux which is not available on native Windows
+// Win32 平台告警 - WISE 依赖 tmux，原生 Windows 上不可用
 warnIfWin32();
 
-// Default action when running 'wise' with no subcommand
-// Forwards all args to launchCommand so 'wise --notify false --madmax' etc. work directly
+// 不带子命令直接运行 'wise' 时的默认动作
+// 将所有参数转发给 launchCommand，使 'wise --notify false --madmax' 等可直接生效
 async function defaultAction() {
-  // Pass all CLI args through to launch (strip node + script path)
+  // 将所有 CLI 参数透传给 launch（去掉 node 和脚本路径）
   const args = process.argv.slice(2);
 
-  // Defensive fallback: wrapper/bridge invocations must preserve explicit ask routing
-  // so nested Claude launch checks only apply to actual Claude launches.
+  // 防御性兜底：wrapper/bridge 调用必须保留显式的 ask 路由，
+  // 使嵌套的 Claude 启动检查仅对真正的 Claude 启动生效。
   if (args[0] === 'ask') {
     await askCommand(args.slice(1));
     return;
@@ -123,7 +122,7 @@ program
   .action(defaultAction);
 
 /**
- * Launch command - Native tmux shell launch for Claude Code
+ * Launch 命令 - 为 Claude Code 提供原生 tmux shell 启动
  */
 program
   .command('launch [args...]')
@@ -151,7 +150,7 @@ Environment:
   });
 
 /**
- * Interop command - Split-pane tmux session with WISE and OMX
+ * Interop 命令 - WISE 与 OMX 的 tmux 分屏会话
  */
 program
   .command('interop')
@@ -166,7 +165,7 @@ Requirements:
   });
 
 /**
- * Ask command - Run provider advisor prompt (claude|gemini)
+ * Ask 命令 - 运行 provider advisor prompt（claude|gemini）
  */
 program
   .command('ask [args...]')
@@ -179,7 +178,7 @@ program
 
 
 /**
- * Config command - Show or validate configuration
+ * Config 命令 - 显示或校验配置
  */
 program
   .command('config')
@@ -211,7 +210,7 @@ Examples:
     if (options.validate) {
       console.log(chalk.blue('Validating configuration...\n'));
 
-      // Check for required fields
+      // 检查必填字段
       const warnings: string[] = [];
       const errors: string[] = [];
 
@@ -245,7 +244,7 @@ Examples:
   });
 
 /**
- * Config stop-callback subcommand - Configure stop hook callbacks
+ * Config stop-callback 子命令 - 配置 stop 钩子回调
  */
 const _configStopCallback = program
   .command('config-stop-callback <type>')
@@ -291,7 +290,7 @@ Examples:
   # Select profile at launch:
   $ WISE_NOTIFY_PROFILE=work claude`)
   .action(async (type: string, options) => {
-    // When --profile is used, route to profile-based config
+    // 当使用 --profile 时，路由到基于 profile 的配置
     if (options.profile) {
       const profileValidTypes = ['file', 'telegram', 'discord', 'discord-bot', 'slack', 'webhook'];
       if (!profileValidTypes.includes(type)) {
@@ -305,7 +304,7 @@ Examples:
       const profileName = options.profile as string;
       const profile = config.notificationProfiles[profileName] || { enabled: true };
 
-      // Show current profile config
+      // 显示当前 profile 配置
       if (options.show) {
         if (config.notificationProfiles[profileName]) {
           console.log(chalk.blue(`Profile "${profileName}" — ${type} configuration:`));
@@ -422,7 +421,7 @@ Examples:
       return;
     }
 
-    // Legacy (non-profile) path
+    // 旧版（非 profile）路径
     const validTypes = ['file', 'telegram', 'discord', 'slack'];
     if (!validTypes.includes(type)) {
       console.error(chalk.red(`Invalid callback type: ${type}`));
@@ -433,7 +432,7 @@ Examples:
     const config = getWiseConfig();
     config.stopHookCallbacks = config.stopHookCallbacks || {};
 
-    // Show current config
+    // 显示当前配置
     if (options.show) {
       const current = config.stopHookCallbacks[type as keyof typeof config.stopHookCallbacks];
       if (current) {
@@ -445,7 +444,7 @@ Examples:
       return;
     }
 
-    // Determine enabled state
+    // 判断启用状态
     let enabled: boolean | undefined;
     if (options.enable) {
       enabled = true;
@@ -489,7 +488,7 @@ Examples:
       return next;
     };
 
-    // Update config based on type
+    // 根据 type 更新配置
     switch (type) {
       case 'file': {
         const current = config.stopHookCallbacks.file;
@@ -552,7 +551,7 @@ Examples:
       }
     }
 
-    // Write config
+    // \u5199\u5165\u914d\u7f6e
     try {
       writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf-8');
       console.log(chalk.green(`\u2713 Stop callback '${type}' configured`));
@@ -564,7 +563,7 @@ Examples:
   });
 
 /**
- * Config notify-profile subcommand - List, show, and delete notification profiles
+ * Config notify-profile 子命令 - 列出、显示和删除通知 profile
  */
 program
   .command('config-notify-profile [name]')
@@ -640,7 +639,7 @@ Examples:
       return;
     }
 
-    // Default: show the named profile
+    // 默认：显示指定的 profile
     if (profiles[name]) {
       console.log(chalk.blue(`Profile "${name}":`));
       console.log(JSON.stringify(profiles[name], null, 2));
@@ -652,7 +651,7 @@ Examples:
 
 
 /**
- * Info command - Show system information
+ * Info 命令 - 显示系统信息
  */
 program
   .command('info')
@@ -699,7 +698,7 @@ Examples:
   });
 
 /**
- * Test command - Test prompt enhancement
+ * Test 命令 - 测试 prompt 增强
  */
 program
   .command('test-prompt <prompt>')
@@ -725,7 +724,7 @@ Examples:
   });
 
 /**
- * Update command - Check for and install updates
+ * Update 命令 - 检查并安装更新
  */
 program
   .command('update')
@@ -747,7 +746,7 @@ Examples:
     }
 
     try {
-      // Show current version
+      // 显示当前版本
       const installed = getInstalledVersion();
       if (!options.quiet) {
         console.log(chalk.gray(`Current version: ${installed?.version ?? 'unknown'}`));
@@ -755,7 +754,7 @@ Examples:
         console.log('');
       }
 
-      // Check for updates
+      // 检查更新
       if (!options.quiet) {
         console.log('Checking for updates...');
       }
@@ -773,7 +772,7 @@ Examples:
         console.log(formatUpdateNotification(checkResult));
       }
 
-      // If check-only mode, stop here
+      // 若为仅检查模式，到此为止
       if (options.check) {
         if (checkResult.updateAvailable) {
           console.log(chalk.yellow('\nRun without --check to install the update.'));
@@ -781,7 +780,7 @@ Examples:
         return;
       }
 
-      // Perform the update
+      // 执行更新
       if (!options.quiet) {
         console.log(chalk.blue('\nStarting update...\n'));
       }
@@ -809,8 +808,8 @@ Examples:
   });
 
 /**
- * Update reconcile command - Internal command for post-update reconciliation
- * Called automatically after npm install to ensure hooks/settings are updated with NEW code
+ * Update reconcile 命令 - 用于更新后对账的内部命令
+ * 在 npm install 后自动调用，以确保 hooks/settings 随新代码一起更新
  */
 program
   .command('update-reconcile')
@@ -838,7 +837,7 @@ program
   });
 
 /**
- * Version command - Show version information
+ * Version 命令 - 显示版本信息
  */
 program
   .command('version')
@@ -874,7 +873,7 @@ Examples:
   });
 
 /**
- * Install command - Install agents and commands (default: ~/.claude/)
+ * Install 命令 - 安装 agents 与 commands（默认：~/.claude/）
  */
 program
   .command('install')
@@ -897,7 +896,7 @@ Examples:
       console.log('');
     }
 
-    // Check if already installed
+    // 检查是否已安装
     if (isInstalled() && !options.force) {
       const info = getInstallInfo();
       if (!options.quiet) {
@@ -911,7 +910,7 @@ Examples:
       return;
     }
 
-    // Run installation
+    // 执行安装
     const result = installWise({
       force: options.force,
       verbose: !options.quiet,
@@ -984,13 +983,13 @@ Examples:
   });
 
 /**
- * Wait command - Rate limit wait and auto-resume
+ * Wait 命令 - 速率限制等待与自动恢复
  *
- * Zero learning curve design:
- * - `wise wait` alone shows status and suggests next action
- * - `wise wait --start` starts the daemon (shortcut)
- * - `wise wait --stop` stops the daemon (shortcut)
- * - Subcommands available for power users
+ * 零学习成本设计：
+ * - 单独 `wise wait` 即显示状态并建议下一步动作
+ * - `wise wait --start` 启动守护进程（快捷方式）
+ * - `wise wait --stop` 停止守护进程（快捷方式）
+ * - 为高级用户提供子命令
  */
 const waitCmd = program
   .command('wait')
@@ -1055,13 +1054,13 @@ waitCmd
 
 
 /**
- * Teleport command - Quick worktree creation
+ * Teleport 命令 - 快速创建 worktree
  *
- * Usage:
- * - `wise teleport '#123'` - Create worktree for issue/PR #123
- * - `wise teleport my-feature` - Create worktree for feature branch
- * - `wise teleport list` - List existing worktrees
- * - `wise teleport remove <path>` - Remove a worktree
+ * 用法：
+ * - `wise teleport '#123'` - 为 issue/PR #123 创建 worktree
+ * - `wise teleport my-feature` - 为 feature 分支创建 worktree
+ * - `wise teleport list` - 列出已存在的 worktree
+ * - `wise teleport remove <path>` - 移除一个 worktree
  */
 const teleportCmd = program
   .command('teleport [ref]')
@@ -1081,7 +1080,7 @@ Note:
   In many shells, # starts a comment. Quote refs: wise teleport '#42'`)
   .action(async (ref: string | undefined, options) => {
     if (!ref) {
-      // No ref provided, show help
+      // 未提供 ref，显示帮助
       console.log(chalk.blue('Teleport - Quick worktree creation\n'));
       console.log('Usage:');
       console.log('  wise teleport <ref>           Create worktree for issue/PR/feature');
@@ -1104,7 +1103,7 @@ Note:
     }
 
     await teleportCommand(ref, {
-      worktree: true, // Always create worktree
+      worktree: true, // 始终创建 worktree
       worktreePath: options.path,
       base: options.base,
       json: options.json,
@@ -1132,7 +1131,7 @@ teleportCmd
 
 
 /**
- * Session command - Search prior local session history
+ * Session 命令 - 搜索本地历史会话
  */
 const sessionCmd = program
   .command('session')
@@ -1168,7 +1167,7 @@ sessionCmd
   });
 
 /**
- * Doctor command - Diagnostic tools
+ * Doctor 命令 - 诊断工具
  */
 const doctorCmd = program
   .command('doctor')
@@ -1190,7 +1189,7 @@ Examples:
       const exitCode = await doctorTeamRoutingCommand({ json: options.json ?? false });
       process.exit(exitCode);
     }
-    // Without --team-routing, show help text for the parent command.
+    // 未指定 --team-routing 时，显示父命令的帮助文本。
     doctorCmd.help();
   });
 
@@ -1224,12 +1223,12 @@ Examples:
   });
 
 /**
- * Setup command - Official CLI entry point for wise-setup
+ * Setup 命令 - wise-setup 的官方 CLI 入口
  *
- * User-friendly command that syncs all WISE components:
- * - Installs/updates hooks, agents, and skills
- * - Reconciles runtime state after updates
- * - Shows clear summary of what was installed/updated
+ * 用户友好的命令，同步所有 WISE 组件：
+ * - 安装/更新 hooks、agents 和 skills
+ * - 更新后对账运行时状态
+ * - 清晰展示已安装/更新的内容
  */
 program
   .command('setup')
@@ -1254,18 +1253,18 @@ Examples:
       console.log(chalk.blue('Wise Setup\n'));
     }
 
-    // Step 1: Run installation (which handles hooks, agents, skills)
+    // 第 1 步：执行安装（涵盖 hooks、agents、skills）
     if (!options.quiet) {
       console.log(chalk.gray('Syncing WISE components...'));
     }
 
-    // Commander exposes negated flags like `--no-plugin` as `options.plugin === false`
-    // rather than `options.noPlugin`. Keep the installer API explicit.
+    // Commander 会把 `--no-plugin` 这类否定标志暴露为 `options.plugin === false`，
+    // 而非 `options.noPlugin`。保持 installer API 显式明确。
     const useLocalBundledSkills = options.plugin === false;
 
-    // Dev plugin-dir mode: skip agent/skill copy because the plugin already
-    // provides them at runtime via `claude --plugin-dir <path>` (or `wise --plugin-dir`).
-    // Auto-detected from WISE_PLUGIN_ROOT (set by `wise --plugin-dir` in src/cli/launch.ts).
+    // 开发 plugin-dir 模式：跳过 agent/skill 拷贝，因为 plugin 已在运行时通过
+    // `claude --plugin-dir <path>`（或 `wise --plugin-dir`）提供。
+    // 从 WISE_PLUGIN_ROOT 自动检测（由 src/cli/launch.ts 中的 `wise --plugin-dir` 设置）。
     let pluginDirMode = !!options.pluginDirMode;
     if (!pluginDirMode && process.env[WISE_PLUGIN_ROOT_ENV]) {
       pluginDirMode = true;
@@ -1300,7 +1299,7 @@ Examples:
       process.exit(1);
     }
 
-    // Step 2: Show summary
+    // 第 2 步：显示摘要
     if (!options.quiet) {
       console.log('');
       console.log(chalk.green('Setup complete!'));
@@ -1339,13 +1338,13 @@ Examples:
   });
 
 /**
- * Postinstall command - Silent install for npm postinstall hook
+ * Postinstall 命令 - 供 npm postinstall 钩子调用的静默安装
  */
 program
   .command('postinstall', { hidden: true })
   .description('Run post-install setup (called automatically by npm)')
   .action(async () => {
-    // Silent install - only show errors
+    // 静默安装 - 仅显示错误
     const result = installWise({
       force: false,
       verbose: false,
@@ -1357,15 +1356,15 @@ program
       console.log(chalk.gray('  Run "wise info" to see available agents.'));
       console.log(chalk.yellow('  Run "/wise-default" (project) or "/wise-default-global" (global) in Claude Code.'));
     } else {
-      // Don't fail the npm install, just warn
+      // 不让 npm install 失败，仅告警
       console.warn(chalk.yellow('⚠ Could not complete WISE setup:'), result.message);
       console.warn(chalk.gray('  Run "wise install" manually to complete setup.'));
     }
   });
 
 /**
- * HUD command - Run the WISE HUD statusline renderer
- * In --watch mode, loops continuously for use in a tmux pane.
+ * HUD 命令 - 运行 WISE HUD 状态栏渲染器
+ * 在 --watch 模式下持续循环，适用于 tmux 面板。
  */
 program
   .command('hud')
@@ -1406,11 +1405,11 @@ program
   });
 
 /**
- * Team command - CLI API for team worker lifecycle operations
- * Exposes WISE's `wise team api` interface.
+ * Team 命令 - team worker 生命周期操作的 CLI API
+ * 暴露 WISE 的 `wise team api` 接口。
  *
- * helpOption(false) prevents commander from intercepting --help;
- * our teamCommand handler provides its own help output.
+ * helpOption(false) 阻止 commander 拦截 --help；
+ * 由我们的 teamCommand 处理器自行提供帮助输出。
  */
 program
   .command('team')
@@ -1424,7 +1423,7 @@ program
   });
 
 /**
- * Autoresearch command - hard-deprecated shim preserved only for migration messaging
+ * Autoresearch 命令 - 仅保留用于迁移提示的硬弃用垫片
  */
 program
   .command('autoresearch')
@@ -1438,10 +1437,10 @@ program
   });
 
 /**
- * Ralphthon command - Autonomous hackathon lifecycle
+ * Ralphthon 命令 - 自治式 hackathon 生命周期
  *
- * Deep-interview generates PRD, ralph loop executes tasks,
- * auto-hardening phase, terminates after clean waves.
+ * 深度访谈生成 PRD，ralph 循环执行任务，
+ * 自动加固阶段，在干净的波次后终止。
  */
 program
   .command('ralphthon')
@@ -1455,13 +1454,12 @@ program
   });
 
 /**
- * Ultragoal command - Durable repo-native multi-goal workflow with Claude /goal handoff
+ * Ultragoal 命令 - 与 Claude /goal 交接的持久化仓库原生多目标工作流
  *
- * Writes plan/ledger artifacts under .wise/ultragoal/ and prints model-facing
- * handoff text that tells the active Claude agent when to invoke /goal,
- * checkpoint progress, and gate final completion behind ai-slop-cleaner +
- * verification + $code-review evidence. The shell cannot mutate the Claude
- * session /goal directive; this command only persists durable state.
+ * 将 plan/ledger 制品写入 .wise/ultragoal/ 下，并打印面向模型的交接文本，
+ * 告知当前活动的 Claude agent 何时调用 /goal、记录进度检查点，
+ * 并将最终完成度置于 ai-slop-cleaner + 校验 + $code-review 证据的把关之后。
+ * shell 无法修改 Claude 会话的 /goal 指令；此命令仅持久化状态。
  */
 program
   .command('ultragoal')
@@ -1476,23 +1474,21 @@ program
   });
 
 /**
- * Returns the fully-configured commander program.
+ * 返回完全配置好的 commander program。
  *
- * Exported so tests can drive the real CLI pipeline (e.g.
- * `await buildProgram().parseAsync(['node','wise','setup','--plugin-dir-mode'], { from: 'user' })`)
- * without spawning a subprocess. The program is built once at module load
- * (commander does not support re-registration), so this just returns the
- * singleton.
+ * 导出供测试驱动真实 CLI 流水线（例如
+ * `await buildProgram().parseAsync(['node','wise','setup','--plugin-dir-mode'], { from: 'user' })`），
+ * 无需派生子进程。program 在模块加载时构建一次（commander 不支持重复注册），
+ * 因此这里只是返回该单例。
  */
 export function buildProgram(): Command {
   return program;
 }
 
-// Parse arguments — skipped only when an importing test explicitly opts out
-// via WISE_CLI_SKIP_PARSE. We do NOT key off process.env.VITEST because the
-// CLI is also spawned as a child process from tests (e.g. cli-boot.test.ts),
-// and child processes inherit VITEST from the parent vitest worker, which
-// would cause the CLI to silently exit with no output.
+// 解析参数 — 仅当导入此模块的测试通过 WISE_CLI_SKIP_PARSE 显式跳过时才不解析。
+// 我们不以 process.env.VITEST 为判断依据，因为 CLI 也会在测试中被作为子进程派生
+// （例如 cli-boot.test.ts），而子进程会从父 vitest worker 继承 VITEST 环境变量，
+// 这会导致 CLI 静默退出且无任何输出。
 if (!process.env.WISE_CLI_SKIP_PARSE) {
   program.parse();
 }

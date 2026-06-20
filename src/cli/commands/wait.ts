@@ -1,19 +1,19 @@
 /**
- * Wait Command
+ * Wait 命令
  *
- * CLI commands for rate limit wait and auto-resume functionality.
+ * 用于速率限制等待与自动恢复功能的 CLI 命令。
  *
- * Design Philosophy (aligned with wise values):
- * - Zero learning curve: `wise wait` just works
- * - Smart defaults: Auto-detects tmux and daemon status
- * - Minimal commands: Most users only need `wise wait`
+ * 设计哲学（与 wise 价值观对齐）：
+ * - 零学习成本：`wise wait` 开箱即用
+ * - 智能默认：自动检测 tmux 与守护进程状态
+ * - 极简命令：大多数用户只需 `wise wait`
  *
- * Commands:
- *   wise wait               - Smart command: shows status, offers to start daemon if needed
- *   wise wait status        - Show current rate limit and daemon status
- *   wise wait daemon start  - Start the background daemon
- *   wise wait daemon stop   - Stop the daemon
- *   wise wait detect        - Scan for blocked Claude Code sessions
+ * 命令：
+ *   wise wait               - 智能命令：显示状态，必要时提示启动守护进程
+ *   wise wait status        - 显示当前速率限制与守护进程状态
+ *   wise wait daemon start  - 启动后台守护进程
+ *   wise wait daemon stop   - 停止守护进程
+ *   wise wait detect        - 扫描被阻塞的 Claude Code 会话
  */
 
 import chalk from 'chalk';
@@ -54,11 +54,11 @@ export interface WaitDetectOptions {
 }
 
 /**
- * Smart wait command - the main entry point
- * Follows "zero learning curve" philosophy
+ * 智能 wait 命令 - 主入口
+ * 遵循"零学习成本"哲学
  */
 export async function waitCommand(options: WaitOptions): Promise<void> {
-  // Handle explicit start/stop flags
+  // 处理显式的 start/stop 标志
   if (options.start) {
     await waitDaemonCommand('start', {});
     return;
@@ -81,7 +81,7 @@ export async function waitCommand(options: WaitOptions): Promise<void> {
     return;
   }
 
-  // Smart output based on current state
+  // 根据当前状态输出智能化信息
   console.log(chalk.bold('\n🕐 Rate Limit Status\n'));
 
   if (!rateLimitStatus) {
@@ -91,7 +91,7 @@ export async function waitCommand(options: WaitOptions): Promise<void> {
   }
 
   if (rateLimitStatus.isLimited) {
-    // Rate limited - provide helpful guidance
+    // 已被速率限制 - 提供有用指引
     console.log(chalk.red.bold('⚠️  Rate Limited'));
     console.log(chalk.yellow(`\n${formatRateLimitStatus(rateLimitStatus)}\n`));
 
@@ -116,7 +116,7 @@ export async function waitCommand(options: WaitOptions): Promise<void> {
       console.log(chalk.gray('Blocked panes can still be tracked if detected.\n'));
     }
   } else {
-    // Not rate limited
+    // 未被速率限制
     console.log(chalk.green('✓ Not rate limited\n'));
 
     if (daemonRunning) {
@@ -127,7 +127,7 @@ export async function waitCommand(options: WaitOptions): Promise<void> {
 }
 
 /**
- * Show current rate limit and daemon status
+ * 显示当前速率限制与守护进程状态
  */
 export async function waitStatusCommand(options: WaitStatusOptions): Promise<void> {
   const rateLimitStatus = await checkRateLimitStatus();
@@ -148,7 +148,7 @@ export async function waitStatusCommand(options: WaitStatusOptions): Promise<voi
   console.log(chalk.bold('\n📊 Rate Limit Wait Status\n'));
   console.log(chalk.gray('─'.repeat(50)));
 
-  // Rate limit status
+  // 速率限制状态
   console.log(chalk.bold('\nRate Limits:'));
   if (rateLimitStatus) {
     if (rateLimitStatus.isLimited) {
@@ -172,7 +172,7 @@ export async function waitStatusCommand(options: WaitStatusOptions): Promise<voi
     console.log(chalk.yellow('  ? Unable to check (no OAuth credentials?)'));
   }
 
-  // Daemon status
+  // 守护进程状态
   console.log(chalk.bold('\nDaemon:'));
   if (daemonStatus.state) {
     if (daemonStatus.state.isRunning) {
@@ -189,7 +189,7 @@ export async function waitStatusCommand(options: WaitStatusOptions): Promise<voi
     console.log(chalk.gray('  ○ Never started'));
   }
 
-  // tmux status
+  // tmux 状态
   console.log(chalk.bold('\ntmux:'));
   if (isTmuxAvailable()) {
     console.log(chalk.green('  ✓ Available'));
@@ -205,7 +205,7 @@ export async function waitStatusCommand(options: WaitStatusOptions): Promise<voi
 }
 
 /**
- * Start/stop the daemon
+ * 启动/停止守护进程
  */
 export async function waitDaemonCommand(
   action: 'start' | 'stop',
@@ -218,7 +218,7 @@ export async function waitDaemonCommand(
 
   if (action === 'start') {
     if (options.foreground) {
-      // Run in foreground (blocking)
+      // 在前台运行（阻塞）
       await runDaemonForeground(config);
     } else {
       const result = startDaemon(config);
@@ -253,7 +253,7 @@ export async function waitDaemonCommand(
 }
 
 /**
- * Detect blocked Claude Code sessions
+ * 检测被阻塞的 Claude Code 会话
  */
 export async function waitDetectCommand(options: WaitDetectOptions): Promise<void> {
   if (!isTmuxAvailable()) {
@@ -282,7 +282,7 @@ export async function waitDetectCommand(options: WaitDetectOptions): Promise<voi
     console.log(chalk.gray('  wise wait daemon start'));
   }
 
-  // Also show rate limit status
+  // 同时显示速率限制状态
   if (result.state?.rateLimitStatus) {
     console.log(chalk.bold('\nCurrent Rate Limit:'));
     console.log(`  ${formatRateLimitStatus(result.state.rateLimitStatus)}`);

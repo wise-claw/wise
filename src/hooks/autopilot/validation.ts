@@ -1,9 +1,9 @@
 /**
- * Autopilot Validation & Summary
+ * Autopilot 校验与摘要
  *
- * Coordinates parallel validation architects for Phase 4.
- * Aggregates verdicts and determines if autopilot can complete.
- * Also generates human-readable summaries when autopilot completes.
+ * 协调 Phase 4 的并行校验架构师。
+ * 汇总裁决并判断 autopilot 是否可以完成。
+ * 同时在 autopilot 完成时生成人类可读的摘要。
  */
 
 import {
@@ -19,7 +19,7 @@ import type {
   ValidationVerdict
 } from './types.js';
 
-/** Number of architects required for validation consensus */
+/** 达成校验共识所需的架构师数量 */
 export const REQUIRED_ARCHITECTS = 3;
 
 export interface ValidationCoordinatorResult {
@@ -31,7 +31,7 @@ export interface ValidationCoordinatorResult {
 }
 
 /**
- * Record a validation verdict from an architect
+ * 记录来自某位架构师的校验裁决
  */
 export function recordValidationVerdict(
   directory: string,
@@ -51,7 +51,7 @@ export function recordValidationVerdict(
     issues
   };
 
-  // Remove any existing verdict of this type for the current round
+  // 移除当前轮次中该类型的已有裁决
   const existingIndex = state.validation.verdicts.findIndex(
     v => v.type === type
   );
@@ -63,7 +63,7 @@ export function recordValidationVerdict(
     state.validation.architects_spawned++;
   }
 
-  // Check if all verdicts are in
+  // 检查是否所有裁决都已提交
   if (state.validation.verdicts.length >= REQUIRED_ARCHITECTS) {
     state.validation.all_approved = state.validation.verdicts.every(
       v => v.verdict === 'APPROVED'
@@ -74,7 +74,7 @@ export function recordValidationVerdict(
 }
 
 /**
- * Get validation status
+ * 获取校验状态
  */
 export function getValidationStatus(directory: string, sessionId?: string): ValidationCoordinatorResult | null {
   const state = readAutopilotState(directory, sessionId);
@@ -99,7 +99,7 @@ export function getValidationStatus(directory: string, sessionId?: string): Vali
 }
 
 /**
- * Start a new validation round
+ * 开启新一轮校验
  */
 export function startValidationRound(directory: string, sessionId?: string): boolean {
   const state = readAutopilotState(directory, sessionId);
@@ -116,7 +116,7 @@ export function startValidationRound(directory: string, sessionId?: string): boo
 }
 
 /**
- * Check if validation should retry
+ * 检查校验是否应重试
  */
 export function shouldRetryValidation(directory: string, maxRounds: number = 3, sessionId?: string): boolean {
   const state = readAutopilotState(directory, sessionId);
@@ -134,7 +134,7 @@ export function shouldRetryValidation(directory: string, maxRounds: number = 3, 
 }
 
 /**
- * Get issues that need fixing before retry
+ * 获取重试前需要修复的问题
  */
 export function getIssuesToFix(directory: string, sessionId?: string): string[] {
   const state = readAutopilotState(directory, sessionId);
@@ -154,7 +154,7 @@ export function getIssuesToFix(directory: string, sessionId?: string): string[] 
 }
 
 /**
- * Generate the validation spawn prompt
+ * 生成校验派发 prompt
  */
 export function getValidationSpawnPrompt(specPath: string): string {
   return `## SPAWN PARALLEL VALIDATION ARCHITECTS
@@ -219,7 +219,7 @@ Wait for all three architects to complete, then aggregate verdicts.
 }
 
 /**
- * Format validation results for display
+ * 格式化校验结果用于展示
  */
 export function formatValidationResults(state: AutopilotState, _sessionId?: string): string {
   const lines: string[] = [
@@ -251,11 +251,11 @@ export function formatValidationResults(state: AutopilotState, _sessionId?: stri
 }
 
 // ============================================================================
-// SUMMARY GENERATION
+// 摘要生成
 // ============================================================================
 
 /**
- * Generate a summary of the autopilot run
+ * 生成本次 autopilot 运行的摘要
  */
 export function generateSummary(directory: string, sessionId?: string): AutopilotSummary | null {
   const state = readAutopilotState(directory, sessionId);
@@ -298,7 +298,7 @@ export function generateSummary(directory: string, sessionId?: string): Autopilo
 }
 
 /**
- * Format duration in human-readable format
+ * 以人类可读格式格式化时长
  */
 function formatDuration(ms: number): string {
   const seconds = Math.floor(ms / 1000);
@@ -319,7 +319,7 @@ function formatDuration(ms: number): string {
 }
 
 /**
- * Generate formatted summary output
+ * 生成格式化的摘要输出
  */
 export function formatSummary(summary: AutopilotSummary): string {
   const lines: string[] = [
@@ -329,21 +329,21 @@ export function formatSummary(summary: AutopilotSummary): string {
     '├──────────────────────────────────────────────────────┤'
   ];
 
-  // Original idea (truncate if too long)
+  // 原始想法（过长则截断）
   const ideaDisplay = summary.originalIdea.length > 50
     ? summary.originalIdea.substring(0, 47) + '...'
     : summary.originalIdea;
   lines.push(`│  Original Idea: ${ideaDisplay.padEnd(36)} │`);
   lines.push('│                                                      │');
 
-  // Delivered section
+  // 交付内容区
   lines.push('│  Delivered:                                          │');
   lines.push(`│  • ${summary.filesCreated.length} files created${' '.repeat(36 - String(summary.filesCreated.length).length)}│`);
   lines.push(`│  • ${summary.filesModified.length} files modified${' '.repeat(35 - String(summary.filesModified.length).length)}│`);
   lines.push(`│  • Tests: ${summary.testsStatus}${' '.repeat(36 - summary.testsStatus.length)}│`);
   lines.push('│                                                      │');
 
-  // Metrics
+  // 指标
   lines.push('│  Metrics:                                            │');
   const durationStr = formatDuration(summary.duration);
   lines.push(`│  • Duration: ${durationStr}${' '.repeat(35 - durationStr.length)}│`);
@@ -357,7 +357,7 @@ export function formatSummary(summary: AutopilotSummary): string {
 }
 
 /**
- * Generate a compact summary for HUD display
+ * 生成用于 HUD 展示的精简摘要
  */
 export function formatCompactSummary(state: AutopilotState): string {
   const phase = state.phase.toUpperCase();
@@ -377,7 +377,7 @@ export function formatCompactSummary(state: AutopilotState): string {
 }
 
 /**
- * Generate failure summary
+ * 生成失败摘要
  */
 export function formatFailureSummary(state: AutopilotState, error?: string): string {
   const lines: string[] = [
@@ -406,7 +406,7 @@ export function formatFailureSummary(state: AutopilotState, error?: string): str
 }
 
 /**
- * List files for detailed summary
+ * 列出文件用于详细摘要
  */
 export function formatFileList(files: string[], title: string, maxFiles: number = 10): string {
   if (files.length === 0) {

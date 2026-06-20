@@ -1,14 +1,14 @@
 /**
- * Agents Module Exports
+ * Agents 模块导出
  *
- * New modular agent system with individual files and metadata.
- * Maintains backward compatibility with definitions.ts exports.
+ * 新的模块化 agent 系统，含独立文件与元数据。
+ * 与 definitions.ts 导出保持向后兼容。
  */
 
-// Types
+// 类型
 export * from './types.js';
 
-// Utilities
+// 工具函数
 export {
   createAgentToolRestrictions,
   mergeAgentConfig,
@@ -24,7 +24,7 @@ export {
   OPEN_QUESTIONS_PATH
 } from './utils.js';
 
-// Individual agent exports
+// 各 agent 单独导出
 export { architectAgent, ARCHITECT_PROMPT_METADATA } from './architect.js';
 export { exploreAgent, EXPLORE_PROMPT_METADATA } from './explore.js';
 export { executorAgent, EXECUTOR_PROMPT_METADATA } from './executor.js';
@@ -37,18 +37,18 @@ export { qaTesterAgent, QA_TESTER_PROMPT_METADATA } from './qa-tester.js';
 export { scientistAgent, SCIENTIST_PROMPT_METADATA } from './scientist.js';
 export { tracerAgent, TRACER_PROMPT_METADATA } from './tracer.js';
 export { documentSpecialistAgent, DOCUMENT_SPECIALIST_PROMPT_METADATA } from './document-specialist.js';
-// Reformed agents (Build/Analysis Lane)
+// 改良后的 agent（构建/分析通道）
 export {
   debuggerAgent,
   verifierAgent
 } from './definitions.js';
 
-// Reformed agents (Domain Specialists)
+// 改良后的 agent（领域专家）
 export {
   testEngineerAgent
 } from './definitions.js';
 
-// Specialized agents (Security, Code Review, Git, Code Simplifier)
+// 专用 agent（安全、代码评审、Git、代码简化器）
 export {
   securityReviewerAgent,
   codeReviewerAgent,
@@ -56,7 +56,7 @@ export {
   codeSimplifierAgent
 } from './definitions.js';
 
-// Core exports (getAgentDefinitions and wiseSystemPrompt)
+// 核心导出（getAgentDefinitions 与 wiseSystemPrompt）
 export {
   getAgentDefinitions,
   wiseSystemPrompt

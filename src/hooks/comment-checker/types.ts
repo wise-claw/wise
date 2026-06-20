@@ -1,91 +1,91 @@
 /**
- * Comment Checker Types
+ * 注释检查器类型
  *
- * Type definitions for comment detection in code changes.
+ * 代码变更中注释检测的类型定义。
  *
- * Adapted from oh-my-opencode's comment-checker hook.
+ * 改编自 oh-my-opencode 的 comment-checker 钩子。
  */
 
 /**
- * Type of comment detected
+ * 检测到的注释类型
  */
 export type CommentType = 'line' | 'block' | 'docstring';
 
 /**
- * Information about a detected comment
+ * 检测到的注释信息
  */
 export interface CommentInfo {
-  /** The comment text content */
+  /** 注释文本内容 */
   text: string;
-  /** Line number where comment appears */
+  /** 注释所在行号 */
   lineNumber: number;
-  /** File path containing the comment */
+  /** 包含该注释的文件路径 */
   filePath: string;
-  /** Type of comment */
+  /** 注释类型 */
   commentType: CommentType;
-  /** Whether this is a docstring */
+  /** 是否为文档字符串 */
   isDocstring: boolean;
-  /** Additional metadata */
+  /** 附加元数据 */
   metadata?: Record<string, string>;
 }
 
 /**
- * Pending tool call for comment checking
+ * 注释检查的待处理工具调用
  */
 export interface PendingCall {
-  /** File path being modified */
+  /** 正在修改的文件路径 */
   filePath: string;
-  /** New file content (for Write tool) */
+  /** 新文件内容（用于 Write 工具） */
   content?: string;
-  /** Old string being replaced (for Edit tool) */
+  /** 被替换的旧字符串（用于 Edit 工具） */
   oldString?: string;
-  /** New string replacement (for Edit tool) */
+  /** 替换的新字符串（用于 Edit 工具） */
   newString?: string;
-  /** Multiple edits (for MultiEdit tool) */
+  /** 多个编辑（用于 MultiEdit 工具） */
   edits?: Array<{ old_string: string; new_string: string }>;
-  /** Tool that triggered this check */
+  /** 触发此次检查的工具 */
   tool: 'write' | 'edit' | 'multiedit';
-  /** Session ID */
+  /** 会话 ID */
   sessionId: string;
-  /** Timestamp of the call */
+  /** 调用时间戳 */
   timestamp: number;
 }
 
 /**
- * Comments found in a file
+ * 文件中找到的注释
  */
 export interface FileComments {
-  /** File path */
+  /** 文件路径 */
   filePath: string;
-  /** List of comments found */
+  /** 找到的注释列表 */
   comments: CommentInfo[];
 }
 
 /**
- * Result of a comment filter
+ * 注释过滤器结果
  */
 export interface FilterResult {
-  /** Whether to skip this comment */
+  /** 是否跳过该注释 */
   shouldSkip: boolean;
-  /** Reason for skipping */
+  /** 跳过原因 */
   reason?: string;
 }
 
 /**
- * Function type for comment filters
+ * 注释过滤器的函数类型
  */
 export type CommentFilter = (comment: CommentInfo) => FilterResult;
 
 /**
- * Result of comment checking
+ * 注释检查结果
  */
 export interface CommentCheckResult {
-  /** Whether comments were detected */
+  /** 是否检测到注释 */
   hasComments: boolean;
-  /** Number of comments found */
+  /** 找到的注释数量 */
   count: number;
-  /** Message to inject if comments found */
+  /** 检测到注释时注入的消息 */
   message?: string;
-  /** Detailed comment information */
+  /** 详细的注释信息 */
   comments: CommentInfo[];
 }

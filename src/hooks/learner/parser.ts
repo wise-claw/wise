@@ -1,7 +1,7 @@
 /**
- * Skill Parser
+ * 技能解析器
  *
- * Parses YAML frontmatter from skill files.
+ * 解析技能文件中的 YAML frontmatter。
  */
 
 import type { SkillMetadata } from './types.js';
@@ -14,7 +14,7 @@ export interface SkillParseResult {
 }
 
 /**
- * Parse skill file frontmatter and content.
+ * 解析技能文件的 frontmatter 与内容。
  */
 export function parseSkillFile(rawContent: string): SkillParseResult {
   const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/;
@@ -36,7 +36,7 @@ export function parseSkillFile(rawContent: string): SkillParseResult {
   try {
     const metadata = parseYamlMetadata(yamlContent);
 
-    // Derive id from name if missing
+    // 若缺失则从 name 派生 id
     if (!metadata.id && metadata.name) {
       metadata.id = metadata.name
         .toLowerCase()
@@ -44,12 +44,12 @@ export function parseSkillFile(rawContent: string): SkillParseResult {
         .replace(/[^a-z0-9-]/g, '');
     }
 
-    // Default source to 'manual' if missing
+    // 若缺失则将 source 默认为 'manual'
     if (!metadata.source) {
       metadata.source = 'manual';
     }
 
-    // Validate required fields (only truly required ones)
+    // 校验必填字段（仅真正必需的字段）
     if (!metadata.name) errors.push('Missing required field: name');
     if (!metadata.description) errors.push('Missing required field: description');
     if (!metadata.triggers || metadata.triggers.length === 0) {
@@ -73,7 +73,7 @@ export function parseSkillFile(rawContent: string): SkillParseResult {
 }
 
 /**
- * Parse YAML metadata without external library.
+ * 不依赖外部库解析 YAML 元数据。
  */
 export function parseYamlMetadata(yamlContent: string): Partial<SkillMetadata> {
   const lines = yamlContent.split('\n');
@@ -164,7 +164,7 @@ export function parseArrayValue(
   lines: string[],
   currentIndex: number
 ): { value: string | string[]; consumed: number } {
-  // Inline array: ["a", "b"]
+  // 内联数组：["a", "b"]
   if (rawValue.startsWith('[')) {
     const endIdx = rawValue.lastIndexOf(']');
     if (endIdx === -1) return { value: [], consumed: 1 };
@@ -175,7 +175,7 @@ export function parseArrayValue(
     return { value: items, consumed: 1 };
   }
 
-  // Multi-line array
+  // 多行数组
   if (!rawValue || rawValue === '') {
     const items: string[] = [];
     let consumed = 1;
@@ -200,12 +200,12 @@ export function parseArrayValue(
     }
   }
 
-  // Single value
+  // 单值
   return { value: parseStringValue(rawValue), consumed: 1 };
 }
 
 /**
- * Generate YAML frontmatter for a skill.
+ * 为技能生成 YAML frontmatter。
  */
 export function generateSkillFrontmatter(metadata: SkillMetadata): string {
   const lines = [

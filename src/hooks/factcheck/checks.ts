@@ -1,8 +1,8 @@
 /**
- * Factcheck Guard - Individual Check Functions
+ * Factcheck 守卫 - 单项检查函数
  *
- * Each function validates a specific aspect of the claims payload and
- * returns a list of mismatches. Ported from factcheck.py.
+ * 每个函数校验 claims 负载的某个特定方面，并返回不匹配项列表。
+ * 移植自 factcheck.py。
  */
 
 import { existsSync } from 'fs';
@@ -15,11 +15,11 @@ import type {
 import { REQUIRED_FIELDS, REQUIRED_GATES } from './types.js';
 
 // ---------------------------------------------------------------------------
-// Schema validation
+// Schema 校验
 // ---------------------------------------------------------------------------
 
 /**
- * Check for missing required top-level fields.
+ * 检查缺失的必需顶层字段。
  */
 export function checkMissingFields(claims: Record<string, unknown>): string[] {
   const missing: string[] = [];
@@ -32,7 +32,7 @@ export function checkMissingFields(claims: Record<string, unknown>): string[] {
 }
 
 /**
- * Check for missing required gates.
+ * 检查缺失的必需 gate。
  */
 export function checkMissingGates(claims: Record<string, unknown>): string[] {
   const gates = (claims.gates ?? {}) as Record<string, unknown>;
@@ -46,11 +46,11 @@ export function checkMissingGates(claims: Record<string, unknown>): string[] {
 }
 
 // ---------------------------------------------------------------------------
-// Gate checks
+// Gate 检查
 // ---------------------------------------------------------------------------
 
 /**
- * Get required gates that are false.
+ * 获取值为 false 的必需 gate。
  */
 export function getFalseGates(claims: Record<string, unknown>): string[] {
   const gates = (claims.gates ?? {}) as Record<string, boolean>;
@@ -64,7 +64,7 @@ export function getFalseGates(claims: Record<string, unknown>): string[] {
 }
 
 /**
- * Count source files (modified + created).
+ * 统计源文件数量（modified + created）。
  */
 export function sourceFileCount(claims: Record<string, unknown>): number {
   const modified = (claims.files_modified as string[]) ?? [];
@@ -73,11 +73,11 @@ export function sourceFileCount(claims: Record<string, unknown>): number {
 }
 
 // ---------------------------------------------------------------------------
-// Path checks
+// 路径检查
 // ---------------------------------------------------------------------------
 
 /**
- * Check file paths for forbidden prefixes/substrings and existence.
+ * 检查文件路径是否包含禁止前缀/子串，以及路径是否存在。
  */
 export function checkPaths(
   claims: Record<string, unknown>,
@@ -122,11 +122,11 @@ export function checkPaths(
 }
 
 // ---------------------------------------------------------------------------
-// Command checks
+// 命令检查
 // ---------------------------------------------------------------------------
 
 /**
- * Check executed commands for forbidden mutating operations.
+ * 检查已执行命令中是否存在禁止的变更操作。
  */
 export function checkCommands(
   claims: Record<string, unknown>,
@@ -154,11 +154,11 @@ export function checkCommands(
 }
 
 // ---------------------------------------------------------------------------
-// CWD parity check
+// CWD 一致性检查
 // ---------------------------------------------------------------------------
 
 /**
- * Check that claims.cwd matches the runtime working directory.
+ * 检查 claims.cwd 是否与运行时工作目录一致。
  */
 export function checkCwdParity(
   claimsCwd: string,

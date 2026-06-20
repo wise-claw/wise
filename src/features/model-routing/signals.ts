@@ -1,8 +1,8 @@
 /**
- * Complexity Signal Extraction
+ * 复杂度信号提取
  *
- * Extracts complexity signals from task prompts to inform routing decisions.
- * Signals are categorized into lexical, structural, and context types.
+ * 从任务提示中提取复杂度信号以辅助路由决策。
+ * 信号分为词法、结构、上下文三类。
  */
 
 import type {
@@ -15,8 +15,8 @@ import type {
 import { COMPLEXITY_KEYWORDS } from './types.js';
 
 /**
- * Extract lexical signals from task prompt
- * These are fast, regex-based extractions that don't require model calls
+ * 从任务提示中提取词法信号
+ * 这些是基于正则的快速提取，无需调用模型
  */
 export function extractLexicalSignals(prompt: string): LexicalSignals {
   const lowerPrompt = prompt.toLowerCase();
@@ -36,8 +36,8 @@ export function extractLexicalSignals(prompt: string): LexicalSignals {
 }
 
 /**
- * Extract structural signals from task prompt
- * These require more sophisticated parsing
+ * 从任务提示中提取结构信号
+ * 这类提取需要更复杂的解析
  */
 export function extractStructuralSignals(prompt: string): StructuralSignals {
   const lowerPrompt = prompt.toLowerCase();
@@ -54,7 +54,7 @@ export function extractStructuralSignals(prompt: string): StructuralSignals {
 }
 
 /**
- * Extract context signals from routing context
+ * 从路由上下文中提取上下文信号
  */
 export function extractContextSignals(context: RoutingContext): ContextSignals {
   return {
@@ -67,7 +67,7 @@ export function extractContextSignals(context: RoutingContext): ContextSignals {
 }
 
 /**
- * Extract all complexity signals
+ * 提取全部复杂度信号
  */
 export function extractAllSignals(
   prompt: string,
@@ -80,17 +80,17 @@ export function extractAllSignals(
   };
 }
 
-// ============ Helper Functions ============
+// ============ 辅助函数 ============
 
 /**
- * Count file paths in prompt
+ * 统计提示中的文件路径数量
  */
 function countFilePaths(prompt: string): number {
-  // Match common file path patterns
+  // 匹配常见的文件路径模式
   const patterns = [
-    /(?:^|\s)[.\/~]?(?:[\w-]+\/)+[\w.-]+\.\w+/gm,  // Unix-style paths
-    /`[^`]+\.\w+`/g,  // Backtick-quoted files
-    /['"][^'"]+\.\w+['"]/g,  // Quoted files
+    /(?:^|\s)[.\/~]?(?:[\w-]+\/)+[\w.-]+\.\w+/gm,  // Unix 风格路径
+    /`[^`]+\.\w+`/g,  // 反引号包裹的文件
+    /['"][^'"]+\.\w+['"]/g,  // 引号包裹的文件
   ];
 
   let count = 0;
@@ -99,11 +99,11 @@ function countFilePaths(prompt: string): number {
     if (matches) count += matches.length;
   }
 
-  return Math.min(count, 20); // Cap at reasonable max
+  return Math.min(count, 20); // 限制在合理上限内
 }
 
 /**
- * Count code blocks in prompt
+ * 统计提示中的代码块数量
  */
 function countCodeBlocks(prompt: string): number {
   const fencedBlocks = (prompt.match(/```[\s\S]*?```/g) || []).length;
@@ -112,15 +112,15 @@ function countCodeBlocks(prompt: string): number {
 }
 
 /**
- * Check if prompt contains any of the keywords
+ * 检查提示是否包含任一关键词
  */
 function hasKeywords(prompt: string, keywords: string[]): boolean {
   return keywords.some(kw => prompt.includes(kw));
 }
 
 /**
- * Detect question depth
- * 'why' questions require deeper reasoning than 'what' or 'where'
+ * 检测问题深度
+ * 'why' 类问题比 'what' 或 'where' 需要更深入的推理
  */
 function detectQuestionDepth(prompt: string): 'why' | 'how' | 'what' | 'where' | 'none' {
   if (/\bwhy\b.*\?|\bwhy\s+(is|are|does|do|did|would|should|can)/i.test(prompt)) {
@@ -139,7 +139,7 @@ function detectQuestionDepth(prompt: string): 'why' | 'how' | 'what' | 'where' |
 }
 
 /**
- * Detect implicit requirements (vague statements without clear deliverables)
+ * 检测隐式需求（缺乏明确交付物的模糊表述）
  */
 function detectImplicitRequirements(prompt: string): boolean {
   const vaguePatterns = [
@@ -154,21 +154,21 @@ function detectImplicitRequirements(prompt: string): boolean {
 }
 
 /**
- * Estimate number of subtasks
+ * 估算子任务数量
  */
 function estimateSubtasks(prompt: string): number {
   let count = 1;
 
-  // Count explicit list items
+  // 统计显式列表项
   const bulletPoints = (prompt.match(/^[\s]*[-*•]\s/gm) || []).length;
   const numberedItems = (prompt.match(/^[\s]*\d+[.)]\s/gm) || []).length;
   count += bulletPoints + numberedItems;
 
-  // Count 'and' conjunctions that might indicate multiple tasks
+  // 统计 'and' 连词，可能表示存在多个任务
   const andCount = (prompt.match(/\band\b/gi) || []).length;
   count += Math.floor(andCount / 2);
 
-  // Count 'then' indicators
+  // 统计 'then' 标志词
   const thenCount = (prompt.match(/\bthen\b/gi) || []).length;
   count += thenCount;
 
@@ -176,7 +176,7 @@ function estimateSubtasks(prompt: string): number {
 }
 
 /**
- * Detect if task involves changes across multiple files
+ * 检测任务是否涉及跨多文件改动
  */
 function detectCrossFileDependencies(prompt: string): boolean {
   const fileCount = countFilePaths(prompt);
@@ -196,7 +196,7 @@ function detectCrossFileDependencies(prompt: string): boolean {
 }
 
 /**
- * Detect test requirements
+ * 检测测试要求
  */
 function detectTestRequirements(prompt: string): boolean {
   const testIndicators = [
@@ -213,7 +213,7 @@ function detectTestRequirements(prompt: string): boolean {
 }
 
 /**
- * Detect domain specificity
+ * 检测领域专属性
  */
 function detectDomain(
   prompt: string
@@ -247,7 +247,7 @@ function detectDomain(
 }
 
 /**
- * Detect if external knowledge is required
+ * 检测是否需要外部知识
  */
 function detectExternalKnowledge(prompt: string): boolean {
   const externalIndicators = [
@@ -264,7 +264,7 @@ function detectExternalKnowledge(prompt: string): boolean {
 }
 
 /**
- * Assess reversibility of changes
+ * 评估改动的可回滚性
  */
 function assessReversibility(prompt: string): 'easy' | 'moderate' | 'difficult' {
   const difficultIndicators = [
@@ -291,7 +291,7 @@ function assessReversibility(prompt: string): 'easy' | 'moderate' | 'difficult' 
 }
 
 /**
- * Assess impact scope of changes
+ * 评估改动的影响范围
  */
 function assessImpactScope(prompt: string): 'local' | 'module' | 'system-wide' {
   const systemWideIndicators = [
@@ -315,7 +315,7 @@ function assessImpactScope(prompt: string): 'local' | 'module' | 'system-wide' {
 
   if (systemWideIndicators.some(p => p.test(prompt))) return 'system-wide';
 
-  // Check for multiple files (indicates module-level at least)
+  // 检查是否涉及多个文件（至少表示模块级影响）
   if (countFilePaths(prompt) >= 3) return 'module';
   if (moduleIndicators.some(p => p.test(prompt))) return 'module';
 

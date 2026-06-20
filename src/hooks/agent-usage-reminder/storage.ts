@@ -1,9 +1,9 @@
 /**
- * Agent Usage Reminder Storage
+ * Agent Usage Reminder 存储
  *
- * Persists agent usage state across sessions.
+ * 跨会话持久化代理使用状态。
  *
- * Ported from oh-my-opencode's agent-usage-reminder hook.
+ * 移植自 oh-my-opencode 的 agent-usage-reminder 钩子。
  */
 
 import {

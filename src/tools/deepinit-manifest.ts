@@ -1,14 +1,13 @@
 /**
- * Deepinit Manifest Tool
+ * Deepinit 清单工具
  *
- * Deterministic, code-level manifest system for incremental /deepinit.
- * Tracks directory file lists so subsequent runs only regenerate AGENTS.md
- * for directories whose structure has actually changed.
+ * 用于增量 /deepinit 的确定性代码级清单系统。
+ * 跟踪目录文件列表，使后续运行仅为结构实际发生变化的目录重新生成 AGENTS.md。
  *
- * Actions:
- * - diff: Compare current filesystem to saved manifest
- * - save: Write current filesystem state as manifest
- * - check: Return whether manifest exists and is valid
+ * 操作：
+ * - diff：将当前文件系统与已保存的清单进行比较
+ * - save：将当前文件系统状态写入清单
+ * - check：返回清单是否存在且有效
  *
  * @see https://github.com/wise-claw/wise/issues/1719
  */
@@ -22,50 +21,50 @@ import { TOOL_CATEGORIES } from '../constants/names.js';
 import type { ToolDefinition } from './types.js';
 
 // =============================================================================
-// CONSTANTS
+// 常量
 // =============================================================================
 
 const MANIFEST_VERSION = 1;
 
-/** Maximum recursion depth to prevent stack overflow */
+/** 最大递归深度，防止栈溢出 */
 const MAX_DEPTH = 50;
 
-/** Maximum directories to scan to prevent memory exhaustion */
+/** 最大扫描目录数，防止内存耗尽 */
 const MAX_DIRECTORIES = 10_000;
 
-/** Directories excluded by name (exact match) */
+/** 按名称精确匹配排除的目录 */
 const EXCLUDED_DIRS = new Set([
   'node_modules', 'dist', 'build', '__pycache__',
   'coverage', '.next', '.nuxt',
 ]);
 
 // =============================================================================
-// TYPES
+// 类型
 // =============================================================================
 
-/** Sorted file list for a single directory */
+/** 单个目录的已排序文件列表 */
 interface DirectoryEntry {
   readonly files: readonly string[];
 }
 
-/** The persisted manifest structure */
+/** 持久化的清单结构 */
 interface DeepInitManifest {
   readonly version: 1;
   readonly generatedAt: string;
   readonly directories: Readonly<Record<string, DirectoryEntry>>;
 }
 
-/** Change status for a directory */
+/** 目录的变更状态 */
 type ChangeStatus = 'added' | 'deleted' | 'modified' | 'unchanged';
 
-/** Diff result for a single directory */
+/** 单个目录的差异结果 */
 interface DiffEntry {
   readonly path: string;
   readonly status: ChangeStatus;
   readonly reason?: string;
 }
 
-/** Full diff result */
+/** 完整差异结果 */
 interface DiffResult {
   readonly entries: readonly DiffEntry[];
   readonly summary: {
@@ -78,7 +77,7 @@ interface DiffResult {
 }
 
 // =============================================================================
-// SCHEMA
+// Schema
 // =============================================================================
 
 const deepinitManifestSchema = {
@@ -101,33 +100,33 @@ const deepinitManifestSchema = {
 type DeepinitManifestInput = z.infer<z.ZodObject<typeof deepinitManifestSchema>>;
 
 // =============================================================================
-// CORE FUNCTIONS (exported for testing)
+// 核心函数（导出供测试使用）
 // =============================================================================
 
 /**
- * Returns true if a directory name should be excluded from scanning.
- * Excludes all hidden directories (starting with '.') and known build/dependency dirs.
+ * 如果目录名应被排除扫描则返回 true。
+ * 排除所有隐藏目录（以 '.' 开头）以及已知的构建/依赖目录。
  */
 export function isExcluded(name: string): boolean {
   return name.startsWith('.') || EXCLUDED_DIRS.has(name);
 }
 
 /**
- * Recursively scan a project directory and build a record of directory → file list.
- * - Skips excluded directories via isExcluded()
- * - Skips empty directories (no files)
- * - Uses inode tracking to prevent symlink loops
- * - File lists are sorted alphabetically for deterministic comparison
- * - All paths use '/' separator regardless of platform
+ * 递归扫描项目目录并构建目录 → 文件列表的记录。
+ * - 通过 isExcluded() 跳过被排除的目录
+ * - 跳过空目录（无文件）
+ * - 使用 inode 跟踪以防止符号链接环路
+ * - 文件列表按字母顺序排序以保证比较的确定性
+ * - 所有路径统一使用 '/' 分隔符，与平台无关
  *
- * @param projectRoot Absolute path to the project root
- * @returns Record keyed by relative path ('.' for root), value is DirectoryEntry
+ * @param projectRoot 项目根目录的绝对路径
+ * @returns 以相对路径为键（根目录用 '.'）的记录，值为 DirectoryEntry
  */
 export function scanDirectories(projectRoot: string): Record<string, DirectoryEntry> {
   const result: Record<string, DirectoryEntry> = {};
   const visitedInodes = new Set<number>();
 
-  // Resolve the real project root for symlink containment checks
+  // 解析真实项目根目录，用于符号链接包含性检查
   let realProjectRoot: string;
   try {
     realProjectRoot = realpathSync(projectRoot);
@@ -138,26 +137,26 @@ export function scanDirectories(projectRoot: string): Record<string, DirectoryEn
   let dirCount = 0;
 
   function walk(absDir: string, depth: number): void {
-    // Guard against excessive depth or directory count
+    // 防止深度或目录数过大
     if (depth > MAX_DEPTH || dirCount > MAX_DIRECTORIES) return;
 
-    // Symlink containment: verify resolved path is under project root
+    // 符号链接包含性校验：确认解析后的路径位于项目根目录之下
     try {
       const realDir = realpathSync(absDir);
       if (realDir !== realProjectRoot && !realDir.startsWith(realProjectRoot + sep)) {
-        return; // Symlink escapes project root — skip
+        return; // 符号链接逃逸出项目根目录 — 跳过
       }
     } catch {
-      return; // Skip inaccessible directories
+      return; // 跳过无法访问的目录
     }
 
-    // Symlink loop protection via inode tracking
+    // 通过 inode 跟踪防止符号链接环路
     try {
       const stat = statSync(absDir);
       if (visitedInodes.has(stat.ino)) return;
       visitedInodes.add(stat.ino);
     } catch {
-      return; // Skip inaccessible directories
+      return; // 跳过无法访问的目录
     }
 
     dirCount++;
@@ -166,14 +165,14 @@ export function scanDirectories(projectRoot: string): Record<string, DirectoryEn
     try {
       entries = readdirSync(absDir, { withFileTypes: true });
     } catch {
-      return; // Skip unreadable directories
+      return; // 跳过不可读的目录
     }
 
     const files: string[] = [];
     const subdirs: string[] = [];
 
     for (const entry of entries) {
-      // Skip symbolic links to prevent escape and information disclosure
+      // 跳过符号链接，防止逃逸和信息泄露
       if (entry.isSymbolicLink()) continue;
 
       if (entry.isFile()) {
@@ -183,13 +182,13 @@ export function scanDirectories(projectRoot: string): Record<string, DirectoryEn
       }
     }
 
-    // Only track directories that contain files
+    // 仅跟踪包含文件的目录
     if (files.length > 0) {
       const relPath = relative(projectRoot, absDir).split(sep).join('/') || '.';
       result[relPath] = { files: [...files].sort() };
     }
 
-    // Recurse into subdirectories
+    // 递归进入子目录
     for (const sub of subdirs) {
       walk(join(absDir, sub), depth + 1);
     }
@@ -200,9 +199,8 @@ export function scanDirectories(projectRoot: string): Record<string, DirectoryEn
 }
 
 /**
- * Load and parse a manifest file.
- * Returns null if file doesn't exist, is unreadable, fails JSON parse,
- * or has an incompatible version.
+ * 加载并解析清单文件。
+ * 文件不存在、不可读、JSON 解析失败或版本不兼容时返回 null。
  */
 export function loadManifest(manifestPath: string): DeepInitManifest | null {
   if (!existsSync(manifestPath)) return null;
@@ -221,14 +219,13 @@ export function loadManifest(manifestPath: string): DeepInitManifest | null {
 }
 
 /**
- * Compute the diff between a previous manifest state and the current directory tree.
- * - If previous is null, all current directories are 'added' (first run)
- * - Applies ancestor cascading: when a child is added/deleted, all ancestor
- *   directories are marked 'modified' (to update their Subdirectories table)
+ * 计算前一个清单状态与当前目录树之间的差异。
+ * - 如果 previous 为 null，则所有当前目录均为 'added'（首次运行）
+ * - 应用祖先级联：当子目录被新增/删除时，所有祖先目录都标记为 'modified'（以更新其 Subdirectories 表）
  *
- * @param previous Previous directory state (null = first run)
- * @param current Current directory state from scanDirectories()
- * @returns DiffResult with entries sorted by path
+ * @param previous 前一个目录状态（null = 首次运行）
+ * @param current 来自 scanDirectories() 的当前目录状态
+ * @returns DiffResult，条目按路径排序
  */
 export function computeDiff(
   previous: Readonly<Record<string, DirectoryEntry>> | null,
@@ -237,12 +234,12 @@ export function computeDiff(
   const entries = new Map<string, DiffEntry>();
 
   if (previous === null) {
-    // First run: everything is added
+    // 首次运行：全部视为 added
     for (const path of Object.keys(current)) {
       entries.set(path, { path, status: 'added', reason: 'first run (no manifest)' });
     }
   } else {
-    // Check current directories against previous
+    // 将当前目录与 previous 进行对比
     for (const [path, entry] of Object.entries(current)) {
       const prev = previous[path];
       if (!prev) {
@@ -252,7 +249,7 @@ export function computeDiff(
         const currFiles = [...entry.files].sort();
 
         if (prevFiles.length !== currFiles.length || prevFiles.some((f, i) => f !== currFiles[i])) {
-          // Compute what changed using Set for O(n+m) instead of O(n*m)
+          // 使用 Set 计算变更，复杂度为 O(n+m) 而非 O(n*m)
           const prevSet = new Set(prevFiles);
           const currSet = new Set(currFiles);
           const added = currFiles.filter(f => !prevSet.has(f));
@@ -267,7 +264,7 @@ export function computeDiff(
       }
     }
 
-    // Check for deleted directories
+    // 检查被删除的目录
     for (const path of Object.keys(previous)) {
       if (!(path in current)) {
         entries.set(path, { path, status: 'deleted', reason: 'directory no longer exists' });
@@ -275,13 +272,13 @@ export function computeDiff(
     }
   }
 
-  // Ancestor cascading: mark parents of added/deleted dirs as modified
+  // 祖先级联：将被新增/删除目录的父目录标记为 modified
   const cascadeTargets = [...entries.values()]
     .filter(e => e.status === 'added' || e.status === 'deleted');
 
   for (const target of cascadeTargets) {
     const parts = target.path.split('/');
-    // Walk up from parent to root
+    // 从父目录逐级向上走到根目录
     for (let i = parts.length - 1; i > 0; i--) {
       const ancestor = parts.slice(0, i).join('/');
       const existing = entries.get(ancestor);
@@ -293,7 +290,7 @@ export function computeDiff(
         });
       }
     }
-    // Handle root directory ('.')
+    // 处理根目录（'.'）
     if (target.path !== '.') {
       const rootEntry = entries.get('.');
       if (rootEntry && rootEntry.status === 'unchanged') {
@@ -306,7 +303,7 @@ export function computeDiff(
     }
   }
 
-  // Sort by path and build result
+  // 按路径排序并构建结果
   const sorted = [...entries.values()].sort((a, b) => a.path.localeCompare(b.path));
   const summary = {
     total: sorted.length,
@@ -320,7 +317,7 @@ export function computeDiff(
 }
 
 // =============================================================================
-// ACTION HANDLERS
+// 操作处理器
 // =============================================================================
 
 function resolveManifestPath(root: string): string {
@@ -333,7 +330,7 @@ function handleDiff(root: string, mode: string): { content: Array<{ type: 'text'
 
   let diff: DiffResult;
   if (mode === 'full') {
-    // Full mode: treat everything as added
+    // full 模式：将全部视为 added
     diff = computeDiff(null, current);
   } else {
     const manifest = loadManifest(manifestPath);
@@ -404,7 +401,7 @@ function handleCheck(root: string): { content: Array<{ type: 'text'; text: strin
 }
 
 // =============================================================================
-// TOOL DEFINITION
+// 工具定义
 // =============================================================================
 
 export const deepinitManifestTool: ToolDefinition<typeof deepinitManifestSchema> = {
@@ -418,7 +415,7 @@ export const deepinitManifestTool: ToolDefinition<typeof deepinitManifestSchema>
   handler: async (args: DeepinitManifestInput) => {
     const { action, workingDirectory, mode, dryRun } = args;
 
-    // Per-action parameter validation
+    // 按操作校验参数
     if (action !== 'diff' && mode !== undefined && mode !== 'incremental') {
       return {
         content: [{ type: 'text' as const, text: `Error: 'mode' parameter is only valid with action='diff'. Got action='${action}'.` }],

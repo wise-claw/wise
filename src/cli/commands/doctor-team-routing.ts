@@ -1,9 +1,9 @@
 /**
- * `wise doctor team-routing` — probe configured /team role-routing providers.
+ * `wise doctor team-routing` — 探测已配置的 /team 角色路由提供方。
  *
- * Iterates every unique provider referenced by `team.roleRouting` (falling back
- * to `claude` when config is empty) and checks CLI presence on PATH.
- * Emits warnings (not errors) for missing binaries — AC-11.
+ * 遍历 `team.roleRouting` 引用的每个唯一提供方（配置为空时兜底为
+ * `claude`），检查其在 PATH 上的 CLI 是否存在。
+ * 对缺失的二进制仅发出警告（而非错误）— AC-11。
  */
 
 import { execSync } from 'child_process';
@@ -44,7 +44,7 @@ function probeProvider(provider: TeamRoleProvider): ProviderProbe {
           .split('\n')[0];
         if (version) probe.version = version;
       } catch {
-        // Version probe is best-effort; binary found is enough.
+        // 版本探测为尽力而为；找到二进制即可。
       }
     }
   } catch (err) {
@@ -57,7 +57,7 @@ function probeProvider(provider: TeamRoleProvider): ProviderProbe {
 function collectConfiguredProviders(): Set<TeamRoleProvider> {
   const cfg = loadConfig();
   const providers = new Set<TeamRoleProvider>();
-  // Always include claude so orchestrator presence is reported.
+  // 始终包含 claude，以便上报编排器存在性。
   providers.add('claude');
 
   const roleRouting = cfg.team?.roleRouting ?? {};
@@ -114,6 +114,6 @@ export async function doctorTeamRoutingCommand(options: { json?: boolean }): Pro
     }
   }
 
-  // Never error on missing providers — AC-11 says warn, not error.
+  // 提供方缺失时绝不报错 — AC-11 要求警告而非错误。
   return 0;
 }

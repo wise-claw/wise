@@ -1,18 +1,18 @@
 /**
- * Live Data Injection
+ * 实时数据注入
  *
- * Resolves `!command` lines in skill/command templates by executing the command
- * and replacing the line with its output wrapped in <live-data> tags.
+ * 通过执行命令来解析技能/命令模板中的 `!command` 行，
+ * 并用包裹在 <live-data> 标签中的输出替换该行。
  *
- * Supports:
- * - Basic: `!git status`
- * - Caching: `!cache 300s git log -10`
- * - Conditional: `!if-modified src/** then git diff src/`
- * - Conditional: `!if-branch feat/* then echo "feature branch"`
- * - Once per session: `!only-once npm install`
- * - Output formats: `!json docker inspect ...`, `!table ...`, `!diff git diff`
- * - Multi-line: `!begin-script bash` ... `!end-script`
- * - Security allowlist via .wise/config/live-data-policy.json
+ * 支持：
+ * - 基础：`!git status`
+ * - 缓存：`!cache 300s git log -10`
+ * - 条件：`!if-modified src/** then git diff src/`
+ * - 条件：`!if-branch feat/* then echo "feature branch"`
+ * - 每会话一次：`!only-once npm install`
+ * - 输出格式：`!json docker inspect ...`、`!table ...`、`!diff git diff`
+ * - 多行：`!begin-script bash` ... `!end-script`
+ * - 通过 .wise/config/live-data-policy.json 配置安全允许列表
  */
 
 import { execSync } from "child_process";
@@ -26,7 +26,7 @@ const MAX_OUTPUT_BYTES = 50 * 1024;
 const MAX_CACHE_SIZE = 200;
 const MAX_ONCE_COMMANDS = 500;
 
-// Pre-compiled regex patterns for performance
+// 为提升性能预编译的正则模式
 const LIVE_DATA_LINE_PATTERN = /^\s*!(.+)/;
 const CODE_BLOCK_FENCE_PATTERN = /^\s*(`{3,}|~{3,})/;
 const CACHE_DIRECTIVE_PATTERN = /^cache\s+(\d+)s?\s+(.+)$/;
@@ -43,7 +43,7 @@ const SCRIPT_BEGIN_PATTERN = /^\s*!begin-script\s+(\S+)\s*$/;
 const SCRIPT_END_PATTERN = /^\s*!end-script\s*$/;
 const WHITESPACE_SPLIT_PATTERN = /\s/;
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── 类型 ───────────────────────────────────────────────────────────────────
 
 interface CacheEntry {
   output: string;
@@ -62,12 +62,12 @@ interface SecurityPolicy {
 
 type OutputFormat = "json" | "table" | "diff" | null;
 
-// ─── Cache ───────────────────────────────────────────────────────────────────
+// ─── 缓存 ───────────────────────────────────────────────────────────────────
 
 const cache = new Map<string, CacheEntry>();
 const onceCommands = new Set<string>();
 
-/** Default TTL heuristics for common commands */
+/** 常见命令的默认 TTL 启发式规则 */
 const DEFAULT_TTL: Record<string, number> = {
   "git status": 1,
   "git branch": 5,
@@ -81,7 +81,7 @@ function getDefaultTtl(command: string): number {
   for (const [pattern, ttl] of Object.entries(DEFAULT_TTL)) {
     if (command.startsWith(pattern)) return ttl;
   }
-  return 0; // no caching by default
+  return 0; // 默认不缓存
 }
 
 function getCached(command: string): CacheEntry | null {
@@ -123,13 +123,13 @@ function markCommandExecuted(command: string): void {
   onceCommands.add(command);
 }
 
-/** Clear all caches (useful for testing) */
+/** 清除所有缓存（测试时有用） */
 export function clearCache(): void {
   cache.clear();
   onceCommands.clear();
 }
 
-// ─── Security ────────────────────────────────────────────────────────────────
+// ─── 安全 ────────────────────────────────────────────────────────────────
 
 let cachedPolicy: SecurityPolicy | null = null;
 let policyLoadedFrom: string | null = null;
@@ -149,14 +149,14 @@ function loadSecurityPolicy(): SecurityPolicy {
         policyLoadedFrom = p;
         return cachedPolicy;
       } catch {
-        // ignore malformed policy
+        // 忽略格式错误的策略
       }
     }
   }
   return {};
 }
 
-/** Reset cached policy (for testing) */
+/** 重置已缓存策略（测试用） */
 export function resetSecurityPolicy(): void {
   cachedPolicy = null;
   policyLoadedFrom = null;
@@ -166,20 +166,20 @@ function checkSecurity(command: string): { allowed: boolean; reason?: string } {
   const policy = loadSecurityPolicy();
   const cmdBase = command.split(WHITESPACE_SPLIT_PATTERN)[0];
 
-  // Check denied patterns first (always enforced)
+  // 先检查拒绝模式（始终强制执行）
   if (policy.denied_patterns) {
     for (const pat of policy.denied_patterns) {
       try {
         if (!safe(pat)) {
-          // Unsafe regex in deny list: block the command to fail closed.
-          // A ReDoS-capable pattern is treated as a blanket deny.
+          // 拒绝列表中的不安全正则：拦截命令以失败闭合。
+          // 具备 ReDoS 能力的模式被视为一律拒绝。
           return { allowed: false, reason: `unsafe regex rejected: ${pat}` };
         }
         if (new RegExp(pat).test(command)) {
           return { allowed: false, reason: `denied by pattern: ${pat}` };
         }
       } catch {
-        // skip invalid regex
+        // 跳过无效正则
       }
     }
   }
@@ -190,8 +190,8 @@ function checkSecurity(command: string): { allowed: boolean; reason?: string } {
     }
   }
 
-  // Default-deny: if an allowlist is configured, command MUST match it
-  // If no allowlist is configured at all, deny by default for safety
+  // 默认拒绝：若配置了允许列表，命令必须命中它
+  // 若完全未配置允许列表，出于安全默认拒绝
   const hasAllowlist =
     (policy.allowed_commands && policy.allowed_commands.length > 0) ||
     (policy.allowed_patterns && policy.allowed_patterns.length > 0);
@@ -203,7 +203,7 @@ function checkSecurity(command: string): { allowed: boolean; reason?: string } {
     };
   }
 
-  // Check if command matches allowlist
+  // 检查命令是否命中允许列表
   let baseAllowed = false;
   let patternAllowed = false;
 
@@ -215,9 +215,9 @@ function checkSecurity(command: string): { allowed: boolean; reason?: string } {
     for (const pat of policy.allowed_patterns) {
       try {
         if (!safe(pat)) {
-          // Unsafe regex in allow list: skip to fail closed.
-          // The pattern cannot grant access — remaining patterns
-          // or allowed_commands may still match.
+          // 允许列表中的不安全正则：跳过以失败闭合。
+          // 该模式无法授予访问权限——其余模式
+          // 或 allowed_commands 仍可能命中。
           continue;
         }
         if (new RegExp(pat).test(command)) {
@@ -225,7 +225,7 @@ function checkSecurity(command: string): { allowed: boolean; reason?: string } {
           break;
         }
       } catch {
-        // skip invalid regex
+        // 跳过无效正则
       }
     }
   }
@@ -240,7 +240,7 @@ function checkSecurity(command: string): { allowed: boolean; reason?: string } {
   return { allowed: true };
 }
 
-// ─── Line Classification ─────────────────────────────────────────────────────
+// ─── 行分类 ─────────────────────────────────────────────────────────────
 
 export function isLiveDataLine(line: string): boolean {
   return LIVE_DATA_LINE_PATTERN.test(line);
@@ -260,7 +260,7 @@ function getCodeBlockRanges(lines: string[]): Array<[number, number]> {
       }
     }
   }
-  // Unclosed fence: treat every line after the opening fence as inside a code block
+  // 未闭合的围栏：将起始围栏之后的每一行都视为在代码块内
   if (openIndex !== null) {
     ranges.push([openIndex, lines.length]);
   }
@@ -274,7 +274,7 @@ function isInsideCodeBlock(
   return ranges.some(([start, end]) => lineIndex > start && lineIndex < end);
 }
 
-// ─── Command Parsing ─────────────────────────────────────────────────────────
+// ─── 命令解析 ─────────────────────────────────────────────────────────────────
 
 interface ParsedDirective {
   type:
@@ -337,7 +337,7 @@ function parseDirective(raw: string): ParsedDirective {
   return { type: "basic", command: trimmed };
 }
 
-// ─── Conditional Helpers ─────────────────────────────────────────────────────
+// ─── 条件辅助 ─────────────────────────────────────────────────────────────
 
 function globToRegex(glob: string): RegExp {
   const escaped = glob
@@ -376,7 +376,7 @@ function checkIfBranch(pattern: string): boolean {
   }
 }
 
-// ─── Execution ───────────────────────────────────────────────────────────────
+// ─── 执行 ───────────────────────────────────────────────────────────────
 
 function executeCommand(command: string): { stdout: string; error: boolean } {
   try {
@@ -410,9 +410,9 @@ function executeCommand(command: string): { stdout: string; error: boolean } {
   }
 }
 
-// ─── HTML Escaping ───────────────────────────────────────────────────────────
+// ─── HTML 转义 ───────────────────────────────────────────────────────────────
 
-/** Escape characters that are special in XML/HTML attributes and content. */
+/** 转义在 XML/HTML 属性和内容中具有特殊含义的字符。 */
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
@@ -422,7 +422,7 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-// ─── Output Formatting ──────────────────────────────────────────────────────
+// ─── 输出格式化 ──────────────────────────────────────────────────────────────
 
 function formatOutput(
   command: string,
@@ -449,7 +449,7 @@ function formatOutput(
   return `<live-data command="${escapedCommand}"${formatAttr}${errorAttr}>${escapedOutput}</live-data>`;
 }
 
-// ─── Multi-line Script Support ───────────────────────────────────────────────
+// ─── 多行脚本支持 ───────────────────────────────────────────────────────────────
 
 interface ScriptBlock {
   startLine: number;
@@ -496,17 +496,17 @@ function extractScriptBlocks(
   return blocks;
 }
 
-// ─── Main Resolver ───────────────────────────────────────────────────────────
+// ─── 主解析器 ───────────────────────────────────────────────────────────
 
 /**
- * Resolve all live-data directives in content.
- * Lines inside fenced code blocks are skipped.
+ * 解析内容中所有 live-data 指令。
+ * 围栏代码块内的行会被跳过。
  */
 export function resolveLiveData(content: string): string {
   const lines = content.split("\n");
   const codeBlockRanges = getCodeBlockRanges(lines);
 
-  // First pass: extract and resolve multi-line script blocks
+  // 第一遍：提取并解析多行脚本块
   const scriptBlocks = extractScriptBlocks(lines, codeBlockRanges);
   const scriptLineSet = new Set<number>();
   const scriptReplacements = new Map<number, string>();
@@ -525,7 +525,7 @@ export function resolveLiveData(content: string): string {
       continue;
     }
 
-    // Write script to stdin of shell
+    // 将脚本写入 shell 的 stdin
     try {
       const result = execSync(block.shell, {
         input: block.body,
@@ -550,10 +550,10 @@ export function resolveLiveData(content: string): string {
     }
   }
 
-  // Second pass: process line by line
+  // 第二遍：逐行处理
   const result: string[] = [];
   for (let i = 0; i < lines.length; i++) {
-    // Script block lines: emit replacement on start line, skip rest
+    // 脚本块行：在起始行输出替换结果，跳过其余行
     if (scriptLineSet.has(i)) {
       const replacement = scriptReplacements.get(i);
       if (replacement) result.push(replacement);
@@ -568,7 +568,7 @@ export function resolveLiveData(content: string): string {
 
     const directive = parseDirective(line);
 
-    // Security check
+    // 安全检查
     const security = checkSecurity(directive.command);
     if (!security.allowed) {
       result.push(

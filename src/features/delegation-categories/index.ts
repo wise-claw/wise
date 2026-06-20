@@ -1,19 +1,19 @@
 /**
- * Delegation Categories
+ * 委派类别
  *
- * Category-based delegation system that layers on top of ComplexityTier.
- * Provides semantic grouping with automatic tier, temperature, and thinking budget.
+ * 基于 ComplexityTier 之上构建的类别化委派系统。
+ * 提供语义分组，并自动设置 tier、temperature 与 thinking budget。
  *
- * Usage:
+ * 用法：
  * ```typescript
  * import { resolveCategory, getCategoryForTask } from './delegation-categories';
  *
- * // Explicit category
+ * // 显式类别
  * const config = resolveCategory('ultrabrain');
  * console.log(config.tier);  // 'HIGH'
  * console.log(config.temperature);  // 0.3
  *
- * // Auto-detect category from task
+ * // 从任务自动检测类别
  * const detected = getCategoryForTask({ taskPrompt: "Design a beautiful dashboard" });
  * console.log(detected.category);  // 'visual-engineering'
  * ```
@@ -29,7 +29,7 @@ import type {
 import type { ComplexityTier } from '../model-routing/types.js';
 
 /**
- * Category configuration definitions
+ * 类别配置定义
  */
 export const CATEGORY_CONFIGS: Record<DelegationCategory, CategoryConfig> = {
   'visual-engineering': {
@@ -82,7 +82,7 @@ export const CATEGORY_CONFIGS: Record<DelegationCategory, CategoryConfig> = {
 };
 
 /**
- * Thinking budget token limits (approximate)
+ * 思考预算的 token 上限（近似值）
  */
 export const THINKING_BUDGET_TOKENS: Record<ThinkingBudget, number> = {
   low: 1000,
@@ -92,15 +92,15 @@ export const THINKING_BUDGET_TOKENS: Record<ThinkingBudget, number> = {
 };
 
 /**
- * Keywords for category detection.
+ * 用于类别检测的关键词。
  *
- * NOTE: These keywords overlap with COMPLEXITY_KEYWORDS in model-routing/types.ts
- * by design. The systems serve different purposes:
- * - COMPLEXITY_KEYWORDS: Determines model tier (haiku/sonnet/opus) based on complexity
- * - CATEGORY_KEYWORDS: Provides semantic context via promptAppend for enhanced guidance
+ * 注意：这些关键词与 model-routing/types.ts 中的 COMPLEXITY_KEYWORDS 有意重叠。
+ * 两套系统用途不同：
+ * - COMPLEXITY_KEYWORDS：依据复杂度决定模型 tier（haiku/sonnet/opus）
+ * - CATEGORY_KEYWORDS：通过 promptAppend 提供语义上下文以增强指引
  *
- * Both can match the same prompt - categories enhance the prompt with context-specific
- * instructions while model-routing independently selects the appropriate model tier.
+ * 两者可以匹配同一个 prompt——类别用上下文相关的指令增强 prompt，
+ * 而 model-routing 独立选择合适的模型 tier。
  */
 const CATEGORY_KEYWORDS: Record<DelegationCategory, string[]> = {
   'visual-engineering': [
@@ -130,10 +130,10 @@ const CATEGORY_KEYWORDS: Record<DelegationCategory, string[]> = {
 };
 
 /**
- * Resolve a category to its full configuration
+ * 将类别解析为完整配置
  *
- * @param category - The category to resolve
- * @returns Resolved category with configuration
+ * @param category - 要解析的类别
+ * @returns 带配置的已解析类别
  */
 export function resolveCategory(category: DelegationCategory): ResolvedCategory {
   const config = CATEGORY_CONFIGS[category];
@@ -148,39 +148,39 @@ export function resolveCategory(category: DelegationCategory): ResolvedCategory 
 }
 
 /**
- * Check if a string is a valid delegation category
+ * 检查字符串是否为有效的委派类别
  *
- * @param category - String to check
- * @returns True if valid category
+ * @param category - 要检查的字符串
+ * @returns 若为有效类别则返回 true
  */
 export function isValidCategory(category: string): category is DelegationCategory {
   return category in CATEGORY_CONFIGS;
 }
 
 /**
- * Get all available categories
+ * 获取所有可用类别
  *
- * @returns Array of all delegation categories
+ * @returns 所有委派类别的数组
  */
 export function getAllCategories(): DelegationCategory[] {
   return Object.keys(CATEGORY_CONFIGS) as DelegationCategory[];
 }
 
 /**
- * Get description for a category
+ * 获取某个类别的描述
  *
- * @param category - The category
- * @returns Human-readable description
+ * @param category - 类别
+ * @returns 人类可读的描述
  */
 export function getCategoryDescription(category: DelegationCategory): string {
   return CATEGORY_CONFIGS[category].description;
 }
 
 /**
- * Detect category from task prompt using keyword matching
+ * 通过关键词匹配从任务提示词中检测类别
  *
- * @param taskPrompt - The task description
- * @returns Best matching category or null
+ * @param taskPrompt - 任务描述
+ * @returns 最佳匹配的类别或 null
  */
 export function detectCategoryFromPrompt(taskPrompt: string): DelegationCategory | null {
   const lowerPrompt = taskPrompt.toLowerCase();
@@ -194,7 +194,7 @@ export function detectCategoryFromPrompt(taskPrompt: string): DelegationCategory
     'unspecified-high': 0,
   };
 
-  // Score each category based on keyword matches
+  // 根据关键词匹配为每个类别计分
   for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
     for (const keyword of keywords) {
       if (lowerPrompt.includes(keyword)) {
@@ -203,7 +203,7 @@ export function detectCategoryFromPrompt(taskPrompt: string): DelegationCategory
     }
   }
 
-  // Find highest scoring category (excluding unspecified)
+  // 找到得分最高的类别（排除 unspecified）
   let maxScore = 0;
   let bestCategory: DelegationCategory | null = null;
 
@@ -216,7 +216,7 @@ export function detectCategoryFromPrompt(taskPrompt: string): DelegationCategory
     }
   }
 
-  // Require at least 2 keyword matches for confidence
+  // 至少需要 2 个关键词匹配才算可信
   if (maxScore >= 2 && bestCategory) {
     return bestCategory;
   }
@@ -225,68 +225,68 @@ export function detectCategoryFromPrompt(taskPrompt: string): DelegationCategory
 }
 
 /**
- * Get category for a task with context
+ * 结合上下文获取任务的类别
  *
- * @param context - Category resolution context
- * @returns Resolved category
+ * @param context - 类别解析上下文
+ * @returns 已解析的类别
  */
 export function getCategoryForTask(context: CategoryContext): ResolvedCategory {
-  // Explicit tier bypasses categories
+  // 显式 tier 绕过类别
   if (context.explicitTier) {
     const category: DelegationCategory = context.explicitTier === 'LOW' ? 'unspecified-low' : 'unspecified-high';
     return resolveCategory(category);
   }
 
-  // Explicit category
+  // 显式类别
   if (context.explicitCategory) {
     return resolveCategory(context.explicitCategory);
   }
 
-  // Auto-detect from task prompt
+  // 从任务提示词自动检测
   const detected = detectCategoryFromPrompt(context.taskPrompt);
   if (detected) {
     return resolveCategory(detected);
   }
 
-  // Default to medium tier
+  // 默认使用 medium tier
   return resolveCategory('unspecified-high');
 }
 
 /**
- * Get tier from category (for backward compatibility)
+ * 从类别获取 tier（用于向后兼容）
  *
- * @param category - Delegation category
- * @returns Complexity tier
+ * @param category - 委派类别
+ * @returns 复杂度 tier
  */
 export function getCategoryTier(category: DelegationCategory): ComplexityTier {
   return CATEGORY_CONFIGS[category].tier;
 }
 
 /**
- * Get temperature from category
+ * 从类别获取 temperature
  *
- * @param category - Delegation category
- * @returns Temperature value
+ * @param category - 委派类别
+ * @returns temperature 值
  */
 export function getCategoryTemperature(category: DelegationCategory): number {
   return CATEGORY_CONFIGS[category].temperature;
 }
 
 /**
- * Get thinking budget from category
+ * 从类别获取思考预算
  *
- * @param category - Delegation category
- * @returns Thinking budget level
+ * @param category - 委派类别
+ * @returns 思考预算级别
  */
 export function getCategoryThinkingBudget(category: DelegationCategory): ThinkingBudget {
   return CATEGORY_CONFIGS[category].thinkingBudget;
 }
 
 /**
- * Get thinking budget in tokens
+ * 获取以 token 为单位的思考预算
  *
- * @param category - Delegation category
- * @returns Token budget
+ * @param category - 委派类别
+ * @returns token 预算
  */
 export function getCategoryThinkingBudgetTokens(category: DelegationCategory): number {
   const budget = CATEGORY_CONFIGS[category].thinkingBudget;
@@ -294,21 +294,21 @@ export function getCategoryThinkingBudgetTokens(category: DelegationCategory): n
 }
 
 /**
- * Get prompt appendix for category
+ * 获取类别的 prompt 附言
  *
- * @param category - Delegation category
- * @returns Prompt appendix or empty string
+ * @param category - 委派类别
+ * @returns prompt 附言或空字符串
  */
 export function getCategoryPromptAppend(category: DelegationCategory): string {
   return CATEGORY_CONFIGS[category].promptAppend || '';
 }
 
 /**
- * Create a delegation prompt with category-specific guidance
+ * 创建带有类别专属指引的委派 prompt
  *
- * @param taskPrompt - Base task prompt
- * @param category - Delegation category
- * @returns Enhanced prompt with category guidance
+ * @param taskPrompt - 基础任务 prompt
+ * @param category - 委派类别
+ * @returns 带类别指引的增强 prompt
  */
 export function enhancePromptWithCategory(
   taskPrompt: string,
@@ -323,7 +323,7 @@ export function enhancePromptWithCategory(
   return `${taskPrompt}\n\n${config.promptAppend}`;
 }
 
-// Re-export types
+// 重新导出类型
 export type {
   DelegationCategory,
   CategoryConfig,

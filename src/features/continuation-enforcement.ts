@@ -1,19 +1,19 @@
 /**
- * Continuation Enforcement Feature
+ * 延续强制特性
  *
- * Ensures agents complete all tasks before stopping:
- * - Monitors todo list for incomplete items
- * - Adds reminders to continue when tasks remain
- * - Prevents premature stopping
- * - Provides background task execution guidance
+ * 确保代理在停止前完成所有任务：
+ * - 监控待办列表中的未完成项
+ * - 当仍有任务时添加继续提醒
+ * - 阻止过早停止
+ * - 提供后台任务执行指引
  */
 
 import type { HookDefinition, HookContext, HookResult } from '../shared/types.js';
 import { getBackgroundTaskGuidance, DEFAULT_MAX_BACKGROUND_TASKS } from './background-tasks.js';
 
 /**
- * Messages to remind agents to continue
- * ENHANCED: Using exact pattern from oh-my-opencode's todo-continuation-enforcer
+ * 提醒代理继续的消息
+ * 增强：采用 oh-my-opencode 的 todo-continuation-enforcer 中的精确模式
  */
 const CONTINUATION_REMINDERS = [
   '[SYSTEM REMINDER - TODO CONTINUATION] Incomplete tasks remain in your todo list. Continue working on the next pending task. Proceed without asking for permission. Mark each task complete when finished. Do not stop until all tasks are done.',
@@ -24,34 +24,34 @@ const CONTINUATION_REMINDERS = [
 ];
 
 /**
- * Get a random continuation reminder
+ * 获取一个随机的延续提醒
  */
 function getRandomReminder(): string {
   return CONTINUATION_REMINDERS[Math.floor(Math.random() * CONTINUATION_REMINDERS.length)];
 }
 
 /**
- * Create a continuation enforcement hook
+ * 创建延续强制钩子
  *
- * This hook intercepts stop attempts and checks if there are
- * incomplete tasks. If so, it blocks the stop and reminds
- * the agent to continue.
+ * 此钩子拦截停止尝试并检查是否存在
+ * 未完成的任务。若有，则阻止停止并提醒
+ * 代理继续。
  */
 export function createContinuationHook(): HookDefinition {
   return {
     event: 'Stop',
     handler: async (_context: HookContext): Promise<HookResult> => {
-      // In a real implementation, this would check the actual todo state
-      // For now, we'll provide the structure for integration
+      // 在真实实现中，这里会检查实际的待办状态
+      // 目前先提供集成的结构
 
-      // The hook would examine:
-      // 1. The current todo list state
-      // 2. Any explicitly stated completion criteria
-      // 3. The conversation history for incomplete work
+      // 钩子会检查：
+      // 1. 当前待办列表状态
+      // 2. 任何显式声明的完成标准
+      // 3. 对话历史中的未完成工作
 
-      // TODO: integrate with actual todo tracking to dynamically determine incomplete tasks.
-      // This is a placeholder — always returns false until todo state is wired up.
-      const hasIncompleteTasks = false; // placeholder: real implementation reads todo state
+      // TODO: 与实际的待办跟踪集成，以动态判定未完成的任务。
+      // 这是占位实现——在接通待办状态前始终返回 false。
+      const hasIncompleteTasks = false; // 占位：真实实现会读取待办状态
 
       if (hasIncompleteTasks) {
         return {
@@ -68,8 +68,8 @@ export function createContinuationHook(): HookDefinition {
 }
 
 /**
- * System prompt addition for continuation enforcement
- * ENHANCED: Much stronger persistence language from oh-my-opencode patterns
+ * 延续强制的系统提示词补充
+ * 增强：采用 oh-my-opencode 模式中更强的坚持性表述
  */
 export const continuationSystemPromptAddition = `
 ## CONTINUATION ENFORCEMENT - THE BOULDER NEVER STOPS
@@ -134,7 +134,7 @@ ${getBackgroundTaskGuidance(DEFAULT_MAX_BACKGROUND_TASKS)}
 `;
 
 /**
- * Check prompt for signals that all work is done
+ * 检查提示词中所有工作已完成的信号
  */
 export function detectCompletionSignals(response: string): {
   claimed: boolean;
@@ -181,7 +181,7 @@ export function detectCompletionSignals(response: string): {
 }
 
 /**
- * Generate a verification prompt to ensure work is complete
+ * 生成校验提示词以确保工作已完成
  */
 export function generateVerificationPrompt(taskSummary: string): string {
   return `Before concluding, please verify the following:

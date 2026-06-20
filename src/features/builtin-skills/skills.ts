@@ -1,12 +1,12 @@
 /**
- * Builtin Skills Definitions
+ * 内置技能定义
  *
- * Loads skills from bundled SKILL.md files in the skills directory.
- * This provides a single source of truth for skill definitions.
+ * 从 skills 目录下打包的 SKILL.md 文件加载技能。
+ * 这为技能定义提供了唯一的真相来源。
  *
- * Skills are loaded from project_root/skills/SKILLNAME/SKILL.md
+ * 技能从 project_root/skills/SKILLNAME/SKILL.md 加载
  *
- * Adapted from oh-my-opencode's builtin-skills feature.
+ * 改编自 oh-my-opencode 的 builtin-skills 特性。
  */
 
 import { existsSync, readdirSync, readFileSync } from 'fs';
@@ -52,9 +52,9 @@ function getPackageDir(): string {
 const SKILLS_DIR = join(getPackageDir(), 'skills');
 
 /**
- * Claude Code native commands that must not be shadowed by WISE skill short names.
- * Skills with these names will still load but their name will be prefixed with 'wise-'
- * to avoid overriding built-in /review, /plan, /security-review etc.
+ * 不可被 WISE 技能短名遮蔽的 Claude Code 原生命令。
+ * 具有这些名称的技能仍会加载，但其名称会加上 'wise-' 前缀，
+ * 以避免覆盖内置的 /review、/plan、/security-review 等。
  */
 const CC_NATIVE_COMMANDS = new Set([
   'review',
@@ -207,7 +207,7 @@ function applyDeepInterviewRuntimeSettings(template: string): string {
       'We\'ll proceed to execution once ambiguity drops below 20%.',
       `We'll proceed to execution once ambiguity drops below ${percent}.`,
     )
-    // Fix #2545: replace remaining hardcoded 20%/0.2 references that conflict with runtime threshold injection
+    // 修复 #2545：替换与运行时阈值注入冲突的其余硬编码 20%/0.2 引用
     .replace('(default: 20%)', `(default: ${percent})`)
     .replace('(default 0.2)', `(default ${threshold})`)
     .replace('"ambiguityThreshold": 0.2,', `"ambiguityThreshold": ${threshold},`)
@@ -229,7 +229,7 @@ export function renderBundledSkillBody(skillName: string, body: string): string 
 }
 
 /**
- * Load a single skill from a SKILL.md file
+ * 从 SKILL.md 文件加载单个技能
  */
 function loadSkillFromFile(skillPath: string, skillName: string): BuiltinSkill[] {
   try {
@@ -274,7 +274,7 @@ function loadSkillFromFile(skillPath: string, skillName: string): BuiltinSkill[]
           : `Skill alias "${name}" is deprecated. Use "${safePrimaryName}" instead.`,
         description: metadata.description || '',
         template,
-        // Optional fields from frontmatter
+        // 来自 frontmatter 的可选字段
         model: metadata.model,
         agent: metadata.agent,
         argumentHint: metadata['argument-hint'],
@@ -289,7 +289,7 @@ function loadSkillFromFile(skillPath: string, skillName: string): BuiltinSkill[]
 }
 
 /**
- * Load all skills from the skills/ directory
+ * 从 skills/ 目录加载所有技能
  */
 function loadSkillsFromDirectory(): BuiltinSkill[] {
   if (!existsSync(SKILLS_DIR)) {
@@ -302,8 +302,8 @@ function loadSkillsFromDirectory(): BuiltinSkill[] {
   try {
     const entries = readdirSync(SKILLS_DIR, { withFileTypes: true })
       .sort((a, b) => {
-        // Public canonical skill-making surface must claim its deprecated
-        // learner alias before the legacy compatibility skill is encountered.
+        // 公开的规范技能制作入口必须先认领其已弃用的
+        // learner 别名，再处理遗留兼容技能。
         if (a.name === 'skillify') return -1;
         if (b.name === 'skillify') return 1;
         return a.name.localeCompare(b.name);
@@ -327,14 +327,14 @@ function loadSkillsFromDirectory(): BuiltinSkill[] {
       }
     }
   } catch {
-    // Return empty array if directory read fails
+    // 若目录读取失败则返回空数组
     return [];
   }
 
   return skills;
 }
 
-// Cache loaded skills to avoid repeated file reads
+// 缓存已加载的技能以避免重复读取文件
 let cachedSkills: BuiltinSkill[] | null = null;
 let cachedSkillsKey: string | null = null;
 
@@ -345,10 +345,10 @@ function getBuiltinSkillsCacheKey(): string {
 }
 
 /**
- * Get all builtin skills
+ * 获取所有内置技能
  *
- * Skills are loaded from bundled SKILL.md files in the skills/ directory.
- * Results are cached after first load.
+ * 技能从 skills/ 目录下打包的 SKILL.md 文件加载。
+ * 首次加载后结果会被缓存。
  */
 export function createBuiltinSkills(): BuiltinSkill[] {
   const cacheKey = getBuiltinSkillsCacheKey();
@@ -360,7 +360,7 @@ export function createBuiltinSkills(): BuiltinSkill[] {
 }
 
 /**
- * Get a skill by name
+ * 按名称获取技能
  */
 export function getBuiltinSkill(name: string): BuiltinSkill | undefined {
   const skills = createBuiltinSkills();
@@ -372,7 +372,7 @@ export interface ListBuiltinSkillNamesOptions {
 }
 
 /**
- * List all builtin skill names
+ * 列出所有内置技能名称
  */
 export function listBuiltinSkillNames(options?: ListBuiltinSkillNamesOptions): string[] {
   const { includeAliases = false } = options ?? {};
@@ -384,7 +384,7 @@ export function listBuiltinSkillNames(options?: ListBuiltinSkillNamesOptions): s
 }
 
 /**
- * Clear the skills cache (useful for testing)
+ * 清除技能缓存（测试时有用）
  */
 export function clearSkillsCache(): void {
   cachedSkills = null;
@@ -392,7 +392,7 @@ export function clearSkillsCache(): void {
 }
 
 /**
- * Get the skills directory path (useful for debugging)
+ * 获取 skills 目录路径（调试时有用）
  */
 export function getSkillsDir(): string {
   return SKILLS_DIR;

@@ -1,7 +1,7 @@
 /**
- * Notepad Wisdom Types
+ * Notepad Wisdom 类型
  *
- * Types for plan-scoped notepad wisdom system.
+ * 计划维度 notepad wisdom 系统的类型定义。
  */
 
 export interface WisdomEntry {

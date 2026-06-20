@@ -1,10 +1,10 @@
 /**
- * Autopilot State Management & Phase Transitions
+ * Autopilot 状态管理与阶段转换
  *
- * Handles:
- * - Persistent state for the autopilot workflow across phases
- * - Phase transitions, especially Ralph → UltraQA and UltraQA → Validation
- * - State machine operations
+ * 负责：
+ * - 跨阶段为 autopilot 工作流维护持久化状态
+ * - 阶段转换，尤其是 Ralph → UltraQA 和 UltraQA → Validation
+ * - 状态机操作
  */
 
 import { mkdirSync, statSync } from "fs";
@@ -43,11 +43,11 @@ import { canStartMode } from "../mode-registry/index.js";
 const SPEC_DIR = "autopilot";
 
 // ============================================================================
-// STATE MANAGEMENT
+// 状态管理
 // ============================================================================
 
 /**
- * Ensure the autopilot directory exists
+ * 确保 autopilot 目录存在
  */
 export function ensureAutopilotDir(directory: string): string {
   const autopilotDir = join(getWiseRoot(directory), SPEC_DIR);
@@ -56,7 +56,7 @@ export function ensureAutopilotDir(directory: string): string {
 }
 
 /**
- * Read autopilot state from disk
+ * 从磁盘读取 autopilot 状态
  */
 export function readAutopilotState(
   directory: string,
@@ -72,7 +72,7 @@ export function readAutopilotState(
     state.phase = state.current_phase;
   }
 
-  // Validate session identity
+  // 校验会话身份
   if (
     state &&
     sessionId &&
@@ -86,7 +86,7 @@ export function readAutopilotState(
 }
 
 /**
- * Write autopilot state to disk
+ * 将 autopilot 状态写入磁盘
  */
 export function writeAutopilotState(
   directory: string,
@@ -112,7 +112,7 @@ export function writeAutopilotState(
 }
 
 /**
- * Clear autopilot state
+ * 清除 autopilot 状态
  */
 export function clearAutopilotState(
   directory: string,
@@ -122,8 +122,8 @@ export function clearAutopilotState(
 }
 
 /**
- * Get the age of the autopilot state file in milliseconds.
- * Returns null if no state file exists.
+ * 获取 autopilot 状态文件的时长（毫秒）。
+ * 若不存在状态文件则返回 null。
  */
 export function getAutopilotStateAge(
   directory: string,
@@ -144,7 +144,7 @@ export function getAutopilotStateAge(
 }
 
 /**
- * Check if autopilot is active
+ * 检查 autopilot 是否处于激活状态
  */
 export function isAutopilotActive(
   directory: string,
@@ -155,7 +155,7 @@ export function isAutopilotActive(
 }
 
 /**
- * Initialize a new autopilot session
+ * 初始化新的 autopilot 会话
  */
 export function initAutopilot(
   directory: string,
@@ -163,7 +163,7 @@ export function initAutopilot(
   sessionId?: string,
   config?: Partial<AutopilotConfig>,
 ): AutopilotState | null {
-  // Mutual exclusion check via mode-registry
+  // 通过 mode-registry 进行互斥检查
   const canStart = canStartMode("autopilot", directory);
   if (!canStart.allowed) {
     console.error(canStart.message);
@@ -234,7 +234,7 @@ export function initAutopilot(
 }
 
 /**
- * Transition to a new phase
+ * 转换到新阶段
  */
 export function transitionPhase(
   directory: string,
@@ -250,14 +250,14 @@ export function transitionPhase(
   const now = new Date().toISOString();
   const oldPhase = state.phase;
 
-  // Record duration for old phase (if we have a start time recorded)
+  // 记录旧阶段的时长（若已记录开始时间）
   const phaseStartKey = `${oldPhase}_start_ms`;
   if (state.phase_durations[phaseStartKey] !== undefined) {
     const duration = Date.now() - state.phase_durations[phaseStartKey];
     state.phase_durations[oldPhase] = duration;
   }
 
-  // Transition to new phase and record start time
+  // 转换到新阶段并记录开始时间
   state.phase = newPhase;
   (state as AutopilotState & { current_phase?: AutopilotPhase }).current_phase = newPhase;
   state.phase_durations[`${newPhase}_start_ms`] = Date.now();
@@ -272,7 +272,7 @@ export function transitionPhase(
 }
 
 /**
- * Increment the agent spawn counter
+ * 递增代理派生计数器
  */
 export function incrementAgentCount(
   directory: string,
@@ -287,7 +287,7 @@ export function incrementAgentCount(
 }
 
 /**
- * Update expansion phase data
+ * 更新扩展阶段数据
  */
 export function updateExpansion(
   directory: string,
@@ -302,7 +302,7 @@ export function updateExpansion(
 }
 
 /**
- * Update planning phase data
+ * 更新规划阶段数据
  */
 export function updatePlanning(
   directory: string,
@@ -317,7 +317,7 @@ export function updatePlanning(
 }
 
 /**
- * Update execution phase data
+ * 更新执行阶段数据
  */
 export function updateExecution(
   directory: string,
@@ -332,7 +332,7 @@ export function updateExecution(
 }
 
 /**
- * Update QA phase data
+ * 更新 QA 阶段数据
  */
 export function updateQA(
   directory: string,
@@ -347,7 +347,7 @@ export function updateQA(
 }
 
 /**
- * Update validation phase data
+ * 更新校验阶段数据
  */
 export function updateValidation(
   directory: string,
@@ -362,14 +362,14 @@ export function updateValidation(
 }
 
 /**
- * Get the spec file path
+ * 获取规格说明文件路径
  */
 export function getSpecPath(directory: string): string {
   return join(getWiseRoot(directory), SPEC_DIR, "spec.md");
 }
 
 /**
- * Get the plan file path
+ * 获取计划文件路径
  */
 export function getPlanPath(directory: string): string {
   return resolvePlanOutputAbsolutePath(
@@ -380,7 +380,7 @@ export function getPlanPath(directory: string): string {
 }
 
 // ============================================================================
-// PHASE TRANSITIONS
+// 阶段转换
 // ============================================================================
 
 export interface TransitionResult {
@@ -390,13 +390,13 @@ export interface TransitionResult {
 }
 
 /**
- * Transition from Ralph (Phase 2: Execution) to UltraQA (Phase 3: QA)
+ * 从 Ralph（阶段 2：执行）转换到 UltraQA（阶段 3：QA）
  *
- * This handles the mutual exclusion by:
- * 1. Saving Ralph's progress to autopilot state
- * 2. Cleanly terminating Ralph mode (and linked Ultrawork)
- * 3. Starting UltraQA mode
- * 4. Preserving context for potential rollback
+ * 该函数通过以下步骤处理互斥：
+ * 1. 将 Ralph 的进度保存到 autopilot 状态
+ * 2. 干净地终止 Ralph 模式（及关联的 Ultrawork）
+ * 3. 启动 UltraQA 模式
+ * 4. 为可能的回滚保留上下文
  */
 export function transitionRalphToUltraQA(
   directory: string,
@@ -413,7 +413,7 @@ export function transitionRalphToUltraQA(
 
   const ralphState = readRalphState(directory, sessionId);
 
-  // Step 1: Preserve Ralph progress in autopilot state
+  // 步骤 1：将 Ralph 进度保存到 autopilot 状态
   const executionUpdated = updateExecution(
     directory,
     {
@@ -432,8 +432,8 @@ export function transitionRalphToUltraQA(
     };
   }
 
-  // Step 2: Deactivate Ralph (set active=false) so UltraQA's mutual exclusion
-  // check passes, but keep state file on disk for rollback if UltraQA fails.
+  // 步骤 2：停用 Ralph（设置 active=false）以使 UltraQA 的互斥检查通过，
+  // 但保留磁盘上的状态文件，以便 UltraQA 失败时回滚。
   if (ralphState) {
     writeRalphState(directory, { ...ralphState, active: false }, sessionId);
   }
@@ -441,10 +441,10 @@ export function transitionRalphToUltraQA(
     clearLinkedUltraworkState(directory, sessionId);
   }
 
-  // Step 3: Transition to QA phase
+  // 步骤 3：转换到 QA 阶段
   const newState = transitionPhase(directory, "qa", sessionId);
   if (!newState) {
-    // Rollback: re-activate Ralph
+    // 回滚：重新激活 Ralph
     if (ralphState) {
       writeRalphState(directory, ralphState, sessionId);
     }
@@ -454,13 +454,13 @@ export function transitionRalphToUltraQA(
     };
   }
 
-  // Step 4: Start UltraQA (Ralph is deactivated, mutual exclusion passes)
+  // 步骤 4：启动 UltraQA（Ralph 已停用，互斥检查通过）
   const qaResult = startUltraQA(directory, "tests", sessionId, {
     maxCycles: 5,
   });
 
   if (!qaResult.success) {
-    // Rollback: restore Ralph state and execution phase
+    // 回滚：恢复 Ralph 状态和执行阶段
     if (ralphState) {
       writeRalphState(directory, ralphState, sessionId);
     }
@@ -473,7 +473,7 @@ export function transitionRalphToUltraQA(
     };
   }
 
-  // Step 5: UltraQA started — clear Ralph state fully (best-effort)
+  // 步骤 5：UltraQA 已启动——彻底清除 Ralph 状态（尽力而为）
   clearRalphState(directory, sessionId);
 
   return {
@@ -483,7 +483,7 @@ export function transitionRalphToUltraQA(
 }
 
 /**
- * Transition from UltraQA (Phase 3: QA) to Validation (Phase 4)
+ * 从 UltraQA（阶段 3：QA）转换到校验（阶段 4）
  */
 export function transitionUltraQAToValidation(
   directory: string,
@@ -500,7 +500,7 @@ export function transitionUltraQAToValidation(
 
   const qaState = readUltraQAState(directory, sessionId);
 
-  // Preserve QA progress
+  // 保留 QA 进度
   const qaUpdated = updateQA(
     directory,
     {
@@ -517,10 +517,10 @@ export function transitionUltraQAToValidation(
     };
   }
 
-  // Terminate UltraQA
+  // 终止 UltraQA
   clearUltraQAState(directory, sessionId);
 
-  // Transition to validation
+  // 转换到校验阶段
   const newState = transitionPhase(directory, "validation", sessionId);
   if (!newState) {
     return {
@@ -536,7 +536,7 @@ export function transitionUltraQAToValidation(
 }
 
 /**
- * Transition from Validation (Phase 4) to Complete
+ * 从校验（阶段 4）转换到完成
  */
 export function transitionToComplete(
   directory: string,
@@ -555,7 +555,7 @@ export function transitionToComplete(
 }
 
 /**
- * Transition to failed state
+ * 转换到失败状态
  */
 export function transitionToFailed(
   directory: string,
@@ -575,7 +575,7 @@ export function transitionToFailed(
 }
 
 /**
- * Get a prompt for Claude to execute the transition
+ * 获取供 Claude 执行转换的提示词
  */
 export function getTransitionPrompt(
   fromPhase: string,

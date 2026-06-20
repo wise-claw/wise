@@ -1,12 +1,12 @@
 /**
- * RALPLAN Stage Adapter
+ * RALPLAN 阶段适配器
  *
- * Wraps the existing ralplan (consensus planning) and direct planning modules
- * into the pipeline stage adapter interface.
+ * 将现有的 ralplan（共识规划）与直接规划模块
+ * 封装为流水线阶段适配器接口。
  *
- * This stage handles: spec creation + implementation plan creation.
- * When planning='ralplan', uses consensus-driven planning with Planner/Architect/Critic.
- * When planning='direct', uses the simpler Architect+Critic approach.
+ * 本阶段负责：规格说明创建 + 实施计划创建。
+ * planning='ralplan' 时，使用 Planner/Architect/Critic 的共识驱动规划。
+ * planning='direct' 时，使用更简单的 Architect+Critic 方式。
  */
 
 import type {
@@ -64,7 +64,7 @@ Signal: ${RALPLAN_COMPLETION_SIGNAL}
 `;
     }
 
-    // Direct planning mode (simpler approach)
+    // 直接规划模式（更简单的方式）
     return `## PIPELINE STAGE: PLANNING (Direct)
 
 Your task: Expand the idea into a spec and create an implementation plan.

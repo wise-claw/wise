@@ -1,7 +1,7 @@
 /**
- * Detection Hook
+ * 检测钩子
  *
- * Integrates skill detection into the message flow.
+ * 将技能检测集成到消息流中。
  */
 
 import { detectExtractableMoment, shouldPromptExtraction, generateExtractionPrompt } from './detector.js';
@@ -9,14 +9,14 @@ import { isLearnerEnabled } from './index.js';
 import type { DetectionResult } from './detector.js';
 
 /**
- * Configuration for detection behavior.
+ * 检测行为的配置。
  */
 export interface DetectionConfig {
-  /** Minimum confidence to prompt (0-100) */
+  /** 触发提示的最小置信度 (0-100) */
   promptThreshold: number;
-  /** Cooldown between prompts (messages) */
+  /** 提示之间的冷却间隔（消息条数） */
   promptCooldown: number;
-  /** Enable/disable auto-detection */
+  /** 启用/禁用自动检测 */
   enabled: boolean;
 }
 
@@ -27,7 +27,7 @@ const DEFAULT_CONFIG: DetectionConfig = {
 };
 
 /**
- * Session state for detection.
+ * 检测的会话状态。
  */
 interface SessionDetectionState {
   messagesSincePrompt: number;
@@ -38,7 +38,7 @@ interface SessionDetectionState {
 const sessionStates = new Map<string, SessionDetectionState>();
 
 /**
- * Get or create session state.
+ * 获取或创建会话状态。
  */
 function getSessionState(sessionId: string): SessionDetectionState {
   if (!sessionStates.has(sessionId)) {
@@ -52,8 +52,8 @@ function getSessionState(sessionId: string): SessionDetectionState {
 }
 
 /**
- * Process assistant response for skill detection.
- * Returns prompt text if extraction should be suggested, null otherwise.
+ * 处理助手回复以进行技能检测。
+ * 若应建议提取则返回提示文本，否则返回 null。
  */
 export function processResponseForDetection(
   assistantMessage: string,
@@ -70,16 +70,16 @@ export function processResponseForDetection(
   const state = getSessionState(sessionId);
   state.messagesSincePrompt++;
 
-  // Check cooldown
+  // 检查冷却
   if (state.messagesSincePrompt < mergedConfig.promptCooldown) {
     return null;
   }
 
-  // Detect extractable moment
+  // 检测可提取的时机
   const detection = detectExtractableMoment(assistantMessage, userMessage);
   state.lastDetection = detection;
 
-  // Check if we should prompt
+  // 检查是否应提示
   if (shouldPromptExtraction(detection, mergedConfig.promptThreshold)) {
     state.messagesSincePrompt = 0;
     state.promptedCount++;
@@ -90,21 +90,21 @@ export function processResponseForDetection(
 }
 
 /**
- * Get the last detection result for a session.
+ * 获取某个会话的最近一次检测结果。
  */
 export function getLastDetection(sessionId: string): DetectionResult | null {
   return sessionStates.get(sessionId)?.lastDetection || null;
 }
 
 /**
- * Clear detection state for a session.
+ * 清除某个会话的检测状态。
  */
 export function clearDetectionState(sessionId: string): void {
   sessionStates.delete(sessionId);
 }
 
 /**
- * Get detection statistics for a session.
+ * 获取某个会话的检测统计信息。
  */
 export function getDetectionStats(sessionId: string): {
   messagesSincePrompt: number;

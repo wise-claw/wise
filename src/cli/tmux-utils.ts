@@ -1,6 +1,6 @@
 /**
- * tmux utility functions for wise native shell launch
- * Adapted from oh-my-codex patterns for wise
+ * wise 原生 shell 启动的 tmux 工具函数
+ * 改编自 oh-my-codex 模式用于 wise
  */
 
 import {
@@ -17,20 +17,20 @@ import {
 import { basename, isAbsolute, win32 as win32Path } from 'path';
 import { promisify } from 'util';
 
-// ── tmux environment & execution wrappers ────────────────────────────────────
+// ── tmux 环境与执行包装器 ────────────────────────────────────
 
 export interface TmuxExecOptions {
-  /** Strip TMUX env var so the command targets the default tmux server.
-   *  Default: false — preserves TMUX (targets the current server).
-   *  Set to true for WISE-owned background sessions and cross-session scans. */
+  /** 剥离 TMUX 环境变量,使命令指向默认的 tmux server。
+   *  默认: false — 保留 TMUX (指向当前 server)。
+   *  设为 true 用于 WISE 拥有的后台会话和跨会话扫描。 */
   stripTmux?: boolean;
 }
 
 export function tmuxEnv(): NodeJS.ProcessEnv {
-  // Strip both TMUX (real tmux) and PSMUX_SESSION (psmux's drop-in tmux on
-  // native Windows). psmux gates `new-session -d` nesting on PSMUX_SESSION,
-  // not TMUX, so dropping only TMUX leaves psmux silently no-op'ing detached
-  // session creation. See issue #3265.
+  // 同时剥离 TMUX (真正的 tmux) 和 PSMUX_SESSION (psmux 在原生
+  // Windows 上的 tmux 替代品)。psmux 基于 PSMUX_SESSION 而非 TMUX
+  // 来控制 `new-session -d` 的嵌套,因此只剥离 TMUX 会导致 psmux
+  // 静默跳过分离式会话创建。见 issue #3265。
   const { TMUX: _, PSMUX_SESSION: __, ...env } = process.env;
   return env;
 }
@@ -169,14 +169,14 @@ function resolveTmuxBinaryPath(): string {
       return first;
     }
   } catch {
-    // Fall back to plain tmux lookup below.
+    // 兜底到下方普通的 tmux 查找。
   }
 
   return 'tmux';
 }
 
 /**
- * Check if tmux is available on the system
+ * 检查系统上 tmux 是否可用
  */
 export function isTmuxAvailable(): boolean {
   try {
@@ -200,7 +200,7 @@ export function isTmuxAvailable(): boolean {
 }
 
 /**
- * Check if claude CLI is available on the system
+ * 检查系统上 claude CLI 是否可用
  */
 export function isClaudeAvailable(): boolean {
   try {
@@ -215,20 +215,20 @@ export function isClaudeAvailable(): boolean {
 }
 
 /**
- * Options for `resolveLaunchPolicy`. `requireTmux=true` makes
- * CMUX_SURFACE_ID stop demoting to 'direct'. The caller is responsible for
- * gating on platform/flag combinations (e.g. macOS + --madmax).
+ * `resolveLaunchPolicy` 的选项。`requireTmux=true` 使
+ * CMUX_SURFACE_ID 不再降级为 'direct'。调用方负责
+ * 根据平台/标志组合进行门控 (例如 macOS + --madmax)。
  */
 export interface ResolveLaunchPolicyOptions {
   requireTmux?: boolean;
 }
 
 /**
- * Resolve launch policy based on environment and args
- * - inside-tmux: Already in tmux session, split pane for HUD
- * - outside-tmux: Not in tmux, create new session
- * - direct: tmux not available, run directly
- * - direct: print mode requested so stdout can flow to parent process
+ * 根据环境和参数解析启动策略
+ * - inside-tmux: 已在 tmux 会话中,为 HUD 切分 pane
+ * - outside-tmux: 不在 tmux 中,创建新会话
+ * - direct: tmux 不可用,直接运行
+ * - direct: 请求了 print 模式,以便 stdout 流向父进程
  */
 export function resolveLaunchPolicy(
   env: NodeJS.ProcessEnv = process.env,
@@ -239,11 +239,11 @@ export function resolveLaunchPolicy(
     return 'direct';
   }
   if (env.TMUX) return 'inside-tmux';
-  // Terminal emulators that embed their own multiplexer (e.g. cmux, a
-  // Ghostty-based terminal) set CMUX_SURFACE_ID but not TMUX. tmux
-  // attach-session fails in these environments because the host PTY is
-  // not directly compatible, leaving orphaned detached sessions.
-  // Demote to direct unless the caller explicitly requires tmux.
+  // 内置自身多路复用器的终端模拟器 (例如 cmux,一个
+  // 基于 Ghostty 的终端) 会设置 CMUX_SURFACE_ID 但不设置 TMUX。tmux
+  // attach-session 在这些环境中会失败,因为宿主 PTY
+  // 不直接兼容,会留下孤立的分离式会话。
+  // 降级为 direct,除非调用方明确要求 tmux。
   if (env.CMUX_SURFACE_ID && !options.requireTmux) return 'direct';
   if (!isTmuxAvailable()) {
     return 'direct';
@@ -252,9 +252,9 @@ export function resolveLaunchPolicy(
 }
 
 /**
- * Build tmux session name from directory, git branch, and UTC timestamp
- * Format: wise-{dir}-{branch}-{utctimestamp}
- * e.g.  wise-myproject-dev-20260221143052
+ * 根据目录、git 分支和 UTC 时间戳生成 tmux 会话名
+ * 格式: wise-{dir}-{branch}-{utctimestamp}
+ * 例如  wise-myproject-dev-20260221143052
  */
 export function buildTmuxSessionName(cwd: string): string {
   const dirToken = sanitizeTmuxToken(basename(cwd));
@@ -270,7 +270,7 @@ export function buildTmuxSessionName(cwd: string): string {
       branchToken = sanitizeTmuxToken(branch);
     }
   } catch {
-    // Non-git directory or git unavailable
+    // 非 git 目录或 git 不可用
   }
 
   const now = new Date();
@@ -288,8 +288,8 @@ export function buildTmuxSessionName(cwd: string): string {
 }
 
 /**
- * Sanitize string for use in tmux session/window names
- * Lowercase, alphanumeric + hyphens only
+ * 净化字符串以便用于 tmux 会话/窗口名
+ * 仅允许小写、字母数字 + 连字符
  */
 export function sanitizeTmuxToken(value: string): string {
   const cleaned = value
@@ -300,7 +300,7 @@ export function sanitizeTmuxToken(value: string): string {
 }
 
 /**
- * Build shell command string for tmux with proper quoting
+ * 为 tmux 构建带正确引号的 shell 命令字符串
  */
 export function buildTmuxShellCommand(command: string, args: string[]): string {
   if (isNativeWindowsShell()) {
@@ -333,13 +333,13 @@ export function buildTmuxShellCommandWithEnv(
 }
 
 /**
- * Wrap a command string in the user's login shell with RC file sourcing.
- * Ensures PATH and other environment setup from .bashrc/.zshrc is available
- * when tmux spawns new sessions or panes with a command argument.
+ * 用用户的 login shell 包裹命令字符串并加载 RC 文件。
+ * 确保 tmux 以命令参数派生新会话或 pane 时,
+ * .bashrc/.zshrc 中的 PATH 及其他环境设置可用。
  *
- * tmux new-session / split-window run commands via a non-login, non-interactive
- * shell, so tools installed via nvm, pyenv, conda, etc. are invisible.
- * This wrapper starts a login shell (`-lc`) and explicitly sources the RC file.
+ * tmux new-session / split-window 通过非 login、非交互式
+ * shell 运行命令,因此通过 nvm、pyenv、conda 等安装的工具不可见。
+ * 此包装器启动 login shell (`-lc`) 并显式加载 RC 文件。
  */
 export function wrapWithLoginShell(command: string): string {
   if (isNativeWindowsShell()) {
@@ -357,15 +357,15 @@ export function wrapWithLoginShell(command: string): string {
 }
 
 /**
- * Quote shell argument for safe shell execution
- * Uses single quotes with proper escaping
+ * 为 shell 参数加引号以安全执行
+ * 使用单引号并做正确的转义
  */
 export function quoteShellArg(value: string): string {
   return `'${value.replace(/'/g, `'\"'\"'`)}'`;
 }
 
 /**
- * Parse tmux pane list output into structured data
+ * 将 tmux pane 列表输出解析为结构化数据
  */
 export function parseTmuxPaneSnapshot(output: string): TmuxPaneSnapshot[] {
   return output
@@ -384,7 +384,7 @@ export function parseTmuxPaneSnapshot(output: string): TmuxPaneSnapshot[] {
 }
 
 /**
- * Check if pane is running a HUD watch command
+ * 检查 pane 是否在运行 HUD watch 命令
  */
 export function isHudWatchPane(pane: TmuxPaneSnapshot): boolean {
   const command = `${pane.startCommand} ${pane.currentCommand}`.toLowerCase();
@@ -394,7 +394,7 @@ export function isHudWatchPane(pane: TmuxPaneSnapshot): boolean {
 }
 
 /**
- * Find HUD watch pane IDs in current window
+ * 在当前窗口中查找 HUD watch pane ID
  */
 export function findHudWatchPaneIds(panes: TmuxPaneSnapshot[], currentPaneId?: string): string[] {
   return panes
@@ -404,7 +404,7 @@ export function findHudWatchPaneIds(panes: TmuxPaneSnapshot[], currentPaneId?: s
 }
 
 /**
- * List HUD watch panes in current tmux window
+ * 列出当前 tmux 窗口中的 HUD watch pane
  */
 export function listHudWatchPaneIdsInCurrentWindow(currentPaneId?: string): string[] {
   try {
@@ -418,8 +418,8 @@ export function listHudWatchPaneIdsInCurrentWindow(currentPaneId?: string): stri
 }
 
 /**
- * Create HUD watch pane in current window
- * Returns pane ID or null on failure
+ * 在当前窗口创建 HUD watch pane
+ * 成功返回 pane ID,失败返回 null
  */
 export function createHudWatchPane(cwd: string, hudCmd: string): string | null {
   try {
@@ -435,13 +435,13 @@ export function createHudWatchPane(cwd: string, hudCmd: string): string | null {
 }
 
 /**
- * Kill tmux pane by ID
+ * 按 ID 杀掉 tmux pane
  */
 export function killTmuxPane(paneId: string): void {
   if (!paneId.startsWith('%')) return;
   try {
     tmuxExec(['kill-pane', '-t', paneId], { stdio: 'ignore' });
   } catch {
-    // Pane may already be gone; ignore
+    // pane 可能已经不在;忽略
   }
 }

@@ -1,8 +1,8 @@
 /**
- * Interop CLI Command - Split-pane tmux session with WISE and OMX
+ * Interop CLI 命令 - WISE 与 OMX 的 tmux 分屏会话
  *
- * Creates a tmux split-pane layout with Claude Code (WISE) on the left
- * and Codex CLI (OMX) on the right, with shared interop state.
+ * 创建一个 tmux 分屏布局：左侧为 Claude Code（WISE），右侧为 Codex CLI（OMX），
+ * 二者共享 interop 状态。
  */
 
 import { execFileSync } from 'child_process';
@@ -43,7 +43,7 @@ export function validateInteropRuntimeFlags(flags: InteropRuntimeFlags): { ok: b
 }
 
 /**
- * Check if codex CLI is available
+ * 检查 codex CLI 是否可用
  */
 function isCodexAvailable(): boolean {
   try {
@@ -55,7 +55,7 @@ function isCodexAvailable(): boolean {
 }
 
 /**
- * Launch interop session with split tmux panes
+ * 启动带分屏 tmux 面板的 interop 会话
  */
 export function launchInteropSession(cwd: string = process.cwd()): void {
   const flags = readInteropRuntimeFlags();
@@ -68,7 +68,7 @@ export function launchInteropSession(cwd: string = process.cwd()): void {
     process.exit(1);
   }
 
-  // Check prerequisites
+  // 检查前置条件
   if (!isTmuxAvailable()) {
     console.error('Error: tmux is not available. Install tmux to use interop mode.');
     process.exit(1);
@@ -87,7 +87,7 @@ export function launchInteropSession(cwd: string = process.cwd()): void {
     console.warn('Install oh-my-codex (npm install -g @openai/codex) for full interop support.\n');
   }
 
-  // Check if already in tmux
+  // 检查是否已处于 tmux 中
   const inTmux = Boolean(process.env.TMUX);
 
   if (!inTmux) {
@@ -96,17 +96,17 @@ export function launchInteropSession(cwd: string = process.cwd()): void {
     process.exit(1);
   }
 
-  // Generate session ID
+  // 生成会话 ID
   const sessionId = `interop-${randomUUID().split('-')[0]}`;
 
-  // Initialize interop session
+  // 初始化 interop 会话
   const _config = initInteropSession(sessionId, cwd, hasCodex ? cwd : undefined);
 
   console.log(`Initializing interop session: ${sessionId}`);
   console.log(`Working directory: ${cwd}`);
   console.log(`Config saved to: ${getInteropDir(cwd)}/config.json\n`);
 
-  // Get current pane ID
+  // 获取当前面板 ID
   let currentPaneId: string;
   try {
     const output = tmuxExec(['display-message', '-p', '#{pane_id}']);
@@ -121,10 +121,10 @@ export function launchInteropSession(cwd: string = process.cwd()): void {
     process.exit(1);
   }
 
-  // Split pane horizontally (left: claude, right: codex)
+  // 水平分屏（左：claude，右：codex）
   try {
     if (hasCodex) {
-      // Create right pane with codex
+      // 创建右侧面板并运行 codex
       console.log('Splitting pane: Left (Claude Code) | Right (Codex)');
 
       tmuxExec([
@@ -135,7 +135,7 @@ export function launchInteropSession(cwd: string = process.cwd()): void {
         'codex',
       ], { stdio: 'inherit' });
 
-      // Select left pane (original/current)
+      // 选中左侧面板（原始/当前面板）
       tmuxExec(['select-pane', '-t', currentPaneId], { stdio: 'ignore' });
 
       console.log('\nInterop session ready!');
@@ -147,7 +147,7 @@ export function launchInteropSession(cwd: string = process.cwd()): void {
       console.log('- interop_send_message: Send messages');
       console.log('- interop_read_messages: Read messages');
     } else {
-      // Codex not available, just inform user
+      // codex 不可用，仅告知用户
       console.log('\nClaude Code is ready in this pane.');
       console.log('Install oh-my-codex to enable split-pane interop mode.');
       console.log('\nInstall: npm install -g @openai/codex');
@@ -159,7 +159,7 @@ export function launchInteropSession(cwd: string = process.cwd()): void {
 }
 
 /**
- * CLI entry point for interop command
+ * interop 命令的 CLI 入口
  */
 export function interopCommand(options: { cwd?: string } = {}): void {
   const cwd = options.cwd || process.cwd();

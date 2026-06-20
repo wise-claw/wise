@@ -1,9 +1,9 @@
 /**
- * Builtin Skills Feature
+ * 内置技能特性
  *
- * Provides bundled skills for Wise-WISE.
+ * 为 Wise-WISE 提供打包的技能。
  *
- * Adapted from oh-my-opencode's builtin-skills feature.
+ * 改编自 oh-my-opencode 的 builtin-skills 特性。
  */
 
 export * from './types.js';

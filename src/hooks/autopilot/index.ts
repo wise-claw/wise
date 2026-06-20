@@ -1,11 +1,10 @@
 /**
- * Autopilot Hook Module
+ * Autopilot 钩子模块
  *
- * Main entry point for the /autopilot command - autonomous execution
- * from idea to working code.
+ * /autopilot 命令的主入口——从想法到可运行代码的自主执行。
  */
 
-// Types
+// 类型
 export type {
   AutopilotPhase,
   AutopilotState,
@@ -26,7 +25,7 @@ export type {
 
 export { DEFAULT_CONFIG } from './types.js';
 
-// State management & phase transitions
+// 状态管理与阶段切换
 export {
   readAutopilotState,
   writeAutopilotState,
@@ -52,7 +51,7 @@ export {
   type TransitionResult
 } from './state.js';
 
-// Prompt generation
+// prompt 生成
 export {
   getExpansionPrompt,
   getDirectPlanningPrompt,
@@ -62,7 +61,7 @@ export {
   getPhasePrompt
 } from './prompts.js';
 
-// Validation coordination & summary generation
+// 校验协调与摘要生成
 export {
   recordValidationVerdict,
   getValidationStatus,
@@ -79,7 +78,7 @@ export {
   type ValidationCoordinatorResult
 } from './validation.js';
 
-// Cancellation
+// 取消
 export {
   cancelAutopilot,
   clearAutopilot,
@@ -90,7 +89,7 @@ export {
   type CancelResult
 } from './cancel.js';
 
-// Signal detection & enforcement
+// 信号检测与强制执行
 export {
   detectSignal,
   getExpectedSignalForPhase,
@@ -99,7 +98,7 @@ export {
   type AutopilotEnforcementResult
 } from './enforcement.js';
 
-// Pipeline types
+// 流水线类型
 export type {
   PipelineStageId,
   PipelineTerminalState,
@@ -120,7 +119,7 @@ export {
   DEPRECATED_MODE_ALIASES,
 } from './pipeline-types.js';
 
-// Pipeline orchestrator
+// 流水线编排器
 export {
   resolvePipelineConfig,
   getDeprecationWarning,
@@ -143,7 +142,7 @@ export {
   hasPipelineTracking,
 } from './pipeline.js';
 
-// Stage adapters
+// 阶段适配器
 export {
   ALL_ADAPTERS,
   getAdapterById,

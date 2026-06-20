@@ -1,156 +1,155 @@
 /**
- * State Manager Types
+ * 状态管理器类型
  *
- * Type definitions for unified state management across
- * local (.wise/state/) and global (XDG-aware user WISE state with legacy ~/.wise/state fallback) locations.
+ * 跨本地（.wise/state/）与全局（XDG 感知的用户 WISE 状态路径，读取时兜底回退到旧版 ~/.wise/state）位置的统一状态管理类型定义。
  */
 
 /**
- * Location where state should be stored
+ * 状态应存储的位置
  */
 export enum StateLocation {
-  /** Local project state: .wise/state/{name}.json */
+  /** 本地项目状态：.wise/state/{name}.json */
   LOCAL = 'local',
-  /** Global user state: XDG-aware WISE state path with legacy ~/.wise/state fallback on reads */
+  /** 全局用户状态：XDG 感知的 WISE 状态路径，读取时兜底回退到旧版 ~/.wise/state */
   GLOBAL = 'global'
 }
 
 /**
- * Configuration for state operations
+ * 状态操作的配置
  */
 export interface StateConfig {
-  /** State file name (without .json extension) */
+  /** 状态文件名（不含 .json 扩展名） */
   name: string;
-  /** Where to store the state */
+  /** 状态存储位置 */
   location: StateLocation;
-  /** Whether to create directories if they don't exist */
+  /** 目录不存在时是否自动创建 */
   createDirs?: boolean;
-  /** Whether to check legacy locations when reading */
+  /** 读取时是否检查旧版位置 */
   checkLegacy?: boolean;
 }
 
 /**
- * Result of a state read operation
+ * 状态读取操作的结果
  */
 export interface StateReadResult<T = unknown> {
-  /** Whether state was found */
+  /** 是否找到状态 */
   exists: boolean;
-  /** The state data (if found) */
+  /** 状态数据（若找到） */
   data?: T;
-  /** Where the state was found */
+  /** 状态被找到的位置 */
   foundAt?: string;
-  /** Legacy location that was checked */
+  /** 已检查的旧版位置 */
   legacyLocations?: string[];
 }
 
 /**
- * Result of a state write operation
+ * 状态写入操作的结果
  */
 export interface StateWriteResult {
-  /** Whether write was successful */
+  /** 写入是否成功 */
   success: boolean;
-  /** Path where state was written */
+  /** 状态写入的路径 */
   path: string;
-  /** Error message if failed */
+  /** 失败时的错误信息 */
   error?: string;
 }
 
 /**
- * Result of a state clear operation
+ * 状态清除操作的结果
  */
 export interface StateClearResult {
-  /** Paths that were removed */
+  /** 已移除的路径 */
   removed: string[];
-  /** Paths that didn't exist */
+  /** 不存在的路径 */
   notFound: string[];
-  /** Paths that failed to remove */
+  /** 移除失败的路径 */
   errors: Array<{ path: string; error: string }>;
 }
 
 /**
- * Result of a state migration operation
+ * 状态迁移操作的结果
  */
 export interface StateMigrationResult {
-  /** Whether migration occurred */
+  /** 是否发生了迁移 */
   migrated: boolean;
-  /** Source path (legacy location) */
+  /** 源路径（旧版位置） */
   from?: string;
-  /** Destination path (standard location) */
+  /** 目标路径（标准位置） */
   to?: string;
-  /** Error message if failed */
+  /** 失败时的错误信息 */
   error?: string;
 }
 
 /**
- * Information about a state file
+ * 状态文件信息
  */
 export interface StateFileInfo {
-  /** State name */
+  /** 状态名 */
   name: string;
-  /** Full file path */
+  /** 完整文件路径 */
   path: string;
-  /** Location type */
+  /** 位置类型 */
   location: StateLocation;
-  /** File size in bytes */
+  /** 文件大小（字节） */
   size: number;
-  /** Last modified timestamp */
+  /** 最后修改时间戳 */
   modified: Date;
-  /** Whether this is a legacy location */
+  /** 是否为旧版位置 */
   isLegacy: boolean;
 }
 
 /**
- * Options for listing states
+ * 列出状态的选项
  */
 export interface ListStatesOptions {
-  /** Filter by location */
+  /** 按位置过滤 */
   location?: StateLocation;
-  /** Include legacy locations */
+  /** 是否包含旧版位置 */
   includeLegacy?: boolean;
-  /** Filter by name pattern (glob) */
+  /** 按名称模式（glob）过滤 */
   pattern?: string;
 }
 
 /**
- * Options for cleanup operation
+ * 清理操作的选项
  */
 export interface CleanupOptions {
-  /** Maximum age in days for orphaned states */
+  /** 孤立状态的最大保留天数 */
   maxAgeDays?: number;
-  /** Dry run - don't actually delete */
+  /** 试运行 - 不实际删除 */
   dryRun?: boolean;
-  /** Patterns to exclude from cleanup */
+  /** 清理时排除的模式 */
   exclude?: string[];
 }
 
 /**
- * Result of cleanup operation
+ * 清理操作的结果
  */
 export interface CleanupResult {
-  /** Files that were deleted */
+  /** 已删除的文件 */
   deleted: string[];
-  /** Files that would be deleted (dry run) */
+  /** 将被删除的文件（试运行） */
   wouldDelete?: string[];
-  /** Total space freed in bytes */
+  /** 释放的总空间（字节） */
   spaceFreed: number;
-  /** Errors encountered */
+  /** 遇到的错误 */
   errors: Array<{ path: string; error: string }>;
 }
 
 /**
- * Generic state data structure
+ * 通用状态数据结构
  */
 export type StateData = Record<string, unknown>;
 
 /**
- * Type guard for StateLocation
+ * StateLocation 的类型守卫
  */
 export function isStateLocation(value: unknown): value is StateLocation {
   return value === StateLocation.LOCAL || value === StateLocation.GLOBAL;
 }
 
 /**
- * Default state configuration
+ * 默认状态配置
  */
 export const DEFAULT_STATE_CONFIG: Partial<StateConfig> = {
   createDirs: true,

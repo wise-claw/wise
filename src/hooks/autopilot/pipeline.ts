@@ -1,12 +1,10 @@
 /**
- * Pipeline Orchestrator
+ * 流水线编排器
  *
- * The core of the configurable pipeline that unifies autopilot/ultrawork/ultrapilot
- * into a single sequenced workflow: RALPLAN -> EXECUTION -> RALPH -> QA.
+ * 可配置流水线的核心，将 autopilot/ultrawork/ultrapilot 统一为单一顺序工作流：RALPLAN -> EXECUTION -> RALPH -> QA。
  *
- * Each stage is implemented by a PipelineStageAdapter and can be skipped
- * via PipelineConfig. The orchestrator manages state transitions, signal
- * detection, and prompt generation.
+ * 每个阶段由 PipelineStageAdapter 实现，可通过 PipelineConfig 跳过。
+ * 编排器负责管理状态转换、信号检测与提示词生成。
  *
  * @see https://github.com/wise-claw/wise/issues/1130
  */
@@ -39,14 +37,14 @@ import {
 } from "../../config/plan-output.js";
 
 // ============================================================================
-// CONFIGURATION
+// 配置
 // ============================================================================
 
 /**
- * Resolve a PipelineConfig from user-provided partial config, merging with defaults.
+ * 根据用户提供的部分配置解析出 PipelineConfig，并与默认值合并。
  *
- * Also handles deprecated mode aliases: if the user invoked 'ultrawork' or 'ultrapilot',
- * the corresponding config overrides are applied.
+ * 同时处理已弃用的模式别名：若用户调用 'ultrawork' 或 'ultrapilot'，
+ * 则应用对应的配置覆盖。
  */
 export function resolvePipelineConfig(
   userConfig?: Partial<PipelineConfig>,
@@ -54,13 +52,13 @@ export function resolvePipelineConfig(
 ): PipelineConfig {
   let config = { ...DEFAULT_PIPELINE_CONFIG };
 
-  // Apply deprecated mode alias overrides
+  // 应用已弃用模式别名的覆盖配置
   if (deprecatedMode && deprecatedMode in DEPRECATED_MODE_ALIASES) {
     const alias = DEPRECATED_MODE_ALIASES[deprecatedMode];
     config = { ...config, ...alias.config };
   }
 
-  // Apply user overrides
+  // 应用用户覆盖配置
   if (userConfig) {
     if (userConfig.planning !== undefined)
       config.planning = userConfig.planning;
@@ -75,7 +73,7 @@ export function resolvePipelineConfig(
 }
 
 /**
- * Check if the invocation is from a deprecated mode and return the deprecation warning.
+ * 检查调用是否来自已弃用的模式，并返回弃用警告。
  */
 export function getDeprecationWarning(mode: string): string | null {
   if (mode in DEPRECATED_MODE_ALIASES) {
@@ -85,12 +83,12 @@ export function getDeprecationWarning(mode: string): string | null {
 }
 
 // ============================================================================
-// PIPELINE STATE MANAGEMENT
+// 流水线状态管理
 // ============================================================================
 
 /**
- * Build the initial pipeline tracking state from a resolved config.
- * Creates stage entries for all stages, marking skipped stages as 'skipped'.
+ * 根据解析后的配置构建初始流水线跟踪状态。
+ * 为所有阶段创建条目，被跳过的阶段标记为 'skipped'。
  */
 export function buildPipelineTracking(
   config: PipelineConfig,
@@ -108,7 +106,7 @@ export function buildPipelineTracking(
     };
   });
 
-  // Find the first non-skipped stage
+  // 查找第一个未跳过的阶段
   const firstActiveIndex = stages.findIndex((s) => s.status !== "skipped");
 
   return {
@@ -119,7 +117,7 @@ export function buildPipelineTracking(
 }
 
 /**
- * Get the ordered list of active (non-skipped) adapters for a given config.
+ * 获取指定配置下已激活（未跳过）适配器的有序列表。
  */
 export function getActiveAdapters(
   config: PipelineConfig,
@@ -128,8 +126,8 @@ export function getActiveAdapters(
 }
 
 /**
- * Read pipeline tracking from an autopilot state.
- * Returns null if the state doesn't have pipeline tracking.
+ * 从 autopilot 状态读取流水线跟踪信息。
+ * 若状态中不含流水线跟踪信息则返回 null。
  */
 export function readPipelineTracking(
   state: AutopilotState,
@@ -139,7 +137,7 @@ export function readPipelineTracking(
 }
 
 /**
- * Write pipeline tracking into an autopilot state and persist to disk.
+ * 将流水线跟踪信息写入 autopilot 状态并持久化到磁盘。
  */
 export function writePipelineTracking(
   directory: string,
@@ -155,22 +153,21 @@ export function writePipelineTracking(
 }
 
 // ============================================================================
-// PIPELINE INITIALIZATION
+// 流水线初始化
 // ============================================================================
 
 /**
- * Initialize a new pipeline-based autopilot session.
+ * 初始化一个新的基于流水线的 autopilot 会话。
  *
- * This is the unified entry point that replaces separate initAutopilot calls
- * for autopilot, ultrawork, and ultrapilot.
+ * 这是统一入口，取代了原先 autopilot、ultrawork 和 ultrapilot 各自单独的 initAutopilot 调用。
  *
- * @param directory - Working directory
- * @param idea - The user's original idea/task
- * @param sessionId - Session ID for state isolation
- * @param autopilotConfig - Standard autopilot config overrides
- * @param pipelineConfig - Pipeline-specific configuration
- * @param deprecatedMode - If invoked via deprecated mode name (ultrawork/ultrapilot)
- * @returns The initialized autopilot state, or null if startup was blocked
+ * @param directory - 工作目录
+ * @param idea - 用户最初的想法/任务
+ * @param sessionId - 用于状态隔离的会话 ID
+ * @param autopilotConfig - 标准 autopilot 配置覆盖
+ * @param pipelineConfig - 流水线专用配置
+ * @param deprecatedMode - 若通过已弃用的模式名调用（ultrawork/ultrapilot）
+ * @returns 初始化后的 autopilot 状态，若启动被阻止则返回 null
  */
 export function initPipeline(
   directory: string,
@@ -180,17 +177,17 @@ export function initPipeline(
   pipelineConfig?: Partial<PipelineConfig>,
   deprecatedMode?: string,
 ): AutopilotState | null {
-  // Resolve pipeline config
+  // 解析流水线配置
   const resolvedConfig = resolvePipelineConfig(pipelineConfig, deprecatedMode);
 
-  // Initialize the base autopilot state
+  // 初始化基础 autopilot 状态
   const state = initAutopilot(directory, idea, sessionId, autopilotConfig);
   if (!state) return null;
 
-  // Build and attach pipeline tracking
+  // 构建并附加流水线跟踪信息
   const tracking = buildPipelineTracking(resolvedConfig);
 
-  // Mark the first active stage as active
+  // 将第一个激活阶段标记为 active
   if (
     tracking.currentStageIndex >= 0 &&
     tracking.currentStageIndex < tracking.stages.length
@@ -200,7 +197,7 @@ export function initPipeline(
       new Date().toISOString();
   }
 
-  // Persist pipeline tracking alongside autopilot state
+  // 将流水线跟踪信息与 autopilot 状态一同持久化
   (state as AutopilotState & { pipeline: PipelineTracking }).pipeline =
     tracking;
   writeAutopilotState(directory, state, sessionId);
@@ -209,12 +206,12 @@ export function initPipeline(
 }
 
 // ============================================================================
-// STAGE TRANSITIONS
+// 阶段转换
 // ============================================================================
 
 /**
- * Get the current pipeline stage adapter.
- * Returns null if the pipeline is in a terminal state or all stages are done.
+ * 获取当前流水线阶段的适配器。
+ * 若流水线处于终止状态或所有阶段都已完成则返回 null。
  */
 export function getCurrentStageAdapter(
   tracking: PipelineTracking,
@@ -227,7 +224,7 @@ export function getCurrentStageAdapter(
 
   const currentStage = stages[currentStageIndex];
   if (currentStage.status === "skipped" || currentStage.status === "complete") {
-    // Find next active stage
+    // 查找下一个激活阶段
     return getNextStageAdapter(tracking);
   }
 
@@ -235,8 +232,8 @@ export function getCurrentStageAdapter(
 }
 
 /**
- * Get the next non-skipped stage adapter after the current one.
- * Returns null if no more stages remain.
+ * 获取当前阶段之后下一个未跳过阶段的适配器。
+ * 若没有剩余阶段则返回 null。
  */
 export function getNextStageAdapter(
   tracking: PipelineTracking,
@@ -253,11 +250,10 @@ export function getNextStageAdapter(
 }
 
 /**
- * Advance the pipeline to the next stage.
+ * 将流水线推进到下一阶段。
  *
- * Marks the current stage as complete, finds the next non-skipped stage,
- * and marks it as active. Returns the new current stage adapter, or null
- * if the pipeline is complete.
+ * 将当前阶段标记为完成，查找下一个未跳过的阶段并将其标记为 active。
+ * 返回新的当前阶段适配器，若流水线已完成则返回 null。
  */
 export function advanceStage(
   directory: string,
@@ -271,13 +267,13 @@ export function advanceStage(
 
   const { stages, currentStageIndex } = tracking;
 
-  // Mark current stage as complete
+  // 将当前阶段标记为完成
   if (currentStageIndex >= 0 && currentStageIndex < stages.length) {
     const currentStage = stages[currentStageIndex];
     currentStage.status = "complete";
     currentStage.completedAt = new Date().toISOString();
 
-    // Call onExit if the adapter supports it
+    // 若适配器支持则调用 onExit
     const currentAdapter = getAdapterById(currentStage.id);
     if (currentAdapter?.onExit) {
       const context = buildContext(state, tracking);
@@ -285,7 +281,7 @@ export function advanceStage(
     }
   }
 
-  // Find next non-skipped stage
+  // 查找下一个未跳过的阶段
   let nextIndex = -1;
   for (let i = currentStageIndex + 1; i < stages.length; i++) {
     if (stages[i].status !== "skipped") {
@@ -295,19 +291,19 @@ export function advanceStage(
   }
 
   if (nextIndex < 0) {
-    // All stages complete — pipeline is done
+    // 所有阶段完成——流水线结束
     tracking.currentStageIndex = stages.length;
     writePipelineTracking(directory, tracking, sessionId);
     return { adapter: null, phase: "complete" };
   }
 
-  // Activate next stage
+  // 激活下一阶段
   tracking.currentStageIndex = nextIndex;
   stages[nextIndex].status = "active";
   stages[nextIndex].startedAt = new Date().toISOString();
   writePipelineTracking(directory, tracking, sessionId);
 
-  // Call onEnter if the adapter supports it
+  // 若适配器支持则调用 onEnter
   const nextAdapter = getAdapterById(stages[nextIndex].id)!;
   if (nextAdapter.onEnter) {
     const context = buildContext(state, tracking);
@@ -318,7 +314,7 @@ export function advanceStage(
 }
 
 /**
- * Mark the current stage as failed and the pipeline as failed.
+ * 将当前阶段标记为失败，并将流水线标记为失败。
  */
 export function failCurrentStage(
   directory: string,
@@ -341,7 +337,7 @@ export function failCurrentStage(
 }
 
 /**
- * Increment the iteration counter for the current stage.
+ * 递增当前阶段的迭代计数器。
  */
 export function incrementStageIteration(
   directory: string,
@@ -362,11 +358,11 @@ export function incrementStageIteration(
 }
 
 // ============================================================================
-// SIGNAL DETECTION FOR PIPELINE
+// 流水线信号检测
 // ============================================================================
 
 /**
- * Get the completion signal expected for the current pipeline stage.
+ * 获取当前流水线阶段期望的完成信号。
  */
 export function getCurrentCompletionSignal(
   tracking: PipelineTracking,
@@ -379,7 +375,7 @@ export function getCurrentCompletionSignal(
 }
 
 /**
- * Map from all pipeline completion signals to their stage IDs.
+ * 从所有流水线完成信号到其阶段 ID 的映射。
  */
 export function getSignalToStageMap(): Map<string, PipelineStageId> {
   const map = new Map<string, PipelineStageId>();
@@ -390,12 +386,12 @@ export function getSignalToStageMap(): Map<string, PipelineStageId> {
 }
 
 // ============================================================================
-// PROMPT GENERATION
+// 提示词生成
 // ============================================================================
 
 /**
- * Generate the continuation prompt for the current pipeline stage.
- * This is the primary output consumed by the enforcement hook.
+ * 生成当前流水线阶段的延续提示词。
+ * 这是强制执行钩子所消费的主要输出。
  */
 export function generatePipelinePrompt(
   directory: string,
@@ -415,7 +411,7 @@ export function generatePipelinePrompt(
 }
 
 /**
- * Generate a stage transition prompt when advancing between stages.
+ * 在阶段之间推进时生成阶段转换提示词。
  */
 export function generateTransitionPrompt(
   fromStage: PipelineStageId,
@@ -441,11 +437,11 @@ The ${fromStage} stage is complete. Transitioning to: **${toName}**
 }
 
 // ============================================================================
-// PIPELINE STATUS & INSPECTION
+// 流水线状态与检查
 // ============================================================================
 
 /**
- * Get a summary of the pipeline's current status for display.
+ * 获取流水线当前状态的概要，用于展示。
  */
 export function getPipelineStatus(tracking: PipelineTracking): {
   currentStage: PipelineStageId | null;
@@ -494,7 +490,7 @@ export function getPipelineStatus(tracking: PipelineTracking): {
 }
 
 /**
- * Format pipeline status for HUD display.
+ * 将流水线状态格式化为 HUD 显示内容。
  */
 export function formatPipelineHUD(tracking: PipelineTracking): string {
   const status = getPipelineStatus(tracking);
@@ -526,11 +522,11 @@ export function formatPipelineHUD(tracking: PipelineTracking): string {
 }
 
 // ============================================================================
-// HELPERS
+// 辅助函数
 // ============================================================================
 
 /**
- * Build a PipelineContext from autopilot state and pipeline tracking.
+ * 从 autopilot 状态与流水线跟踪信息构建 PipelineContext。
  */
 function buildContext(
   state: AutopilotState,
@@ -548,7 +544,7 @@ function buildContext(
 }
 
 /**
- * Check if a state has pipeline tracking (i.e. was initialized via the new pipeline).
+ * 检查某个状态是否包含流水线跟踪信息（即是否通过新流水线初始化）。
  */
 export function hasPipelineTracking(state: AutopilotState): boolean {
   return readPipelineTracking(state) !== null;

@@ -1,13 +1,13 @@
 /**
- * Comment Checker Constants
+ * Comment Checker 常量
  *
- * Keywords and patterns for comment detection and filtering.
+ * 用于注释检测与过滤的关键词和模式。
  *
- * Adapted from oh-my-opencode's comment-checker hook.
+ * 改编自 oh-my-opencode 的 comment-checker 钩子。
  */
 
 /**
- * BDD (Behavior-Driven Development) keywords that are acceptable in comments
+ * 注释中可接受的 BDD（行为驱动开发）关键词
  */
 export const BDD_KEYWORDS = new Set([
   'given',
@@ -21,7 +21,7 @@ export const BDD_KEYWORDS = new Set([
 ]);
 
 /**
- * Prefixes for type checker and linter directives (acceptable comments)
+ * 类型检查器与 linter 指令的前缀（可接受的注释）
  */
 export const TYPE_CHECKER_PREFIXES = [
   // Python
@@ -56,13 +56,13 @@ export const TYPE_CHECKER_PREFIXES = [
   'go:generate',
   'go:build',
   'go:embed',
-  // Coverage
+  // 覆盖率
   'coverage:',
   'c8 ignore',
   'istanbul ignore',
   // Biome
   'biome-ignore',
-  // Regions
+  // 区域折叠
   'region',
   'endregion',
   '#region',
@@ -70,7 +70,7 @@ export const TYPE_CHECKER_PREFIXES = [
 ];
 
 /**
- * Header message for comment detection
+ * 注释检测的头部消息
  */
 export const HOOK_MESSAGE_HEADER = `COMMENT/DOCSTRING DETECTED - IMMEDIATE ACTION REQUIRED
 
@@ -113,10 +113,10 @@ Detected comments/docstrings:
 `;
 
 /**
- * Pattern for detecting line comments by language
+ * 按语言检测行注释的模式
  */
 export const LINE_COMMENT_PATTERNS: Record<string, RegExp> = {
-  // C-style: //, /* */
+  // C 风格：//, /* */
   js: /\/\/.*$|\/\*[\s\S]*?\*\//gm,
   ts: /\/\/.*$|\/\*[\s\S]*?\*\//gm,
   jsx: /\/\/.*$|\/\*[\s\S]*?\*\//gm,
@@ -129,7 +129,7 @@ export const LINE_COMMENT_PATTERNS: Record<string, RegExp> = {
   rust: /\/\/.*$|\/\*[\s\S]*?\*\//gm,
   swift: /\/\/.*$|\/\*[\s\S]*?\*\//gm,
   kotlin: /\/\/.*$|\/\*[\s\S]*?\*\//gm,
-  // Hash-style: #
+  // 井号风格：#
   py: /#.*$|'''[\s\S]*?'''|"""[\s\S]*?"""/gm,
   rb: /#.*$|=begin[\s\S]*?=end/gm,
   sh: /#.*$/gm,
@@ -138,19 +138,19 @@ export const LINE_COMMENT_PATTERNS: Record<string, RegExp> = {
   yaml: /#.*$/gm,
   yml: /#.*$/gm,
   toml: /#.*$/gm,
-  // HTML-style: <!-- -->
+  // HTML 风格：<!-- -->
   html: /<!--[\s\S]*?-->/gm,
   xml: /<!--[\s\S]*?-->/gm,
   vue: /<!--[\s\S]*?-->|\/\/.*$|\/\*[\s\S]*?\*\//gm,
   svelte: /<!--[\s\S]*?-->|\/\/.*$|\/\*[\s\S]*?\*\//gm,
-  // SQL-style: --
+  // SQL 风格：--
   sql: /--.*$/gm,
-  // Lua-style: --
+  // Lua 风格：--
   lua: /--.*$|--\[\[[\s\S]*?\]\]/gm,
 };
 
 /**
- * File extensions to language mapping
+ * 文件扩展名到语言的映射
  */
 export const EXTENSION_TO_LANGUAGE: Record<string, string> = {
   '.js': 'js',

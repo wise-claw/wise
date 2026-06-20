@@ -1,140 +1,140 @@
 /**
- * Background Agent Types
+ * Background Agent 类型
  *
- * Type definitions for background task management.
+ * 后台任务管理的类型定义。
  *
- * Adapted from oh-my-opencode's background-agent feature.
+ * 改编自 oh-my-opencode 的 background-agent 功能。
  */
 
 /**
- * Status of a background task
+ * 后台任务的状态
  */
 export type BackgroundTaskStatus =
-  | 'queued'      // Waiting for concurrency slot
-  | 'pending'     // @deprecated Use 'queued' instead. Kept for backward compatibility.
+  | 'queued'      // 等待并发槽位
+  | 'pending'     // @deprecated 改用 'queued'。保留仅为向后兼容。
   | 'running'
   | 'completed'
   | 'error'
   | 'cancelled';
 
 /**
- * Progress tracking for a background task
+ * 后台任务的进度跟踪
  */
 export interface TaskProgress {
-  /** Number of tool calls made */
+  /** 已发起的工具调用次数 */
   toolCalls: number;
-  /** Last tool used */
+  /** 最近使用的工具 */
   lastTool?: string;
-  /** Last update timestamp */
+  /** 最近一次更新时间戳 */
   lastUpdate: Date;
-  /** Last message content (truncated) */
+  /** 最近一条消息内容（已截断） */
   lastMessage?: string;
-  /** Last message timestamp */
+  /** 最近一条消息的时间戳 */
   lastMessageAt?: Date;
 }
 
 /**
- * A background task being managed
+ * 受管理的后台任务
  */
 export interface BackgroundTask {
-  /** Unique task identifier */
+  /** 任务唯一标识 */
   id: string;
-  /** Session ID for this task */
+  /** 该任务对应的会话 ID */
   sessionId: string;
-  /** Parent session that launched this task */
+  /** 发起该任务的父会话 */
   parentSessionId: string;
-  /** Short description of the task */
+  /** 任务简短描述 */
   description: string;
-  /** Original prompt for the task */
+  /** 任务原始 prompt */
   prompt: string;
-  /** Agent handling the task */
+  /** 处理该任务的智能体 */
   agent: string;
-  /** Current status */
+  /** 当前状态 */
   status: BackgroundTaskStatus;
-  /** When the task was queued (waiting for concurrency) */
+  /** 任务进入排队等待并发的时间 */
   queuedAt?: Date;
-  /** When the task started */
+  /** 任务开始时间 */
   startedAt: Date;
-  /** When the task completed (if completed) */
+  /** 任务完成时间（若已完成） */
   completedAt?: Date;
-  /** Result output (if completed) */
+  /** 结果输出（若已完成） */
   result?: string;
-  /** Error message (if failed) */
+  /** 错误信息（若失败） */
   error?: string;
-  /** Progress tracking */
+  /** 进度跟踪 */
   progress?: TaskProgress;
-  /** Key for concurrency tracking */
+  /** 用于并发跟踪的键 */
   concurrencyKey?: string;
-  /** Parent model (preserved from launch input) */
+  /** 父模型（从启动输入中保留） */
   parentModel?: string;
 }
 
 /**
- * Input for launching a new background task
+ * 启动新后台任务的输入
  */
 export interface LaunchInput {
-  /** Short description of the task */
+  /** 任务简短描述 */
   description: string;
-  /** Prompt for the task */
+  /** 任务的 prompt */
   prompt: string;
-  /** Agent to handle the task */
+  /** 处理该任务的智能体 */
   agent: string;
-  /** Parent session ID */
+  /** 父会话 ID */
   parentSessionId: string;
-  /** Model configuration (optional) */
+  /** 模型配置（可选） */
   model?: string;
 }
 
 /**
- * Input for resuming a background task
+ * 恢复后台任务的输入
  */
 export interface ResumeInput {
-  /** Session ID to resume */
+  /** 要恢复的会话 ID */
   sessionId: string;
-  /** New prompt to send */
+  /** 要发送的新 prompt */
   prompt: string;
-  /** Parent session ID */
+  /** 父会话 ID */
   parentSessionId: string;
 }
 
 /**
- * Context for resuming a background task
+ * 恢复后台任务的上下文
  */
 export interface ResumeContext {
-  /** Session ID of the task */
+  /** 任务对应的会话 ID */
   sessionId: string;
-  /** Original prompt for the task */
+  /** 任务原始 prompt */
   previousPrompt: string;
-  /** Number of tool calls made so far */
+  /** 目前已发起的工具调用次数 */
   toolCallCount: number;
-  /** Last tool used (if any) */
+  /** 最近使用的工具（若有） */
   lastToolUsed?: string;
-  /** Summary of last output (truncated) */
+  /** 最近输出的摘要（已截断） */
   lastOutputSummary?: string;
-  /** When the task started */
+  /** 任务开始时间 */
   startedAt: Date;
-  /** When the task was last active */
+  /** 任务最近活跃时间 */
   lastActivityAt: Date;
 }
 
 /**
- * Configuration for background task concurrency
+ * 后台任务并发配置
  */
 export interface BackgroundTaskConfig {
-  /** Default concurrency limit (0 = unlimited) */
+  /** 默认并发上限（0 = 不限） */
   defaultConcurrency?: number;
-  /** Per-model concurrency limits */
+  /** 按模型设置的并发上限 */
   modelConcurrency?: Record<string, number>;
-  /** Per-provider concurrency limits */
+  /** 按提供商设置的并发上限 */
   providerConcurrency?: Record<string, number>;
-  /** Maximum total background tasks */
+  /** 后台任务总数上限 */
   maxTotalTasks?: number;
-  /** Task timeout in milliseconds */
+  /** 任务超时时间（毫秒） */
   taskTimeoutMs?: number;
-  /** Maximum queue size (tasks waiting for slot). If not set, uses maxTotalTasks - running as implicit limit */
+  /** 队列大小上限（等待槽位的任务数）。未设置时隐式以 maxTotalTasks - running 作为上限 */
   maxQueueSize?: number;
-  /** Threshold in ms for detecting stale sessions (default: 5 min) */
+  /** 检测僵尸会话的阈值（毫秒，默认 5 分钟） */
   staleThresholdMs?: number;
-  /** Callback when stale session detected */
+  /** 检测到僵尸会话时的回调 */
   onStaleSession?: (task: BackgroundTask) => void;
 }

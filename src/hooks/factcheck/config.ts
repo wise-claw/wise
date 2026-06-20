@@ -1,8 +1,7 @@
 /**
- * Factcheck Guard Configuration
+ * Factcheck 守卫配置
  *
- * Loads guard config from the WISE config system with token expansion
- * and deep merge over sensible defaults.
+ * 从 WISE 配置系统加载守卫配置，进行 token 展开并基于合理的默认值做深度合并。
  */
 
 import { homedir } from 'os';
@@ -11,7 +10,7 @@ import { getClaudeConfigDir } from '../../utils/config-dir.js';
 import type { GuardsConfig, FactcheckPolicy, SentinelPolicy } from './types.js';
 
 // ---------------------------------------------------------------------------
-// Defaults
+// 默认值
 // ---------------------------------------------------------------------------
 
 const DEFAULT_FACTCHECK_POLICY: FactcheckPolicy = {
@@ -45,11 +44,11 @@ export const DEFAULT_GUARDS_CONFIG: GuardsConfig = {
 };
 
 // ---------------------------------------------------------------------------
-// Token expansion
+// token 展开
 // ---------------------------------------------------------------------------
 
 /**
- * Expand ${HOME}, ${WORKSPACE}, and ${CLAUDE_CONFIG_DIR} tokens in a string.
+ * 展开字符串中的 ${HOME}、${WORKSPACE} 和 ${CLAUDE_CONFIG_DIR} token。
  */
 export function expandTokens(value: string, workspace?: string): string {
   const home = homedir();
@@ -61,7 +60,7 @@ export function expandTokens(value: string, workspace?: string): string {
 }
 
 /**
- * Recursively expand tokens in string values within an object or array.
+ * 递归展开对象或数组中字符串值里的 token。
  */
 function expandTokensDeep<T>(obj: T, workspace?: string): T {
   if (typeof obj === 'string') {
@@ -81,7 +80,7 @@ function expandTokensDeep<T>(obj: T, workspace?: string): T {
 }
 
 // ---------------------------------------------------------------------------
-// Deep merge (local, type-safe for guards config)
+// 深度合并（本地实现，针对 guards 配置做类型安全处理）
 // ---------------------------------------------------------------------------
 
 function deepMergeGuards(
@@ -108,14 +107,14 @@ function deepMergeGuards(
 }
 
 // ---------------------------------------------------------------------------
-// Public API
+// 公开 API
 // ---------------------------------------------------------------------------
 
 /**
- * Load guards config from the WISE config system.
+ * 从 WISE 配置系统加载 guards 配置。
  *
- * Reads the `guards` key from the merged WISE config, deep-merges over
- * defaults, and expands ${HOME}/${WORKSPACE}/${CLAUDE_CONFIG_DIR} tokens.
+ * 从合并后的 WISE 配置中读取 `guards` 键，基于默认值做深度合并，
+ * 并展开 ${HOME}/${WORKSPACE}/${CLAUDE_CONFIG_DIR} token。
  */
 export function loadGuardsConfig(workspace?: string): GuardsConfig {
   try {
@@ -124,14 +123,14 @@ export function loadGuardsConfig(workspace?: string): GuardsConfig {
     const merged = deepMergeGuards(DEFAULT_GUARDS_CONFIG, guardsRaw);
     return expandTokensDeep(merged, workspace);
   } catch {
-    // If config loading fails, return expanded defaults
+    // 若配置加载失败，返回展开后的默认值
     return expandTokensDeep({ ...DEFAULT_GUARDS_CONFIG }, workspace);
   }
 }
 
 /**
- * Check if a project name matches any strict project patterns.
- * Uses simple glob-style matching (supports * wildcard).
+ * 检查项目名称是否匹配任一 strict 项目模式。
+ * 使用简单的 glob 风格匹配（支持 * 通配符）。
  */
 export function shouldUseStrictMode(
   projectName: string,

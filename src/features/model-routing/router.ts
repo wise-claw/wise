@@ -1,8 +1,8 @@
 /**
- * Model Router
+ * 模型路由器
  *
- * Main routing engine that determines which model tier to use for a given task.
- * Combines signal extraction, scoring, and rules evaluation.
+ * 主路由引擎，决定给定任务使用哪个模型档位。
+ * 结合信号提取、评分与规则评估。
  */
 
 import type {
@@ -20,7 +20,7 @@ import { calculateComplexityScore, calculateConfidence, scoreToTier } from './sc
 import { evaluateRules, DEFAULT_ROUTING_RULES } from './rules.js';
 
 /**
- * Route a task to the appropriate model tier
+ * 将任务路由到合适的模型档位
  */
 export function routeTask(
   context: RoutingContext,
@@ -28,7 +28,7 @@ export function routeTask(
 ): RoutingDecision {
   const mergedConfig = { ...DEFAULT_ROUTING_CONFIG, ...config };
 
-  // If forceInherit is enabled, bypass all routing so agents inherit the parent model (issue #1135)
+  // 若启用 forceInherit，则绕过所有路由，让子代理继承父模型（issue #1135）
   if (mergedConfig.forceInherit) {
     return {
       model: 'inherit',
@@ -40,35 +40,35 @@ export function routeTask(
     };
   }
 
-  // If routing is disabled, use default tier
+  // 若路由被禁用，使用默认档位
   if (!mergedConfig.enabled) {
     return createDecision(mergedConfig.defaultTier, mergedConfig.tierModels, ['Routing disabled, using default tier'], false);
   }
 
-  // If explicit model is specified, respect it
+  // 若显式指定了模型，遵从该指定
   if (context.explicitModel) {
     const explicitTier = modelTypeToTier(context.explicitModel);
     return createDecision(explicitTier, mergedConfig.tierModels, ['Explicit model specified by user'], false, explicitTier);
   }
 
-  // Check for agent-specific overrides
+  // 检查是否有按代理类型的覆盖配置
   if (context.agentType && mergedConfig.agentOverrides?.[context.agentType]) {
     const override = mergedConfig.agentOverrides[context.agentType];
     return createDecision(override.tier, mergedConfig.tierModels, [override.reason], false, override.tier);
   }
 
-  // Extract signals from the task
+  // 从任务中提取信号
   const signals = extractAllSignals(context.taskPrompt, context);
 
-  // Evaluate routing rules
+  // 评估路由规则
   const ruleResult = evaluateRules(context, signals, DEFAULT_ROUTING_RULES);
 
   if (ruleResult.tier === 'EXPLICIT') {
-    // Explicit model was handled above, this shouldn't happen
+    // 显式模型已在上方处理，此处不应到达
     return createDecision('MEDIUM', mergedConfig.tierModels, ['Unexpected EXPLICIT tier'], false);
   }
 
-  // Calculate score for confidence and logging
+  // 计算分数以用于置信度与日志
   const score = calculateComplexityScore(signals);
   const scoreTier = scoreToTier(score);
   let confidence = calculateConfidence(score, ruleResult.tier);
@@ -78,8 +78,8 @@ export function routeTask(
   const ruleIdx = tierOrder.indexOf(ruleResult.tier);
   const scoreIdx = tierOrder.indexOf(scoreTier);
 
-  // When scorer and rules diverge by more than 1 level, reduce confidence
-  // and prefer the higher tier to avoid under-provisioning
+  // 当评分器与规则分歧超过 1 级时，降低置信度
+  // 并优先采用更高档位，以避免资源不足
   const divergence = Math.abs(ruleIdx - scoreIdx);
   if (divergence > 1) {
     confidence = Math.min(confidence, 0.5);
@@ -93,7 +93,7 @@ export function routeTask(
     ...(divergence > 1 ? [`Scorer/rules divergence (${divergence} levels): confidence reduced, preferred higher tier`] : []),
   ];
 
-  // Enforce minTier if configured
+  // 若配置了 minTier 则强制执行下限
   if (mergedConfig.minTier) {
     const currentIdx = tierOrder.indexOf(finalTier);
     const minIdx = tierOrder.indexOf(mergedConfig.minTier);
@@ -114,7 +114,7 @@ export function routeTask(
 }
 
 /**
- * Create a routing decision for a given tier
+ * 为给定档位创建路由决策
  */
 function createDecision(
   tier: ComplexityTier,
@@ -127,7 +127,7 @@ function createDecision(
     model: tierModels[tier],
     modelType: TIER_TO_MODEL_TYPE[tier],
     tier,
-    confidence: escalated ? 0.9 : 0.7, // Higher confidence after escalation
+    confidence: escalated ? 0.9 : 0.7, // 升级后置信度更高
     reasons,
     escalated,
     originalTier,
@@ -135,7 +135,7 @@ function createDecision(
 }
 
 /**
- * Convert ModelType to ComplexityTier
+ * 将 ModelType 转换为 ComplexityTier
  */
 function modelTypeToTier(modelType: string): ComplexityTier {
   switch (modelType) {
@@ -150,7 +150,7 @@ function modelTypeToTier(modelType: string): ComplexityTier {
 }
 
 /**
- * Escalate to a higher tier after failure
+ * 失败后升级到更高档位
  */
 export function escalateModel(currentTier: ComplexityTier): ComplexityTier {
   switch (currentTier) {
@@ -159,24 +159,24 @@ export function escalateModel(currentTier: ComplexityTier): ComplexityTier {
     case 'MEDIUM':
       return 'HIGH';
     case 'HIGH':
-      return 'HIGH'; // Already at max
+      return 'HIGH'; // 已是最高档
   }
 }
 
 /**
- * Check if we can escalate further
+ * 检查是否还能进一步升级
  */
 export function canEscalate(currentTier: ComplexityTier): boolean {
   return currentTier !== 'HIGH';
 }
 
 /**
- * Get routing recommendation for orchestrator
+ * 为编排器获取路由建议
  *
- * This is designed for PROACTIVE routing - the orchestrator (Opus) analyzes
- * task complexity BEFORE delegation and chooses the appropriate model tier.
+ * 面向主动式（PROACTIVE）路由设计——编排器（Opus）在委派之前
+ * 分析任务复杂度并选择合适的模型档位。
  *
- * NOT reactive escalation - the right model is chosen upfront.
+ * 而非响应式升级——即在前期就选好正确的模型。
  */
 export function getRoutingRecommendation(
   context: RoutingContext,
@@ -186,21 +186,21 @@ export function getRoutingRecommendation(
 }
 
 /**
- * Legacy: Route with escalation support
- * @deprecated Use getRoutingRecommendation for proactive routing instead.
- * The orchestrator should analyze complexity upfront, not escalate reactively.
+ * 遗留：带升级支持的路由
+ * @deprecated 主动式路由请改用 getRoutingRecommendation。
+ * 编排器应在前期分析复杂度，而非事后响应式升级。
  */
 export function routeWithEscalation(
   context: RoutingContext,
   config: Partial<RoutingConfig> = {}
 ): RoutingDecision {
-  // Simply return the routing recommendation
-  // Reactive escalation is deprecated - orchestrator decides upfront
+  // 直接返回路由建议
+  // 响应式升级已废弃——编排器应在前期决定
   return routeTask(context, config);
 }
 
 /**
- * Get routing explanation for debugging/logging
+ * 获取路由解释，用于调试/日志
  */
 export function explainRouting(
   context: RoutingContext,
@@ -242,8 +242,8 @@ export function explainRouting(
 }
 
 /**
- * Quick tier lookup for known agent types
- * Useful for cases where we don't need full signal analysis
+ * 已知代理类型的快速档位查询
+ * 适用于不需要完整信号分析的场景
  */
 export function quickTierForAgent(agentType: string): ComplexityTier | null {
   const agentTiers: Record<string, ComplexityTier> = {
@@ -267,24 +267,24 @@ export function quickTierForAgent(agentType: string): ComplexityTier | null {
 
 
 /**
- * Get recommended model for an agent based on task complexity
+ * 根据任务复杂度获取为代理推荐的模型
  *
- * This is the main entry point for orchestrator model routing.
- * The orchestrator calls this to determine which model to use when delegating.
+ * 这是编排器模型路由的主入口。
+ * 编排器在委派时调用此函数以决定使用哪个模型。
  *
- * ALL agents are adaptive based on task complexity.
+ * 所有代理均根据任务复杂度自适应。
  *
- * @param agentType - The agent to delegate to
- * @param taskPrompt - The task description
- * @returns The recommended model type ('haiku', 'sonnet', or 'opus')
+ * @param agentType - 要委派到的代理
+ * @param taskPrompt - 任务描述
+ * @returns 推荐的模型类型（'haiku'、'sonnet' 或 'opus'）
  */
 export function getModelForTask(
   agentType: string,
   taskPrompt: string,
   config: Partial<RoutingConfig> = {}
 ): { model: 'haiku' | 'sonnet' | 'opus'; tier: ComplexityTier; reason: string } {
-  // All agents are adaptive based on task complexity
-  // Use agent-specific rules for advisory agents, general rules for others
+  // 所有代理均根据任务复杂度自适应
+  // 建议类代理使用代理专属规则，其他代理使用通用规则
   const decision = routeTask({ taskPrompt, agentType }, config);
 
   return {
@@ -296,9 +296,9 @@ export function getModelForTask(
 
 
 /**
- * Generate a complexity analysis summary for the orchestrator
+ * 为编排器生成复杂度分析摘要
  *
- * Returns a human-readable analysis explaining the routing recommendation.
+ * 返回人类可读的分析说明，解释路由建议。
  */
 export function analyzeTaskComplexity(
   taskPrompt: string,

@@ -1,9 +1,9 @@
 /**
- * Directory README Injector Storage
+ * 目录 README 注入器存储
  *
- * Persistent storage for tracking which directory READMEs have been injected per session.
+ * 持久化存储，用于按会话追踪已注入的目录 README。
  *
- * Ported from oh-my-opencode's directory-readme-injector hook.
+ * 移植自 oh-my-opencode 的 directory-readme-injector 钩子。
  */
 
 import {
@@ -18,14 +18,14 @@ import { README_INJECTOR_STORAGE } from './constants.js';
 import type { InjectedPathsData } from './types.js';
 
 /**
- * Get storage file path for a session.
+ * 获取指定会话的存储文件路径。
  */
 function getStoragePath(sessionID: string): string {
   return join(README_INJECTOR_STORAGE, `${sessionID}.json`);
 }
 
 /**
- * Load set of injected directory paths for a session.
+ * 加载指定会话已注入的目录路径集合。
  */
 export function loadInjectedPaths(sessionID: string): Set<string> {
   const filePath = getStoragePath(sessionID);
@@ -41,7 +41,7 @@ export function loadInjectedPaths(sessionID: string): Set<string> {
 }
 
 /**
- * Save set of injected directory paths for a session.
+ * 保存指定会话已注入的目录路径集合。
  */
 export function saveInjectedPaths(sessionID: string, paths: Set<string>): void {
   if (!existsSync(README_INJECTOR_STORAGE)) {
@@ -58,7 +58,7 @@ export function saveInjectedPaths(sessionID: string, paths: Set<string>): void {
 }
 
 /**
- * Clear injected paths for a session.
+ * 清除指定会话的已注入路径。
  */
 export function clearInjectedPaths(sessionID: string): void {
   const filePath = getStoragePath(sessionID);

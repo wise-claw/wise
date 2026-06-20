@@ -1,11 +1,11 @@
 /**
- * Directory README Injector Hook
+ * 目录 README 注入器钩子
  *
- * Automatically injects relevant README content from directories when files are accessed.
- * Walks up the directory tree from accessed files to find and inject README.md files.
+ * 当文件被访问时，自动注入其所在目录的相关 README 内容。
+ * 从被访问文件开始向上遍历目录树，查找并注入 README.md 文件。
  *
- * Ported from oh-my-opencode's directory-readme-injector hook.
- * Adapted for Claude Code's shell hook system.
+ * 移植自 oh-my-opencode 的 directory-readme-injector 钩子。
+ * 已适配 Claude Code 的 shell 钩子系统。
  */
 
 import { existsSync, readFileSync } from 'node:fs';
@@ -17,19 +17,19 @@ import {
 } from './storage.js';
 import { CONTEXT_FILENAMES, TRACKED_TOOLS } from './constants.js';
 
-// Re-export submodules
+// 重新导出子模块
 export * from './types.js';
 export * from './constants.js';
 export * from './storage.js';
 
 /**
- * Simple token estimation (4 chars per token)
+ * 简单的 token 估算（每 4 个字符为 1 个 token）
  */
 const CHARS_PER_TOKEN = 4;
 const DEFAULT_MAX_README_TOKENS = 5000;
 
 /**
- * Truncation result
+ * 截断结果
  */
 interface TruncationResult {
   result: string;
@@ -37,7 +37,7 @@ interface TruncationResult {
 }
 
 /**
- * Simple truncation for README content
+ * 对 README 内容的简单截断
  */
 function truncateContent(
   content: string,
@@ -59,10 +59,10 @@ function truncateContent(
 }
 
 /**
- * Create directory README injector hook for Claude Code.
+ * 为 Claude Code 创建目录 README 注入器钩子。
  *
- * @param workingDirectory - The working directory for resolving paths
- * @returns Hook handlers for tool execution
+ * @param workingDirectory - 用于解析路径的工作目录
+ * @returns 工具执行用的钩子处理器
  */
 export function createDirectoryReadmeInjectorHook(workingDirectory: string) {
   const sessionCaches = new Map<string, Set<string>>();
@@ -81,8 +81,8 @@ export function createDirectoryReadmeInjectorHook(workingDirectory: string) {
   }
 
   /**
-   * Find context files (README.md, AGENTS.md) by walking up the directory tree.
-   * Returns paths in order from root to leaf.
+   * 向上遍历目录树查找上下文文件（README.md、AGENTS.md）。
+   * 返回路径按从根到叶的顺序排列。
    */
   function findContextFilesUp(startDir: string): string[] {
     const found: string[] = [];
@@ -96,24 +96,24 @@ export function createDirectoryReadmeInjectorHook(workingDirectory: string) {
         }
       }
 
-      // Stop at working directory root
+      // 到达工作目录根时停止
       if (current === workingDirectory) break;
 
       const parent = dirname(current);
-      // Stop at filesystem root
+      // 到达文件系统根时停止
       if (parent === current) break;
-      // Stop if we've gone outside the working directory
+      // 超出工作目录范围时停止
       if (!parent.startsWith(workingDirectory)) break;
 
       current = parent;
     }
 
-    // Return in order from root to leaf (reverse the array)
+    // 按从根到叶的顺序返回（反转数组）
     return found.reverse();
   }
 
   /**
-   * Get a human-readable label for a context file.
+   * 获取上下文文件的可读标签。
    */
   function getContextLabel(filePath: string): string {
     if (filePath.endsWith('AGENTS.md')) return 'Project AGENTS';
@@ -121,8 +121,8 @@ export function createDirectoryReadmeInjectorHook(workingDirectory: string) {
   }
 
   /**
-   * Process a file path and return context file content to inject.
-   * Finds both README.md and AGENTS.md files walking up the directory tree.
+   * 处理文件路径并返回要注入的上下文文件内容。
+   * 向上遍历目录树查找 README.md 与 AGENTS.md 文件。
    */
   function processFilePathForContextFiles(
     filePath: string,
@@ -138,8 +138,8 @@ export function createDirectoryReadmeInjectorHook(workingDirectory: string) {
     let output = '';
 
     for (const contextPath of contextPaths) {
-      // Track by full file path to allow both README.md and AGENTS.md
-      // from the same directory to be independently injected
+      // 按完整文件路径追踪，以允许同一目录下的 README.md 与 AGENTS.md
+      // 被独立注入
       if (cache.has(contextPath)) continue;
 
       try {
@@ -154,7 +154,7 @@ export function createDirectoryReadmeInjectorHook(workingDirectory: string) {
         output += `\n\n[${label}: ${contextPath}]\n${result}${truncationNotice}`;
         cache.add(contextPath);
       } catch {
-        // Skip files that can't be read
+        // 跳过无法读取的文件
       }
     }
 
@@ -167,7 +167,7 @@ export function createDirectoryReadmeInjectorHook(workingDirectory: string) {
 
   return {
     /**
-     * Process a tool execution and inject READMEs if relevant.
+     * 处理工具执行并在相关时注入 README。
      */
     processToolExecution: (
       toolName: string,
@@ -182,7 +182,7 @@ export function createDirectoryReadmeInjectorHook(workingDirectory: string) {
     },
 
     /**
-     * Get context files (README.md, AGENTS.md) for a specific file without marking as injected.
+     * 获取指定文件的上下文文件（README.md、AGENTS.md），不标记为已注入。
      */
     getContextFilesForFile: (filePath: string): string[] => {
       const resolved = resolveFilePath(filePath);
@@ -193,7 +193,7 @@ export function createDirectoryReadmeInjectorHook(workingDirectory: string) {
     },
 
     /**
-     * @deprecated Use getContextFilesForFile instead
+     * @deprecated 请改用 getContextFilesForFile
      */
     getReadmesForFile: (filePath: string): string[] => {
       const resolved = resolveFilePath(filePath);
@@ -204,7 +204,7 @@ export function createDirectoryReadmeInjectorHook(workingDirectory: string) {
     },
 
     /**
-     * Clear session cache when session ends.
+     * 会话结束时清除会话缓存。
      */
     clearSession: (sessionID: string): void => {
       sessionCaches.delete(sessionID);
@@ -212,7 +212,7 @@ export function createDirectoryReadmeInjectorHook(workingDirectory: string) {
     },
 
     /**
-     * Check if a tool triggers README injection.
+     * 检查某工具是否会触发 README 注入。
      */
     isTrackedTool: (toolName: string): boolean => {
       return TRACKED_TOOLS.includes(toolName.toLowerCase());
@@ -221,7 +221,7 @@ export function createDirectoryReadmeInjectorHook(workingDirectory: string) {
 }
 
 /**
- * Get README paths for a file (simple utility function).
+ * 获取某文件的 README 路径（简单的工具函数）。
  */
 export function getReadmesForPath(
   filePath: string,

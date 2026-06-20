@@ -90,9 +90,9 @@ export interface TeamStartInput {
   sentinelGateTimeoutMs?: number;
   sentinelGatePollIntervalMs?: number;
   /**
-   * When true, the v2 runtime starts the merge orchestrator: per-commit
-   * auto-merge to the leader branch and auto-rebase fanout to other workers.
-   * Equivalent to setting WISE_TEAMS_AUTO_MERGE=1. Requires WISE_RUNTIME_V2=1.
+   * 为 true 时,v2 运行时启动 merge orchestrator:逐提交
+   * auto-merge 到 leader 分支,并 auto-rebase 扇出到其他 worker。
+   * 等价于设置 WISE_TEAMS_AUTO_MERGE=1。要求 WISE_RUNTIME_V2=1。
    */
   autoMerge?: boolean;
 }
@@ -319,7 +319,7 @@ function convergeWithResultArtifact(jobId: string, job: TeamJobRecord, jobsDir: 
       };
     }
   } catch {
-    // no artifact yet
+    // 暂无产物
   }
 
   if (job.status === 'running' && job.pid != null && !isProcessAlive(job.pid)) {
@@ -548,8 +548,8 @@ export async function cleanupTeamJob(jobId: string, graceMs = 10_000): Promise<T
     const cleanupResult = cleanupTeamWorktrees(job.teamName, job.cwd);
     preservedWorktrees = cleanupResult.preserved.length;
   } catch {
-    // best-effort for dormant team-owned worktree infrastructure; preserve state
-    // when cleanup could not prove worktree metadata/backups are disposable.
+    // 针对休眠的团队专属 worktree 基础设施尽力而为;当清理无法证明
+    // worktree 元数据/备份可安全丢弃时,保留状态。
     preservedWorktrees = 1;
   }
   if (preservedWorktrees > 0) {
@@ -845,7 +845,7 @@ function parseStartArgs(args: string[]): StartArgsParsed {
   let pollIntervalMs: number | undefined;
   let sentinelGateTimeoutMs: number | undefined;
   let sentinelGatePollIntervalMs: number | undefined;
-  // --auto-merge / WISE_TEAMS_AUTO_MERGE=1 enables the merge orchestrator (v2-only).
+  // --auto-merge / WISE_TEAMS_AUTO_MERGE=1 启用 merge orchestrator (仅 v2)。
   let autoMerge: boolean = process.env.WISE_TEAMS_AUTO_MERGE === '1';
 
   for (let i = 0; i < args.length; i += 1) {

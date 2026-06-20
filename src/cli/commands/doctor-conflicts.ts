@@ -1,6 +1,6 @@
 /**
- * Conflict diagnostic command
- * Scans for and reports plugin coexistence issues.
+ * 冲突诊断命令
+ * 扫描并报告插件共存问题。
  */
 
 import { readFileSync, existsSync, readdirSync } from 'fs';
@@ -13,13 +13,13 @@ import { inspectUnifiedMcpRegistrySync } from '../../installer/mcp-registry.js';
 import { findWorkspaceRoot, WORKSPACE_MARKER } from '../../lib/worktree-paths.js';
 
 export interface WorkspaceMarkerStatus {
-  /** Absolute path to the directory containing .wise-workspace, or null if absent. */
+  /** 包含 .wise-workspace 的目录的绝对路径，缺失时为 null。 */
   markerRoot: string | null;
-  /** True when WISE_STATE_DIR env var is set. */
+  /** 当 WISE_STATE_DIR 环境变量已设置时为 true。 */
   stateDirEnvSet: boolean;
-  /** Value of WISE_STATE_DIR, or null when unset. */
+  /** WISE_STATE_DIR 的值，未设置时为 null。 */
   stateDirEnvValue: string | null;
-  /** When both WISE_STATE_DIR and .wise-workspace are active, this is true (warn: WISE_STATE_DIR wins). */
+  /** 当 WISE_STATE_DIR 与 .wise-workspace 同时生效时为 true（警告：WISE_STATE_DIR 优先）。 */
   precedenceConflict: boolean;
 }
 
@@ -36,7 +36,7 @@ export interface ConflictReport {
 }
 
 /**
- * Collect hook entries from a single settings.json file.
+ * 从单个 settings.json 文件收集钩子条目。
  */
 function collectHooksFromSettings(settingsPath: string): ConflictReport['hookConflicts'] {
   const conflicts: ConflictReport['hookConflicts'] = [];
@@ -49,7 +49,7 @@ function collectHooksFromSettings(settingsPath: string): ConflictReport['hookCon
     const settings = JSON.parse(readFileSync(settingsPath, 'utf-8'));
     const hooks = settings.hooks || {};
 
-    // Hook events to check
+    // 待检查的钩子事件
     const hookEvents = [
       'PreToolUse',
       'PostToolUse',
@@ -73,18 +73,18 @@ function collectHooksFromSettings(settingsPath: string): ConflictReport['hookCon
       }
     }
   } catch (_error) {
-    // Ignore parse errors, will be reported separately
+    // 忽略解析错误，将另行报告
   }
 
   return conflicts;
 }
 
 /**
- * Check for hook conflicts in both profile-level (~/.claude/settings.json)
- * and project-level (./.claude/settings.json).
+ * 检查 profile 级（~/.claude/settings.json）与
+ * project 级（./.claude/settings.json）的钩子冲突。
  *
- * Claude Code settings precedence: project > profile > defaults.
- * We check both levels so the diagnostic is complete.
+ * Claude Code 设置优先级：project > profile > defaults。
+ * 我们检查两个层级以使诊断完整。
  */
 export function checkHookConflicts(): ConflictReport['hookConflicts'] {
   const profileSettingsPath = join(getClaudeConfigDir(), 'settings.json');
@@ -93,7 +93,7 @@ export function checkHookConflicts(): ConflictReport['hookConflicts'] {
   const profileHooks = collectHooksFromSettings(profileSettingsPath);
   const projectHooks = collectHooksFromSettings(projectSettingsPath);
 
-  // Deduplicate by event+command (same hook in both levels should appear once)
+  // 按 event+command 去重（两个层级中相同的钩子应只出现一次）
   const seen = new Set<string>();
   const merged: ConflictReport['hookConflicts'] = [];
 
@@ -115,9 +115,9 @@ function isWindowsUnsafePluginHookCommand(command: string): boolean {
 }
 
 /**
- * Native Windows cannot execute plugin hooks that still route through sh/find-node.
- * Detect stale cache manifests so doctor can point users at setup/update repair
- * instead of reporting a generic hook conflict.
+ * 原生 Windows 无法执行仍经由 sh/find-node 路由的插件钩子。
+ * 检测陈旧的缓存清单，使 doctor 能引导用户进行 setup/update 修复，
+ * 而不是报告通用的钩子冲突。
  */
 export function checkWindowsUnsafePluginHooks(): ConflictReport['windowsUnsafePluginHooks'] {
   if (process.platform !== 'win32') {
@@ -152,7 +152,7 @@ export function checkWindowsUnsafePluginHooks(): ConflictReport['windowsUnsafePl
         }
       }
     } catch {
-      // Ignore unreadable manifests; doctor should remain best-effort.
+      // 忽略无法读取的清单；doctor 应保持尽力而为。
     }
   }
 
@@ -160,8 +160,8 @@ export function checkWindowsUnsafePluginHooks(): ConflictReport['windowsUnsafePl
 }
 
 /**
- * Check a single file for WISE markers.
- * Returns { hasMarkers, hasUserContent } or null on error.
+ * 检查单个文件是否包含 WISE 标记。
+ * 返回 { hasMarkers, hasUserContent }，出错时返回 null。
  */
 function checkFileForWiseMarkers(filePath: string): { hasMarkers: boolean; hasUserContent: boolean } | null {
   if (!existsSync(filePath)) return null;
@@ -188,9 +188,9 @@ function checkFileForWiseMarkers(filePath: string): { hasMarkers: boolean; hasUs
 }
 
 /**
- * Find companion CLAUDE-*.md files in the config directory.
- * These are files like CLAUDE-wise.md that users create as part of a
- * file-split pattern to keep WISE config separate from their own CLAUDE.md.
+ * 在配置目录中查找伴随的 CLAUDE-*.md 文件。
+ * 这些是类似 CLAUDE-wise.md 的文件，用户作为文件拆分模式的一部分创建，
+ * 以将 WISE 配置与自己的 CLAUDE.md 分开存放。
  */
 function findCompanionClaudeMdFiles(configDir: string): string[] {
   try {
@@ -203,9 +203,9 @@ function findCompanionClaudeMdFiles(configDir: string): string[] {
 }
 
 /**
- * Check CLAUDE.md for WISE markers and user content.
- * Also checks companion files (CLAUDE-wise.md, etc.) for the file-split pattern
- * where users keep WISE config in a separate file.
+ * 检查 CLAUDE.md 中的 WISE 标记与用户内容。
+ * 同时检查伴随文件（CLAUDE-wise.md 等）以识别文件拆分模式，
+ * 即用户将 WISE 配置存放在单独文件中的情形。
  */
 export function checkClaudeMdStatus(): ConflictReport['claudeMdStatus'] {
   const configDir = getClaudeConfigDir();
@@ -216,7 +216,7 @@ export function checkClaudeMdStatus(): ConflictReport['claudeMdStatus'] {
   }
 
   try {
-    // Check the main CLAUDE.md first
+    // 先检查主 CLAUDE.md
     const mainResult = checkFileForWiseMarkers(claudeMdPath);
     if (!mainResult) return null;
 
@@ -228,7 +228,7 @@ export function checkClaudeMdStatus(): ConflictReport['claudeMdStatus'] {
       };
     }
 
-    // No markers in main file - check companion files (file-split pattern)
+    // 主文件无标记 - 检查伴随文件（文件拆分模式）
     const companions = findCompanionClaudeMdFiles(configDir);
     for (const companionPath of companions) {
       const companionResult = checkFileForWiseMarkers(companionPath);
@@ -242,12 +242,12 @@ export function checkClaudeMdStatus(): ConflictReport['claudeMdStatus'] {
       }
     }
 
-    // No markers in main or companions - check if CLAUDE.md references a companion
+    // 主文件与伴随文件均无标记 - 检查 CLAUDE.md 是否引用了伴随文件
     const content = readFileSync(claudeMdPath, 'utf-8');
     const companionRefPattern = /CLAUDE-[^\s)]+\.md/i;
     const refMatch = content.match(companionRefPattern);
     if (refMatch) {
-      // CLAUDE.md references a companion file but it doesn't have markers yet
+      // CLAUDE.md 引用了伴随文件，但该文件尚无标记
       return {
         hasMarkers: false,
         hasUserContent: mainResult.hasUserContent,
@@ -267,7 +267,7 @@ export function checkClaudeMdStatus(): ConflictReport['claudeMdStatus'] {
 }
 
 /**
- * Check environment flags that affect WISE behavior
+ * 检查影响 WISE 行为的环境标志
  */
 export function checkEnvFlags(): ConflictReport['envFlags'] {
   const disableWise = process.env.DISABLE_WISE === 'true' || process.env.DISABLE_WISE === '1';
@@ -394,10 +394,10 @@ function isSupportedSetupFallbackSkill(legacySkillsDir: string, entry: string, b
     return false;
   }
 
-  // scripts/setup-claude-md.sh intentionally syncs the raw bundled
-  // skills/wise-reference/SKILL.md file into ~/.claude/skills/wise-reference/SKILL.md
-  // as a Claude CLI fallback. Suppress only that exact, unmodified sync so real
-  // legacy collisions and user-edited wise-reference copies still surface.
+  // scripts/setup-claude-md.sh 有意将打包的原始
+  // skills/wise-reference/SKILL.md 文件同步到 ~/.claude/skills/wise-reference/SKILL.md
+  // 作为 Claude CLI 兜底。仅抑制这种精确且未修改的同步，以确保真正的
+  // 旧版冲突与用户编辑过的 wise-reference 副本仍能浮现。
   if (entry.toLowerCase() !== baseName) {
     return false;
   }
@@ -419,9 +419,8 @@ function isSupportedSetupFallbackSkill(legacySkillsDir: string, entry: string, b
 }
 
 /**
- * Check for legacy curl-installed skills that collide with plugin skill names.
- * Only flags skills whose names match actual installed plugin skills, avoiding
- * false positives for user's custom skills.
+ * 检查与插件技能名冲突的旧版 curl 安装技能。
+ * 仅标记名称与实际已安装插件技能匹配的技能，避免对用户自定义技能误报。
  */
 export function checkLegacySkills(): ConflictReport['legacySkills'] {
   const legacySkillsDir = join(getClaudeConfigDir(), 'skills');
@@ -434,7 +433,7 @@ export function checkLegacySkills(): ConflictReport['legacySkills'] {
     );
     const entries = readdirSync(legacySkillsDir);
     for (const entry of entries) {
-      // Match .md files or directories whose name collides with a plugin skill
+      // 匹配名称与插件技能冲突的 .md 文件或目录
       const baseName = entry.replace(/\.md$/i, '').toLowerCase();
       if (pluginSkillNames.has(baseName)) {
         if (isSupportedSetupFallbackSkill(legacySkillsDir, entry, baseName)) {
@@ -444,13 +443,13 @@ export function checkLegacySkills(): ConflictReport['legacySkills'] {
       }
     }
   } catch {
-    // Ignore read errors
+    // 忽略读取错误
   }
   return collisions;
 }
 
 /**
- * Check for unknown fields in config files
+ * 检查配置文件中的未知字段
  */
 export function checkConfigIssues(): ConflictReport['configIssues'] {
   const unknownFields: string[] = [];
@@ -463,21 +462,21 @@ export function checkConfigIssues(): ConflictReport['configIssues'] {
   try {
     const config = JSON.parse(readFileSync(configPath, 'utf-8'));
 
-    // Known top-level fields from the current config surfaces:
+    // 当前配置面中的已知顶层字段：
     // - PluginConfig (src/shared/types.ts)
     // - WiseConfig (src/features/auto-update.ts)
-    // - direct .wise-config.json readers/writers (notifications, auto-invoke,
-    //   delegation enforcement, wise-setup team config)
-    // - preserved legacy compatibility keys that still appear in user configs
+    // - 直接读写 .wise-config.json 的位置（notifications、auto-invoke、
+    //   delegation enforcement、wise-setup team config）
+    // - 保留的旧版兼容键，仍会出现在用户配置中
     const knownFields = new Set([
-      // PluginConfig fields
+      // PluginConfig 字段
       'agents',
       'features',
       'mcpServers',
       'permissions',
       'magicKeywords',
       'routing',
-      // WiseConfig fields (from auto-update.ts / wise-setup)
+      // WiseConfig 字段（来自 auto-update.ts / wise-setup）
       'silentAutoUpdate',
       'configuredAt',
       'configVersion',
@@ -494,7 +493,7 @@ export function checkConfigIssues(): ConflictReport['configIssues'] {
       'hudEnabled',
       'autoUpgradePrompt',
       'nodeBinary',
-      // Direct config readers / writers outside WiseConfig
+      // WiseConfig 之外的直接配置读取/写入方
       'customIntegrations',
       'delegationEnforcementLevel',
       'enforcementLevel',
@@ -508,20 +507,20 @@ export function checkConfigIssues(): ConflictReport['configIssues'] {
       }
     }
   } catch (_error) {
-    // Ignore parse errors
+    // 忽略解析错误
   }
 
   return { unknownFields };
 }
 
 /**
- * Check for .wise-workspace marker presence and WISE_STATE_DIR precedence.
+ * 检查 .wise-workspace 标记是否存在及 WISE_STATE_DIR 优先级。
  *
- * Reports:
- *  - Whether a .wise-workspace marker was found (and where).
- *  - Whether WISE_STATE_DIR is set.
- *  - When both are set, emits a precedenceConflict flag (WISE_STATE_DIR wins per
- *    the resolution-order principle: WISE_STATE_DIR > .wise-workspace > git > cwd).
+ * 报告：
+ *  - 是否找到 .wise-workspace 标记（及其位置）。
+ *  - 是否设置了 WISE_STATE_DIR。
+ *  - 当两者都设置时，发出 precedenceConflict 标志（按解析顺序原则 WISE_STATE_DIR 优先：
+ *    WISE_STATE_DIR > .wise-workspace > git > cwd）。
  */
 export function checkWorkspaceMarker(): WorkspaceMarkerStatus {
   const markerRoot = findWorkspaceRoot();
@@ -535,7 +534,7 @@ export function checkWorkspaceMarker(): WorkspaceMarkerStatus {
 }
 
 /**
- * Run complete conflict check
+ * 运行完整的冲突检查
  */
 export function runConflictCheck(): ConflictReport {
   const hookConflicts = checkHookConflicts();
@@ -547,20 +546,20 @@ export function runConflictCheck(): ConflictReport {
   const mcpRegistrySync = inspectUnifiedMcpRegistrySync();
   const workspaceMarker = checkWorkspaceMarker();
 
-  // Determine if there are actual conflicts
+  // 判定是否存在实际冲突
   const hasConflicts =
-    hookConflicts.some(h => !h.isWise) || // Non-WISE hooks present
-    legacySkills.length > 0 || // Legacy skills colliding with plugin
-    envFlags.disableWise || // WISE is disabled
-    envFlags.skipHooks.length > 0 || // Hooks are being skipped
-    configIssues.unknownFields.length > 0 || // Unknown config fields
-    windowsUnsafePluginHooks.length > 0 || // Stale plugin hooks still use sh/find-node on Windows
+    hookConflicts.some(h => !h.isWise) || // 存在非 WISE 钩子
+    legacySkills.length > 0 || // 旧版技能与插件冲突
+    envFlags.disableWise || // WISE 已禁用
+    envFlags.skipHooks.length > 0 || // 钩子正被跳过
+    configIssues.unknownFields.length > 0 || // 未知配置字段
+    windowsUnsafePluginHooks.length > 0 || // Windows 上陈旧的插件钩子仍使用 sh/find-node
     mcpRegistrySync.claudeMissing.length > 0 ||
     mcpRegistrySync.claudeMismatched.length > 0 ||
     mcpRegistrySync.codexMissing.length > 0 ||
     mcpRegistrySync.codexMismatched.length > 0;
-    // Note: Missing WISE markers is informational (normal for fresh install), not a conflict
-    // Note: workspaceMarker.precedenceConflict is a WARN, not a hard conflict
+    // 注意：缺失 WISE 标记属于提示信息（全新安装时正常），并非冲突
+    // 注意：workspaceMarker.precedenceConflict 是 WARN，并非硬冲突
 
   return {
     hookConflicts,
@@ -576,14 +575,14 @@ export function runConflictCheck(): ConflictReport {
 }
 
 /**
- * Format report for display
+ * 格式化报告以供展示
  */
 export function formatReport(report: ConflictReport, json: boolean): string {
   if (json) {
     return JSON.stringify(report, null, 2);
   }
 
-  // Human-readable format
+  // 人类可读格式
   const lines: string[] = [];
 
   lines.push('');
@@ -591,7 +590,7 @@ export function formatReport(report: ConflictReport, json: boolean): string {
   lines.push(colors.gray('━'.repeat(60)));
   lines.push('');
 
-  // Hook conflicts
+  // 钩子冲突
   if (report.hookConflicts.length > 0) {
     lines.push(colors.bold('📌 Hook Configuration'));
     lines.push('');
@@ -607,7 +606,7 @@ export function formatReport(report: ConflictReport, json: boolean): string {
     lines.push('');
   }
 
-  // CLAUDE.md status
+  // CLAUDE.md 状态
   if (report.claudeMdStatus) {
     lines.push(colors.bold('📄 CLAUDE.md Status'));
     lines.push('');
@@ -637,7 +636,7 @@ export function formatReport(report: ConflictReport, json: boolean): string {
     lines.push('');
   }
 
-  // Environment flags
+  // 环境标志
   lines.push(colors.bold('🔧 Environment Flags'));
   lines.push('');
   if (report.envFlags.disableWise) {
@@ -653,7 +652,7 @@ export function formatReport(report: ConflictReport, json: boolean): string {
   }
   lines.push('');
 
-  // Legacy skills
+  // 旧版技能
   if (report.legacySkills.length > 0) {
     lines.push(colors.bold('📦 Legacy Skills'));
     lines.push('');
@@ -665,7 +664,7 @@ export function formatReport(report: ConflictReport, json: boolean): string {
     lines.push('');
   }
 
-  // Windows plugin hook portability
+  // Windows 插件钩子可移植性
   if (report.windowsUnsafePluginHooks.length > 0) {
     lines.push(colors.bold('🪟 Windows Plugin Hooks'));
     lines.push('');
@@ -678,7 +677,7 @@ export function formatReport(report: ConflictReport, json: boolean): string {
     lines.push('');
   }
 
-  // Config issues
+  // 配置问题
   if (report.configIssues.unknownFields.length > 0) {
     lines.push(colors.bold('⚙️  Configuration Issues'));
     lines.push('');
@@ -689,7 +688,7 @@ export function formatReport(report: ConflictReport, json: boolean): string {
     lines.push('');
   }
 
-  // Unified MCP registry sync
+  // 统一 MCP 注册表同步
   lines.push(colors.bold('🧩 Unified MCP Registry'));
   lines.push('');
   if (!report.mcpRegistrySync.registryExists) {
@@ -722,7 +721,7 @@ export function formatReport(report: ConflictReport, json: boolean): string {
   }
   lines.push('');
 
-  // Workspace marker
+  // 工作区标记
   lines.push(colors.bold('🗂  Workspace Marker (.wise-workspace)'));
   lines.push('');
   const wm = report.workspaceMarker;
@@ -744,7 +743,7 @@ export function formatReport(report: ConflictReport, json: boolean): string {
   }
   lines.push('');
 
-  // Summary
+  // 汇总
   lines.push(colors.gray('━'.repeat(60)));
   if (report.hasConflicts) {
     lines.push(`${colors.yellow('⚠')} Potential conflicts detected`);
@@ -759,7 +758,7 @@ export function formatReport(report: ConflictReport, json: boolean): string {
 }
 
 /**
- * Doctor conflicts command
+ * Doctor 冲突命令
  */
 export async function doctorConflictsCommand(options: { json?: boolean }): Promise<number> {
   const report = runConflictCheck();

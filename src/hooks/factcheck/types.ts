@@ -1,12 +1,12 @@
 /**
- * Factcheck Guard Types
+ * Factcheck 守卫类型定义
  *
- * TypeScript types for the portable factcheck guard and sentinel health analyzer.
- * Ported from rolldav/portable-wise-guards (issue #1155).
+ * 可移植 factcheck 守卫与 sentinel 健康分析器的 TypeScript 类型定义。
+ * 移植自 rolldav/portable-wise-guards（issue #1155）。
  */
 
 // ---------------------------------------------------------------------------
-// Factcheck Claims
+// Factcheck claims
 // ---------------------------------------------------------------------------
 
 export interface FactcheckGates {
@@ -33,7 +33,7 @@ export interface FactcheckClaims {
 }
 
 // ---------------------------------------------------------------------------
-// Policy / Config
+// 策略 / 配置
 // ---------------------------------------------------------------------------
 
 export interface FactcheckPolicy {
@@ -69,7 +69,7 @@ export interface GuardsConfig {
 export type FactcheckMode = 'strict' | 'declared' | 'manual' | 'quick';
 
 // ---------------------------------------------------------------------------
-// Check Results
+// 检查结果
 // ---------------------------------------------------------------------------
 
 export type Severity = 'PASS' | 'WARN' | 'FAIL';
@@ -93,7 +93,7 @@ export interface FactcheckResult {
 }
 
 // ---------------------------------------------------------------------------
-// Sentinel Health
+// Sentinel 健康
 // ---------------------------------------------------------------------------
 
 export interface SentinelLogEntry {
@@ -125,7 +125,7 @@ export interface SentinelReadinessResult {
 }
 
 // ---------------------------------------------------------------------------
-// Required fields / gates constants
+// 必需字段 / gate 常量
 // ---------------------------------------------------------------------------
 
 export const REQUIRED_FIELDS: ReadonlySet<string> = new Set([

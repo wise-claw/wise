@@ -354,7 +354,7 @@ export function spawnAutoresearchTmux(missionDir: string, slug: string): void {
   tmuxExec(['new-session', '-d', '-s', sessionName, '-c', repoRoot, wrappedCommand], { stripTmux: true, stdio: 'ignore' });
   try {
     configureTmuxClipboardForSession(sessionName, { stripTmux: true, stdio: 'ignore' });
-  } catch { /* non-fatal — older tmux builds may not support these options */ }
+  } catch { /* 非致命 — 旧版 tmux 构建可能不支持这些选项 */ }
   assertTmuxSessionAvailable(sessionName);
 
   console.log('\nAutoresearch launched in background tmux session.');
@@ -371,7 +371,7 @@ function ensureSymlink(target: string, linkPath: string): void {
     }
     unlinkSync(linkPath);
   } catch {
-    // missing path is fine
+    // 路径缺失无妨
   }
   symlinkSync(target, linkPath, 'dir');
 }
@@ -417,7 +417,7 @@ export function spawnAutoresearchSetupTmux(repoRoot: string): void {
   ).trim();
   try {
     configureTmuxClipboardForSession(sessionName, { stripTmux: true, stdio: 'ignore' });
-  } catch { /* non-fatal — older tmux builds may not support these options */ }
+  } catch { /* 非致命 — 旧版 tmux 构建可能不支持这些选项 */ }
 
   assertTmuxSessionAvailable(sessionName);
 

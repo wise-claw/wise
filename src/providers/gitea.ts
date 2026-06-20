@@ -25,17 +25,17 @@ export class GiteaProvider implements GitProvider {
   }
 
   detectFromRemote(_url: string): boolean {
-    // Self-hosted: can't reliably detect from URL patterns alone
+    // 自托管：无法仅凭 URL 模式可靠识别
     return false;
   }
 
   async detectFromApi(baseUrl: string): Promise<boolean> {
     try {
-      // Check Forgejo first (Forgejo is a Gitea fork with its own version endpoint)
+      // 先检查 Forgejo（Forgejo 是 Gitea 的分支，拥有独立的版本接口）
       const forgejoRes = await fetch(`${baseUrl}/api/forgejo/v1/version`);
       if (forgejoRes.ok) return true;
     } catch {
-      // Forgejo endpoint not available, try Gitea
+      // Forgejo 接口不可用，回退尝试 Gitea
     }
 
     try {
@@ -48,7 +48,7 @@ export class GiteaProvider implements GitProvider {
 
   viewPR(number: number, owner?: string, repo?: string): PRInfo | null {
     if (!Number.isInteger(number) || number < 1) return null;
-    // Try tea CLI first
+    // 优先尝试 tea CLI
     try {
       const raw = execFileSync('tea', ['pr', 'view', String(number)], {
         encoding: 'utf-8',
@@ -65,7 +65,7 @@ export class GiteaProvider implements GitProvider {
         author: data.user?.login,
       };
     } catch {
-      // tea not installed or failed, fall back to REST API
+      // tea 未安装或失败，回退到 REST API
     }
 
     return this.viewPRviaRest(number, owner, repo);
@@ -101,7 +101,7 @@ export class GiteaProvider implements GitProvider {
 
   viewIssue(number: number, owner?: string, repo?: string): IssueInfo | null {
     if (!Number.isInteger(number) || number < 1) return null;
-    // Try tea CLI first
+    // 优先尝试 tea CLI
     try {
       const raw = execFileSync('tea', ['issues', 'view', String(number)], {
         encoding: 'utf-8',
@@ -116,7 +116,7 @@ export class GiteaProvider implements GitProvider {
         labels: data.labels?.map((l: { name: string }) => l.name),
       };
     } catch {
-      // tea not installed or failed, fall back to REST API
+      // tea 未安装或失败，回退到 REST API
     }
 
     return this.viewIssueviaRest(number, owner, repo);
@@ -149,10 +149,10 @@ export class GiteaProvider implements GitProvider {
   }
 
   checkAuth(): boolean {
-    // Check GITEA_TOKEN env var
+    // 检查 GITEA_TOKEN 环境变量
     if (process.env.GITEA_TOKEN) return true;
 
-    // Try tea CLI auth
+    // 尝试 tea CLI 鉴权
     try {
       execFileSync('tea', ['login', 'list'], {
         encoding: 'utf-8',

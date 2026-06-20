@@ -1,5 +1,5 @@
 /**
- * Features Module Exports
+ * Features 模块导出
  */
 
 export {
@@ -16,20 +16,20 @@ export {
 } from './continuation-enforcement.js';
 
 export {
-  // Types
+  // 类型
   type VersionMetadata,
   type ReleaseInfo,
   type UpdateCheckResult,
   type UpdateResult,
   type SilentUpdateConfig,
-  // Constants
+  // 常量
   REPO_OWNER,
   REPO_NAME,
   GITHUB_API_URL,
   GITHUB_RAW_URL,
   CLAUDE_CONFIG_DIR,
   VERSION_FILE,
-  // Functions
+  // 函数
   getInstalledVersion,
   saveVersionMetadata,
   updateLastCheckTime,
@@ -41,23 +41,23 @@ export {
   shouldCheckForUpdates,
   backgroundUpdateCheck,
   interactiveUpdate,
-  // Silent auto-update
+  // 静默自动更新
   silentAutoUpdate,
   hasPendingUpdateRestart,
   clearPendingUpdateRestart,
   getPendingUpdateVersion,
   initSilentAutoUpdate,
-  // Auto-upgrade prompt
+  // 自动升级提示
   isAutoUpgradePromptEnabled
 } from './auto-update.js';
 
-// Boulder State - session/plan tracking
+// Boulder State - 会话/计划追踪
 export {
-  // Types
+  // 类型
   type BoulderState,
   type PlanProgress,
   type PlanSummary,
-  // Constants
+  // 常量
   BOULDER_DIR,
   BOULDER_FILE,
   BOULDER_STATE_PATH,
@@ -65,7 +65,7 @@ export {
   NOTEPAD_BASE_PATH,
   PLANNER_PLANS_DIR,
   PLAN_EXTENSION,
-  // Functions
+  // 函数
   getBoulderFilePath,
   readBoulderState,
   writeBoulderState,
@@ -80,16 +80,16 @@ export {
   getActivePlanPath
 } from './boulder-state/index.js';
 
-// Context Injector - multi-source context collection and injection
+// Context Injector - 多源上下文收集与注入
 export {
-  // Classes
+  // 类
   ContextCollector,
   contextCollector,
-  // Functions
+  // 函数
   injectPendingContext,
   injectContextIntoText,
   createContextInjectorHook,
-  // Types
+  // 类型
   type ContextSourceType,
   type ContextPriority,
   type ContextEntry,
@@ -101,15 +101,15 @@ export {
   type InjectionResult
 } from './context-injector/index.js';
 
-// Background Agent - background task management
+// Background Agent - 后台任务管理
 export {
-  // Classes
+  // 类
   BackgroundManager,
   ConcurrencyManager,
-  // Functions
+  // 函数
   getBackgroundManager,
   resetBackgroundManager,
-  // Types
+  // 类型
   type BackgroundTask,
   type BackgroundTaskStatus,
   type BackgroundTaskConfig,
@@ -118,21 +118,21 @@ export {
   type TaskProgress
 } from './background-agent/index.js';
 
-// Builtin Skills - bundled skill definitions
+// Builtin Skills - 内置 skill 定义
 export {
-  // Functions
+  // 函数
   createBuiltinSkills,
   getBuiltinSkill,
   listBuiltinSkillNames,
-  // Types
+  // 类型
   type BuiltinSkill,
   type SkillMcpConfig,
   type SkillRegistry
 } from './builtin-skills/index.js';
 
-// Model Routing - intelligent model tier routing
+// Model Routing - 智能模型分层路由
 export {
-  // Main functions
+  // 主要函数
   routeTask,
   routeWithEscalation,
   routeAndAdaptTask,
@@ -140,31 +140,31 @@ export {
   canEscalate,
   explainRouting,
   quickTierForAgent,
-  // Signal extraction
+  // 信号提取
   extractLexicalSignals,
   extractStructuralSignals,
   extractContextSignals,
   extractAllSignals,
-  // Scoring
+  // 评分
   calculateComplexityScore,
   calculateComplexityTier,
   scoreToTier,
   getScoreBreakdown,
   calculateConfidence,
-  // Rules
+  // 规则
   evaluateRules,
   getMatchingRules,
   createRule,
   mergeRules,
   DEFAULT_ROUTING_RULES,
-  // Prompt adaptation
+  // prompt 适配
   adaptPromptForTier,
   getPromptStrategy,
   getPromptPrefix,
   getPromptSuffix,
   createDelegationPrompt,
   getTaskInstructions,
-  // Constants
+  // 常量
   TIER_MODELS,
   TIER_TO_MODEL_TYPE,
   DEFAULT_ROUTING_CONFIG,
@@ -172,7 +172,7 @@ export {
   COMPLEXITY_KEYWORDS,
   TIER_PROMPT_STRATEGIES,
   TIER_TASK_INSTRUCTIONS,
-  // Types
+  // 类型
   type ComplexityTier,
   type ComplexitySignals,
   type LexicalSignals,
@@ -185,9 +185,9 @@ export {
   type PromptAdaptationStrategy,
 } from './model-routing/index.js';
 
-// Notepad Wisdom - plan-scoped wisdom accumulation
+// Notepad Wisdom - 计划级经验积累
 export {
-  // Functions
+  // 函数
   initPlanNotepad,
   readPlanWisdom,
   addLearning,
@@ -195,15 +195,15 @@ export {
   addIssue,
   addProblem,
   getWisdomSummary,
-  // Types
+  // 类型
   type WisdomEntry,
   type WisdomCategory,
   type PlanWisdom
 } from './notepad-wisdom/index.js';
 
-// Delegation Categories - semantic task routing
+// Delegation Categories - 语义化任务路由
 export {
-  // Functions
+  // 函数
   resolveCategory,
   isValidCategory,
   getAllCategories,
@@ -215,10 +215,10 @@ export {
   getCategoryForTask,
   detectCategoryFromPrompt,
   enhancePromptWithCategory,
-  // Constants
+  // 常量
   CATEGORY_CONFIGS,
   THINKING_BUDGET_TOKENS,
-  // Types
+  // 类型
   type DelegationCategory,
   type CategoryConfig,
   type ResolvedCategory,
@@ -226,12 +226,12 @@ export {
   type ThinkingBudget
 } from './delegation-categories/index.js';
 
-// State Manager - unified state file management
+// State Manager - 统一状态文件管理
 export {
-  // Classes
+  // 类
   StateManager,
   createStateManager,
-  // Functions
+  // 函数
   getStatePath,
   getLegacyPaths,
   ensureStateDir,
@@ -241,11 +241,11 @@ export {
   migrateState,
   listStates,
   cleanupOrphanedStates,
-  // Enums/Constants
+  // 枚举/常量
   StateLocation,
   isStateLocation,
   DEFAULT_STATE_CONFIG,
-  // Types
+  // 类型
   type StateConfig,
   type StateReadResult,
   type StateWriteResult,
@@ -259,18 +259,18 @@ export {
 } from './state-manager/index.js';
 
 
-// Verification - verification protocol for ralph, ultrawork, autopilot
+// Verification - ralph、ultrawork、autopilot 的校验协议
 export {
-  // Functions
+  // 函数
   createProtocol,
   createChecklist,
   runVerification,
   checkEvidence,
   formatReport,
   validateChecklist,
-  // Constants
+  // 常量
   STANDARD_CHECKS,
-  // Types
+  // 类型
   type VerificationProtocol,
   type VerificationCheck,
   type VerificationChecklist,
@@ -282,16 +282,16 @@ export {
   type ReportOptions
 } from './verification/index.js';
 
-// Task Decomposer - task decomposition and file ownership
+// Task Decomposer - 任务分解与文件归属
 export {
-  // Functions
+  // 函数
   decomposeTask,
   analyzeTask,
   identifyComponents,
   generateSubtasks,
   assignFileOwnership,
   identifySharedFiles,
-  // Types
+  // 类型
   type TaskAnalysis,
   type Component,
   type Subtask,
@@ -305,7 +305,7 @@ export {
 } from './task-decomposer/index.js';
 
 
-// Session History Search - local transcript/session artifact search
+// Session History Search - 本地 transcript/session 产物搜索
 export {
   searchSessionHistory,
   parseSinceSpec,

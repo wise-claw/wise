@@ -55,17 +55,16 @@ function normalizeObjective(value: string): string {
 }
 
 /**
- * Parse a Claude goal snapshot JSON payload.
+ * 解析 Claude goal 快照 JSON 负载。
  *
- * The payload is whatever the active Claude agent shares as proof of the
- * current `/goal` condition state. Accepted shapes include:
+ * 该负载是当前活跃 Claude agent 作为当前 `/goal` 条件状态证明而分享的内容。
+ * 接受的结构包括：
  *   { goal: { objective, status, ... } }
  *   { objective, status, ... }
- * with `condition` accepted as a synonym for `objective`.
+ * 其中 `condition` 可作为 `objective` 的同义词。
  *
- * NOTE: The Claude Code `/goal` slash command is not invokable from a shell.
- * This snapshot is a model-facing artifact; WISE only verifies textual
- * consistency between the model's reported state and the ultragoal plan.
+ * 注意：Claude Code 的 `/goal` slash 命令无法从 shell 调用。
+ * 该快照是面向模型的产物；WISE 仅校验模型上报状态与 ultragoal 计划之间的文本一致性。
  */
 export function parseClaudeGoalSnapshot(value: unknown): ClaudeGoalSnapshot {
   const root = safeObject(value);

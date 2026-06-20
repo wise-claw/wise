@@ -1,13 +1,13 @@
 /**
- * Persistent Mode Hook
+ * 持久模式钩子
  *
- * Unified handler for persistent work modes: ultrawork, ralph, and todo-continuation.
- * This hook intercepts Stop events and enforces work continuation based on:
- * 1. Active ultrawork mode with pending todos
- * 2. Active ralph loop (until cancelled via /wise:cancel)
- * 3. Any pending todos (general enforcement)
+ * 持久工作模式的统一处理器：ultrawork、ralph 与 todo-continuation。
+ * 本钩子拦截 Stop 事件并基于以下条件强制继续工作：
+ * 1. 带有未完成 todo 的活动 ultrawork 模式
+ * 2. 活动 ralph 循环（直到通过 /wise:cancel 取消）
+ * 3. 任意未完成 todo（通用强制）
  *
- * Priority order: Ralph > Ultrawork > Todo Continuation
+ * 优先级顺序：Ralph > Ultrawork > Todo Continuation
  */
 
 import { existsSync, readFileSync, unlinkSync, statSync, openSync, readSync, closeSync, mkdirSync } from 'fs';
@@ -69,13 +69,13 @@ export interface ToolErrorState {
 }
 
 export interface PersistentModeResult {
-  /** Whether to block the stop event */
+  /** 是否阻断 stop 事件 */
   shouldBlock: boolean;
-  /** Message to inject into context */
+  /** 注入上下文的消息 */
   message: string;
-  /** Which mode triggered the block */
+  /** 触发阻断的模式 */
   mode: 'ralph' | 'ultrawork' | 'todo-continuation' | 'autopilot' | 'autoresearch' | 'team' | 'ralplan' | 'none';
-  /** Additional metadata */
+  /** 额外元数据 */
   metadata?: {
     todoCount?: number;
     iteration?: number;
@@ -89,7 +89,7 @@ export interface PersistentModeResult {
   };
 }
 
-/** Maximum todo-continuation attempts before giving up (prevents infinite loops) */
+/** 放弃前的最大 todo-continuation 尝试次数（防止无限循环） */
 const MAX_TODO_CONTINUATION_ATTEMPTS = 5;
 const CANCEL_SIGNAL_TTL_MS = 30_000;
 const STALE_STATE_THRESHOLD_MS = 2 * 60 * 60 * 1000;
@@ -108,7 +108,7 @@ const TERMINAL_WORKFLOW_PHASES = new Set([
   'stopped',
 ]);
 
-/** Track todo-continuation attempts per session to prevent infinite loops */
+/** 按会话跟踪 todo-continuation 尝试次数以防止无限循环 */
 const todoContinuationAttempts = new Map<string, number>();
 
 export function shouldWriteStateBack(statePath: string | null | undefined): boolean {
@@ -116,8 +116,8 @@ export function shouldWriteStateBack(statePath: string | null | undefined): bool
 }
 
 /**
- * Check whether this session is in an explicit cancel window.
- * Used to prevent stop-hook re-enforcement races during /cancel.
+ * 检查当前会话是否处于显式取消窗口内。
+ * 用于防止 /cancel 期间 stop 钩子重复强化的竞态。
  */
 function isSessionCancelInProgress(directory: string, sessionId?: string): boolean {
   let cancelSignalPath: string | undefined;
@@ -126,11 +126,11 @@ function isSessionCancelInProgress(directory: string, sessionId?: string): boole
     try {
       cancelSignalPath = resolveSessionStatePath('cancel-signal', sessionId, directory);
     } catch {
-      // fall through to legacy path
+      // 回退到遗留路径
     }
   }
 
-  // Fallback: check legacy (non-session-scoped) cancel signal
+  // 兜底：检查遗留（非会话级）取消信号
   if (!cancelSignalPath) {
     cancelSignalPath = join(getWiseRoot(directory), 'state', 'cancel-signal-state.json');
   }
@@ -163,9 +163,9 @@ function isSessionCancelInProgress(directory: string, sessionId?: string): boole
 }
 
 /**
- * Treat mode state as stale if it has not been refreshed recently.
- * Stale files are ignored so they cannot falsely block new sessions.
- * Uses the freshest of last_checked_at, updated_at, or started_at.
+ * 若模式状态近期未刷新则视为过期。
+ * 过期文件会被忽略，以免错误阻断新会话。
+ * 取 last_checked_at、updated_at、started_at 中最新者判断。
  */
 function isStaleState(state: unknown): boolean {
   if (!state || typeof state !== 'object') {
@@ -332,9 +332,8 @@ async function reconcileTerminalWorkflowSlots(
 }
 
 /**
- * Pending owned async work (background Bash/Task or an armed wakeup) means the
- * agent is legitimately waiting for an external notification/resume. In that
- * window persistent modes should not inject a "stalled" reinforcement.
+ * 待处理的本会话异步工作（后台 Bash/Task 或已设置的 wakeup）意味着
+ * 代理正在合理等待外部通知/恢复。此窗口内持久模式不应注入"停滞"强化。
  */
 export function hasPendingOwnedAsyncWork(directory: string, sessionId?: string): boolean {
   return hasPendingBackgroundTask(directory, sessionId)
@@ -342,8 +341,8 @@ export function hasPendingOwnedAsyncWork(directory: string, sessionId?: string):
 }
 
 /**
- * Read last tool error from state directory.
- * Returns null if file doesn't exist or error is stale (>60 seconds old).
+ * 从状态目录读取最近一次工具错误。
+ * 文件不存在或错误过期（超过 60 秒）时返回 null。
  */
 export function readLastToolError(directory: string): ToolErrorState | null {
   const stateDir = join(getWiseRoot(directory), 'state');
@@ -361,7 +360,7 @@ export function readLastToolError(directory: string): ToolErrorState | null {
       return null;
     }
 
-    // Check staleness - errors older than 60 seconds are ignored
+    // 检查是否过期——超过 60 秒的错误被忽略
     const parsedTime = new Date(toolError.timestamp).getTime();
     if (!Number.isFinite(parsedTime)) {
       return null;
@@ -378,7 +377,7 @@ export function readLastToolError(directory: string): ToolErrorState | null {
 }
 
 /**
- * Clear tool error state file atomically.
+ * 原子化清除工具错误状态文件。
  */
 export function clearToolErrorState(directory: string): void {
   const stateDir = join(getWiseRoot(directory), 'state');
@@ -389,13 +388,13 @@ export function clearToolErrorState(directory: string): void {
       unlinkSync(errorPath);
     }
   } catch {
-    // Ignore errors - file may have been removed already
+    // 忽略错误——文件可能已被移除
   }
 }
 
 /**
- * Generate retry guidance message for tool errors.
- * After 5+ retries, suggests alternative approaches.
+ * 生成工具错误的重试指引消息。
+ * 重试 5 次及以上时建议替代方案。
  */
 export function getToolErrorRetryGuidance(toolError: ToolErrorState | null): string {
   if (!toolError) {
@@ -436,7 +435,7 @@ Do NOT skip this step. Do NOT move on without fixing the error.
 }
 
 /**
- * Get or increment todo-continuation attempt counter
+ * 获取或递增 todo-continuation 尝试计数器
  */
 function trackTodoContinuationAttempt(sessionId: string): number {
   if (todoContinuationAttempts.size > 200) todoContinuationAttempts.clear();
@@ -447,15 +446,15 @@ function trackTodoContinuationAttempt(sessionId: string): number {
 }
 
 /**
- * Reset todo-continuation attempt counter (call when todos actually change)
+ * 重置 todo-continuation 尝试计数器（todo 实际变化时调用）
  */
 export function resetTodoContinuationAttempts(sessionId: string): void {
   todoContinuationAttempts.delete(sessionId);
 }
 
 /**
- * Read the session-idle notification cooldown in seconds from global WISE config.
- * Default: 60 seconds. 0 = disabled (no cooldown).
+ * 从全局 WISE 配置读取会话空闲通知冷却秒数。
+ * 默认：60 秒。0 = 禁用（无冷却）。
  */
 export function getIdleNotificationCooldownSeconds(): number {
   for (const configPath of getGlobalWiseConfigCandidates('config.json')) {
@@ -484,7 +483,7 @@ function getGlobalIdleNotificationCooldownPath(stateDir: string): string {
 }
 
 function getIdleNotificationCooldownPath(stateDir: string, sessionId?: string): string {
-  // Keep session segments filesystem-safe; fall back to legacy global path otherwise.
+  // 保持会话段对文件系统安全；否则回退到遗留全局路径。
   if (sessionId && /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,255}$/.test(sessionId)) {
     return join(stateDir, 'sessions', sessionId, 'idle-notif-cooldown.json');
   }
@@ -535,9 +534,8 @@ function hasRepeatedZeroBacklogCooldown(
 }
 
 /**
- * OpenClaw stop wakes should usually bypass idle cooldowns, but unchanged
- * zero-backlog repo state should stay suppressed so stale repo-level CI replay
- * bursts do not re-arm after the actionable backlog is already zero.
+ * OpenClaw 的 stop 唤醒通常应绕过空闲冷却，但未变化的零积压仓库状态应保持抑制，
+ * 以免过期的仓库级 CI 重放突发在可处理积压已归零后重新触发。
  */
 export function shouldWakeOpenClawOnStop(
   stateDir: string,
@@ -548,8 +546,8 @@ export function shouldWakeOpenClawOnStop(
 }
 
 /**
- * Check whether the session-idle notification cooldown has elapsed.
- * Returns true if the notification should be sent.
+ * 检查会话空闲通知冷却是否已过。
+ * 应发送通知时返回 true。
  */
 export function shouldSendIdleNotification(
   stateDir: string,
@@ -570,7 +568,7 @@ export function shouldSendIdleNotification(
     }
   }
 
-  if (cooldownSecs === 0) return true; // cooldown disabled
+  if (cooldownSecs === 0) return true; // 冷却已禁用
 
   if (typeof cooldownRecord?.lastSentAt === 'string') {
     const elapsed = (Date.now() - new Date(cooldownRecord.lastSentAt).getTime()) / 1000;
@@ -580,7 +578,7 @@ export function shouldSendIdleNotification(
 }
 
 /**
- * Record that the session-idle notification was sent at the current timestamp.
+ * 记录会话空闲通知已在当前时间戳发送。
  */
 export function recordIdleNotificationSent(
   stateDir: string,
@@ -605,7 +603,7 @@ export function recordIdleNotificationSent(
   }
 }
 
-/** Max bytes to read from the tail of a transcript for architect approval detection. */
+/** 为检测架构师批准而从 transcript 尾部读取的最大字节数。 */
 const TRANSCRIPT_TAIL_BYTES = 32 * 1024; // 32 KB
 const CRITICAL_CONTEXT_STOP_PERCENT = 95;
 const RALPLAN_TERMINAL_PHASES = new Set([
@@ -629,9 +627,9 @@ const RALPLAN_TERMINAL_PHASES = new Set([
 ]);
 
 /**
- * Read the tail of a potentially large transcript file.
- * Architect approval/rejection markers appear near the end of the conversation,
- * so reading only the last N bytes avoids loading megabyte-sized transcripts.
+ * 读取可能很大的 transcript 文件的尾部。
+ * 架构师批准/拒绝标记出现在对话末尾附近，
+ * 因此只读取最后 N 字节可避免加载兆字节级 transcript。
  */
 function readTranscriptTail(transcriptPath: string): string {
   const size = statSync(transcriptPath).size;
@@ -869,7 +867,7 @@ function isAwaitingConfirmation(state: unknown): boolean {
 }
 
 /**
- * Check for architect approval in session transcript
+ * 检查会话 transcript 中的架构师批准
  */
 function checkArchitectApprovalInTranscript(
   sessionId: string,
@@ -896,7 +894,7 @@ function checkArchitectApprovalInTranscript(
 }
 
 /**
- * Check for architect rejection in session transcript
+ * 检查会话 transcript 中的架构师拒绝
  */
 function checkArchitectRejectionInTranscript(sessionId: string): { rejected: boolean; feedback: string } {
   const claudeDir = getClaudeConfigDir();
@@ -923,8 +921,8 @@ function checkArchitectRejectionInTranscript(sessionId: string): { rejected: boo
 }
 
 /**
- * Check Ralph Loop state and determine if it should continue
- * Now includes Architect verification for completion claims
+ * 检查 Ralph 循环状态并判断是否应继续
+ * 现包含对完成声明的架构师校验
  */
 async function checkRalphLoop(
   sessionId?: string,
@@ -941,17 +939,14 @@ async function checkRalphLoop(
     return null;
   }
 
-  // Session isolation. `readRalphState()` already enforces the lenient form
-  // ("only reject when BOTH sides have defined session_ids that differ"),
-  // so by the time we get here, the state file is either explicitly bound
-  // to this session or has no session_id at all (legacy/unbound state).
+  // 会话隔离。`readRalphState()` 已强制宽松形式
+  // （"仅当两侧都有已定义 session_id 且不同时才拒绝"），
+  // 因此到这里时，状态文件要么显式绑定到本会话，要么没有 session_id（遗留/未绑定状态）。
   //
-  // The previous strict check `state.session_id !== sessionId` rejected the
-  // legitimate case where one side is undefined and the other is a UUID,
-  // which broke iteration counting on every Ralph loop where the state file
-  // lacked a session_id (or the Stop hook lost it). Symptom: ralph:1/100
-  // stuck forever in the HUD even on multi-hour sessions where the Stop
-  // hook fired many times.
+  // 之前的严格检查 `state.session_id !== sessionId` 会拒绝一侧未定义、
+  // 另一侧为 UUID 的合法情形，导致每个 Ralph 循环的迭代计数都被打断
+  // （状态文件缺 session_id 或 Stop 钩子丢失了它）。症状：ralph:1/100
+  // 在 HUD 中永远卡住，即使 Stop 钩子在多小时的会话中触发了多次。
   if (state.session_id && sessionId && state.session_id !== sessionId) {
     return null;
   }
@@ -960,8 +955,8 @@ async function checkRalphLoop(
     return null;
   }
 
-  // Explicit cancellation window: never re-arm Ralph internals while cancel is in progress.
-  // Uses cached cancel signal from checkPersistentModes to avoid TOCTOU re-reads.
+  // 显式取消窗口：cancel 进行中时绝不重新武装 Ralph 内部逻辑。
+  // 使用 checkPersistentModes 缓存的取消信号以避免 TOCTOU 重读。
   if (cancelInProgress) {
     return {
       shouldBlock: false,
@@ -970,8 +965,8 @@ async function checkRalphLoop(
     };
   }
 
-  // Self-heal linked ultrawork: if ralph is active and marked linked but ultrawork
-  // state is missing, recreate it so stop reinforcement cannot silently disappear.
+  // 自愈关联的 ultrawork：若 ralph 处于活动且标记为关联，但 ultrawork 状态缺失，
+  // 则重建它，使 stop 强化不会静默消失。
   if (state.linked_ultrawork) {
     const ultraworkState = readUltraworkState(workingDir, sessionId);
     if (!ultraworkState?.active) {
@@ -990,13 +985,13 @@ async function checkRalphLoop(
     }
   }
 
-  // Check team pipeline state coordination
-  // When team mode is active alongside ralph, respect team phase transitions
+  // 检查 team pipeline 状态协调
+  // 当 team 模式与 ralph 同时活动时，尊重 team 阶段转换
   const teamState = readTeamPipelineState(workingDir, sessionId);
   if (teamState && teamState.active !== undefined && !isStaleState(teamState)) {
     const teamPhase: TeamPipelinePhase = teamState.phase;
 
-    // If team pipeline reached a terminal state, ralph should also complete
+    // 若 team pipeline 已达终态，ralph 也应完成
     if (teamPhase === 'complete') {
       clearRalphState(workingDir, sessionId);
       clearVerificationState(workingDir, sessionId);
@@ -1029,13 +1024,13 @@ async function checkRalphLoop(
     }
   }
 
-  // Check for existing verification state (architect verification in progress)
+  // 检查已有的校验状态（架构师校验进行中）
   let verificationState = readVerificationState(workingDir, sessionId);
 
   if (verificationState?.pending) {
-    // Verification is in progress - check for architect's response
+    // 校验进行中——检查架构师的响应
     if (sessionId) {
-      // Check for architect approval
+      // 检查架构师批准
       if (checkArchitectApprovalInTranscript(sessionId, verificationState)) {
         if (verificationState.verification_scope === 'story' && verificationState.story_id) {
           markStoryArchitectVerified(workingDir, verificationState.story_id, undefined, sessionId);
@@ -1049,8 +1044,8 @@ async function checkRalphLoop(
           }
           verificationState = readVerificationState(workingDir, sessionId);
         } else {
-          // Architect approved - truly complete
-          // Also deactivate ultrawork if it was active alongside ralph
+          // 架构师已批准——真正完成
+          // 若 ultrawork 与 ralph 同时活动，一并停用
           clearVerificationState(workingDir, sessionId);
           clearRalphState(workingDir, sessionId);
           deactivateUltrawork(workingDir, sessionId);
@@ -1067,13 +1062,13 @@ async function checkRalphLoop(
         }
       }
 
-      // Check for architect rejection
+      // 检查架构师拒绝
       const rejection = checkArchitectRejectionInTranscript(sessionId);
       if (verificationState && rejection.rejected) {
         if (verificationState.verification_scope === 'story' && verificationState.story_id) {
           markStoryIncomplete(workingDir, verificationState.story_id, rejection.feedback, sessionId);
         }
-        // Architect rejected - continue with feedback
+        // 架构师已拒绝——带反馈继续
         recordArchitectFeedback(workingDir, false, rejection.feedback, sessionId);
         const updatedVerification = readVerificationState(workingDir, sessionId);
         verificationState = updatedVerification;
@@ -1098,7 +1093,7 @@ async function checkRalphLoop(
         ? getStory(workingDir, verificationState.story_id, sessionId) ?? undefined
         : undefined;
 
-      // Verification still pending - remind to run the selected reviewer
+      // 校验仍在进行——提醒运行所选审查者
       const verificationPrompt = getArchitectVerificationPrompt(verificationState, storyUnderReview);
       return {
         shouldBlock: true,
@@ -1138,8 +1133,8 @@ async function checkRalphLoop(
     };
   }
 
-  // Check for PRD-based completion (all stories have passes: true and are architect-verified).
-  // Enter a verification phase instead of clearing Ralph immediately.
+  // 检查基于 PRD 的完成（所有 story 都标记 passes: true 且已通过架构师校验）。
+  // 进入校验阶段而非立即清除 Ralph。
   if (prdStatus.hasPrd && prdStatus.allComplete) {
     const startedVerification = startVerification(
       workingDir,
@@ -1160,12 +1155,11 @@ async function checkRalphLoop(
     };
   }
 
-  // Hard max: check iteration count directly against the security limit,
-  // independent of max_iterations, so it cannot be bypassed by a high
-  // initial max_iterations value.
+  // 硬上限：直接对照安全限制检查迭代次数，
+  // 独立于 max_iterations，使其无法被较高的初始 max_iterations 绕过。
   const hardMax = getHardMaxIterations();
   if (hardMax > 0 && state.iteration >= hardMax) {
-    // Hard limit reached — auto-disable to prevent unbounded execution
+    // 达到硬上限——自动停用以防止无界执行
     state.active = false;
     if (!shouldWriteStateBack(ralphStatePath)) {
       return {
@@ -1183,8 +1177,8 @@ async function checkRalphLoop(
     };
   }
 
-  // Check max iterations — extend limit so user-visible cancellation
-  // remains the only explicit termination path.
+  // 检查最大迭代次数——延长上限，使用户可见的取消
+  // 仍是唯一的显式终止路径。
   if (state.iteration >= state.max_iterations) {
     state.max_iterations += 10;
     if (!shouldWriteStateBack(ralphStatePath)) {
@@ -1197,17 +1191,17 @@ async function checkRalphLoop(
     writeRalphState(workingDir, state, sessionId);
   }
 
-  // Read tool error before generating message
+  // 生成消息前读取工具错误
   const toolError = readLastToolError(workingDir);
   const errorGuidance = getToolErrorRetryGuidance(toolError);
 
-  // Increment and continue
+  // 递增并继续
   const newState = incrementRalphIteration(workingDir, sessionId);
   if (!newState) {
     return null;
   }
 
-  // Get PRD context for injection
+  // 获取 PRD 上下文用于注入
   const ralphContext = getRalphContext(workingDir, sessionId);
   const activePrdPath = prdStatus.hasPrd ? findPrdPath(workingDir, sessionId) : null;
   const prdInstruction = prdStatus.hasPrd
@@ -1248,7 +1242,7 @@ ${newState.prompt ? `Original task: ${truncatePromptForEcho(newState.prompt)}` :
 }
 
 // ---------------------------------------------------------------------------
-// Stop Breaker helpers (shared by team pipeline and ralplan)
+// Stop Breaker 辅助函数（team pipeline 与 ralplan 共用）
 // ---------------------------------------------------------------------------
 
 interface StopBreakerState {
@@ -1289,21 +1283,21 @@ function writeStopBreaker(directory: string, name: string, count: number, sessio
     const data: StopBreakerState = { count, updated_at: new Date().toISOString() };
     atomicWriteJsonSync(breakerPath, data);
   } catch {
-    // Ignore write errors — fail-open
+    // 忽略写入错误——fail-open
   }
 }
 
 // ---------------------------------------------------------------------------
-// Team Pipeline enforcement (standalone team mode)
+// Team Pipeline 强制（独立 team 模式）
 // ---------------------------------------------------------------------------
 
 const TEAM_PIPELINE_STOP_BLOCKER_MAX = 20;
 const TEAM_PIPELINE_STOP_BLOCKER_TTL_MS = 5 * 60 * 1000; // 5 min
 
 /**
- * Check Team Pipeline state for standalone team mode enforcement.
- * When team runs WITHOUT ralph, this provides the stop-hook blocking.
- * When team runs WITH ralph, checkRalphLoop() handles it (higher priority).
+ * 检查 Team Pipeline 状态以进行独立 team 模式强制。
+ * team 不带 ralph 运行时，由此提供 stop 钩子阻断。
+ * team 带 ralph 运行时，由 checkRalphLoop() 处理（更高优先级）。
  */
 async function checkTeamPipeline(
   sessionId?: string,
@@ -1327,10 +1321,10 @@ async function checkTeamPipeline(
   }
 
 
-  // Session isolation: readTeamPipelineState already checks session_id match
-  // and returns null on mismatch (team-pipeline/state.ts:81)
+  // 会话隔离：readTeamPipelineState 已检查 session_id 匹配
+  // 不匹配时返回 null（team-pipeline/state.ts:81）
 
-  // Cancel-in-progress bypass
+  // 取消进行中则绕过
   if (cancelInProgress) {
     return {
       shouldBlock: false,
@@ -1339,8 +1333,8 @@ async function checkTeamPipeline(
     };
   }
 
-  // Read phase from canonical team-pipeline/current_phase shape first,
-  // then fall back to bridge.ts / legacy stage fields for compatibility.
+  // 先从规范的 team-pipeline/current_phase 形态读取阶段，
+  // 再回退到 bridge.ts / 遗留 stage 字段以保持兼容。
   const rawPhase = teamState.phase
     ?? (teamState as unknown as Record<string, unknown>).current_phase
     ?? (teamState as unknown as Record<string, unknown>).currentStage
@@ -1348,13 +1342,13 @@ async function checkTeamPipeline(
     ?? (teamState as unknown as Record<string, unknown>).stage;
 
   if (typeof rawPhase !== 'string') {
-    // Fail-open but still claim mode='team' so bridge.ts defers to this result
-    // instead of running its own team enforcement (which could falsely block).
+    // fail-open，但仍声明 mode='team'，使 bridge.ts 延用此结果
+    // 而非运行自己的 team 强制（可能误阻断）。
     return { shouldBlock: false, message: '', mode: 'team' };
   }
   const phase = rawPhase.trim().toLowerCase();
 
-  // Terminal phases — allow stop
+  // 终态阶段——允许 stop
   if (phase === 'complete' || phase === 'completed' || phase === 'failed' || phase === 'cancelled' || phase === 'canceled' || phase === 'cancel') {
     writeStopBreaker(workingDir, 'team-pipeline', 0, sessionId);
     return {
@@ -1364,15 +1358,15 @@ async function checkTeamPipeline(
     };
   }
 
-  // Fail-open: only known active phases should block.
-  // Missing, malformed, or unknown phases do not block (safety principle).
+  // fail-open：仅已知活动阶段才阻断。
+  // 缺失、畸形或未知阶段不阻断（安全原则）。
   const KNOWN_ACTIVE_PHASES = new Set(['team-plan', 'team-prd', 'team-exec', 'team-verify', 'team-fix']);
   if (!KNOWN_ACTIVE_PHASES.has(phase)) {
-    // Still claim mode='team' so bridge.ts defers
+    // 仍声明 mode='team'，使 bridge.ts 延用
     return { shouldBlock: false, message: '', mode: 'team' };
   }
 
-  // Status-level terminal check (bridge.ts format uses `status` field)
+  // 状态级终态检查（bridge.ts 格式使用 `status` 字段）
   const rawStatus = (teamState as unknown as Record<string, unknown>).status;
   const status = typeof rawStatus === 'string' ? rawStatus.trim().toLowerCase() : null;
   if (status === 'cancelled' || status === 'canceled' || status === 'cancel' || status === 'failed' || status === 'complete' || status === 'completed') {
@@ -1384,7 +1378,7 @@ async function checkTeamPipeline(
     };
   }
 
-  // Cancel requested on team state — allow stop
+  // team 状态上请求了取消——允许 stop
   if (teamState.cancel?.requested) {
     writeStopBreaker(workingDir, 'team-pipeline', 0, sessionId);
     return {
@@ -1394,7 +1388,7 @@ async function checkTeamPipeline(
     };
   }
 
-  // Circuit breaker
+  // 断路器
   const breakerCount = readStopBreaker(workingDir, 'team-pipeline', sessionId, TEAM_PIPELINE_STOP_BLOCKER_TTL_MS) + 1;
   if (breakerCount > TEAM_PIPELINE_STOP_BLOCKER_MAX) {
     writeStopBreaker(workingDir, 'team-pipeline', 0, sessionId);
@@ -1431,7 +1425,7 @@ When done, run \`/wise:cancel\` to cleanly exit.
 }
 
 // ---------------------------------------------------------------------------
-// Ralplan enforcement (standalone consensus planning)
+// Ralplan 强制（独立共识规划）
 // ---------------------------------------------------------------------------
 
 const RALPLAN_STOP_BLOCKER_MAX = 30;
@@ -1487,8 +1481,8 @@ async function checkAutoresearch(
   let stateSourceSessionId = sessionId;
   let state = readModeState<AutoresearchStopState>('autoresearch', workingDir, sessionId);
 
-  // Autoresearch predates session-scoped state files. Preserve strict sessioned reads
-  // first, then allow a narrow legacy/shared bridge only for matching or unbound state.
+  // Autoresearch 早于会话级状态文件。先保留严格会话化读取，
+  // 再仅对匹配或未绑定的状态放行狭窄的遗留/共享桥接。
   if (!state && sessionId) {
     const legacyState = readModeState<AutoresearchStopState>('autoresearch', workingDir);
     if (!legacyState?.session_id || legacyState.session_id === sessionId) {
@@ -1605,9 +1599,9 @@ function getNormalizedRalplanPhase(state: Record<string, unknown> | null | undef
 }
 
 /**
- * Check Ralplan state for standalone ralplan mode enforcement.
- * Ralplan state is written by the MCP state_write tool.
- * `active`, `session_id`, and the normalized phase/status fields are used for blocking decisions.
+ * 检查 Ralplan 状态以进行独立 ralplan 模式强制。
+ * Ralplan 状态由 MCP state_write 工具写入。
+ * 阻断决策使用 `active`、`session_id` 以及规范化后的 phase/status 字段。
  */
 async function checkRalplan(
   sessionId?: string,
@@ -1624,13 +1618,13 @@ async function checkRalplan(
     ),
   );
 
-  // Session-scoped ralplan state can legitimately omit timestamps in CI.
-  // Only apply stale-state suppression when a freshness timestamp exists.
+  // 会话级 ralplan 状态在 CI 中可以合法省略时间戳。
+  // 仅当存在新鲜度时间戳时才应用过期状态抑制。
   if (!state || !state.active || (hasTimestampFields && isStaleState(state))) {
     return null;
   }
 
-  // Session isolation
+  // 会话隔离
   if (sessionId && state.session_id && state.session_id !== sessionId) {
     return null;
   }
@@ -1639,7 +1633,7 @@ async function checkRalplan(
     return null;
   }
 
-  // Terminal phase detection — allow stop when ralplan has completed
+  // 终态阶段检测——ralplan 完成时允许 stop
   const currentPhase = getNormalizedRalplanPhase(state as unknown as Record<string, unknown>);
   if (currentPhase && RALPLAN_TERMINAL_PHASES.has(currentPhase)) {
     writeStopBreaker(workingDir, 'ralplan', 0, sessionId);
@@ -1647,7 +1641,7 @@ async function checkRalplan(
   }
 
 
-  // Cancel-in-progress bypass
+  // 取消进行中则绕过
   if (cancelInProgress) {
     return {
       shouldBlock: false,
@@ -1656,11 +1650,10 @@ async function checkRalplan(
     };
   }
 
-  // Orchestrators are allowed to go idle while delegated work is still active,
-  // but the raw running-agent count can lag behind the real lifecycle because
-  // SubagentStop/post-tool-use bookkeeping lands after the stop event. Only
-  // trust the bypass when the tracker itself was updated recently enough to
-  // look live; otherwise fail closed and keep consensus enforcement active.
+  // 编排器在委派工作仍活动时允许空闲，
+  // 但原始运行中代理计数可能滞后于真实生命周期，因为
+  // SubagentStop/post-tool-use 记账发生在 stop 事件之后。仅当
+  // 跟踪器自身更新足够新、看起来仍存活时才信任此绕过；否则 fail closed 并保持共识强制活动。
   const activeAgents = getActiveAgentSnapshot(workingDir);
   const activeAgentStateUpdatedAt = activeAgents.lastUpdatedAt ? new Date(activeAgents.lastUpdatedAt).getTime() : NaN;
   const hasFreshActiveAgentState =
@@ -1676,14 +1669,13 @@ async function checkRalplan(
     };
   }
 
-  // Circuit breaker
+  // 断路器
   const breakerCount = readStopBreaker(workingDir, 'ralplan', sessionId, RALPLAN_STOP_BLOCKER_TTL_MS) + 1;
   if (breakerCount > RALPLAN_STOP_BLOCKER_MAX) {
     writeStopBreaker(workingDir, 'ralplan', 0, sessionId);
 
-    // Deactivate the stale ralplan state so a later Stop event cannot start a
-    // brand-new reinforcement cycle (30/30 -> 1/30) after the workflow has
-    // already exhausted its breaker budget.
+    // 停用过期的 ralplan 状态，使后续 Stop 事件无法在工作流已耗尽
+    // 断路器预算后开启全新的强化循环（30/30 -> 1/30）。
     (state as unknown as Record<string, unknown>).active = false;
     (state as unknown as Record<string, unknown>).deactivated_reason = 'stop_breaker_exhausted';
     (state as unknown as Record<string, unknown>).completed_at = new Date().toISOString();
@@ -1718,7 +1710,7 @@ When done, run \`/wise:cancel\` to cleanly exit.
 }
 
 /**
- * Check Ultrawork state and determine if it should reinforce
+ * 检查 Ultrawork 状态并判断是否应强化
  */
 async function checkUltrawork(
   sessionId?: string,
@@ -1733,10 +1725,9 @@ async function checkUltrawork(
     return null;
   }
 
-  // Session isolation. `readUltraworkState()` already enforces the lenient
-  // form ("only reject when BOTH sides have defined session_ids that
-  // differ"). The previous strict check rejected legitimate cases where
-  // one side was undefined — same root cause as the ralph counter bug.
+  // 会话隔离。`readUltraworkState()` 已强制宽松形式
+  // （"仅当两侧都有已定义 session_id 且不同时才拒绝"）。之前的严格检查
+  // 会拒绝一侧未定义的合法情形——与 ralph 计数 bug 同一根因。
   if (state.session_id && sessionId && state.session_id !== sessionId) {
     return null;
   }
@@ -1745,7 +1736,7 @@ async function checkUltrawork(
     return null;
   }
 
-  // Uses cached cancel signal from checkPersistentModes to avoid TOCTOU re-reads.
+  // 使用 checkPersistentModes 缓存的取消信号以避免 TOCTOU 重读。
   if (cancelInProgress) {
     return {
       shouldBlock: false,
@@ -1754,9 +1745,9 @@ async function checkUltrawork(
     };
   }
 
-  // If all tracked work is complete, auto-deactivate ultrawork and allow exit.
-  // Issue #2419: otherwise the Stop hook can keep blocking even after task
-  // completion, leaving ultrawork active until manual /cancel or session-end.
+  // 若所有跟踪的工作都已完成，自动停用 ultrawork 并允许退出。
+  // Issue #2419：否则 Stop 钩子可能在任务完成后仍持续阻断，
+  // 使 ultrawork 保持活动直到手动 /cancel 或会话结束。
   if (!_hasIncompleteTodos) {
     deactivateUltrawork(workingDir, sessionId);
     return {
@@ -1766,7 +1757,7 @@ async function checkUltrawork(
     };
   }
 
-  // Enforce hard max iterations for ultrawork (mirrors ralph enforcement).
+  // 对 ultrawork 强制硬上限迭代次数（与 ralph 强制一致）。
   const hardMax = getHardMaxIterations();
   if (hardMax > 0 && state.reinforcement_count >= hardMax) {
     deactivateUltrawork(workingDir, sessionId);
@@ -1778,8 +1769,8 @@ async function checkUltrawork(
     };
   }
 
-  // Reinforce ultrawork mode while incomplete work remains.
-  // This prevents false stops from bash errors or transient failures mid-task.
+  // 在仍有未完成工作时强化 ultrawork 模式。
+  // 防止任务中途因 bash 错误或瞬时故障导致的误停止。
   const newState = incrementReinforcement(workingDir, sessionId);
   if (!newState) {
     return null;
@@ -1798,8 +1789,8 @@ async function checkUltrawork(
 }
 
 /**
- * Check for incomplete todos (baseline enforcement)
- * Includes max-attempts counter to prevent infinite loops when agent is stuck
+ * 检查未完成的 todo（基线强制）
+ * 含最大尝试计数器，防止代理卡住时的无限循环
  */
 async function _checkTodoContinuation(
   sessionId?: string,
@@ -1808,22 +1799,22 @@ async function _checkTodoContinuation(
   const result = await checkIncompleteTodos(sessionId, directory);
 
   if (result.count === 0) {
-    // Reset counter when todos are cleared
+    // todo 清空时重置计数器
     if (sessionId) {
       resetTodoContinuationAttempts(sessionId);
     }
     return null;
   }
 
-  // Track continuation attempts to prevent infinite loops
+  // 跟踪 continuation 尝试以防止无限循环
   const attemptCount = sessionId ? trackTodoContinuationAttempt(sessionId) : 1;
 
-  // Use dynamic label based on source (Tasks vs todos)
+  // 基于来源使用动态标签（Tasks vs todos）
   const _sourceLabel = result.source === 'task' ? 'Tasks' : 'todos';
   const sourceLabelLower = result.source === 'task' ? 'tasks' : 'todos';
 
   if (attemptCount > MAX_TODO_CONTINUATION_ATTEMPTS) {
-    // Too many attempts - agent appears stuck, allow stop but warn
+    // 尝试过多——代理似乎卡住，允许 stop 但告警
     return {
       shouldBlock: false,
       message: `[TODO CONTINUATION LIMIT] Attempted ${MAX_TODO_CONTINUATION_ATTEMPTS} continuations without progress. ${result.count} ${sourceLabelLower} remain incomplete. Consider reviewing the stuck ${sourceLabelLower} or asking the user for guidance.`,
@@ -1868,20 +1859,19 @@ ${TODO_CONTINUATION_PROMPT}
 }
 
 /**
- * Main persistent mode checker
- * Checks all persistent modes in priority order and returns appropriate action
+ * 主持久模式检查器
+ * 按优先级顺序检查所有持久模式并返回相应动作
  */
 export async function checkPersistentModes(
   sessionId?: string,
   directory?: string,
-  stopContext?: StopContext  // NEW: from todo-continuation types
+  stopContext?: StopContext  // 新增：来自 todo-continuation 类型
 ): Promise<PersistentModeResult> {
   const workingDir = resolveToWorktreeRoot(directory);
 
-  // Hard bypass invariants: never enforce stop continuation under any of these
-  // environment-level kill switches. bridge.ts also guards DISABLE_WISE and
-  // WISE_SKIP_HOOKS at hook-entry, but we re-check here so direct callers and
-  // nested helpers (team workers, tests) observe the same contract.
+  // 硬 bypass 不变量：在任何这些环境级 kill switch 下绝不强制 stop continuation。
+  // bridge.ts 也在钩子入口守护 DISABLE_WISE 和 WISE_SKIP_HOOKS，但此处再次检查，
+  // 使直接调用方与嵌套辅助（team worker、测试）遵守同一契约。
   if (
     process.env.DISABLE_WISE === '1' ||
     process.env.DISABLE_WISE === 'true' ||
@@ -1897,16 +1887,14 @@ export async function checkPersistentModes(
     return { shouldBlock: false, message: '', mode: 'none' };
   }
 
-  // Best-effort: keep the workflow-slot ledger aligned with terminal mode
-  // state before using it for stop-gating authority. This both prunes old
-  // tombstones and tombstones live slots whose autopilot/Ralph/ralplan mode
-  // state already reached a terminal/inactive state through a path other than
-  // the Skill PostToolUse completion hook.
+  // 尽力而为：在使用工作流槽账本作为 stop-gating 权威前，使其与终态模式状态对齐。
+  // 这既修剪旧墓碑，也为已通过 Skill PostToolUse 完成钩子以外的路径达到终态/非活动状态的
+  // autopilot/Ralph/ralplan 模式状态的活跃槽打墓碑。
   await reconcileTerminalWorkflowSlots(workingDir, sessionId);
 
-  // CRITICAL: Never block context-limit/critical-context stops.
-  // Blocking these causes a deadlock where Claude Code cannot compact or exit.
-  // See: https://github.com/wise-claw/wise/issues/213
+  // 关键：绝不阻断 context-limit/critical-context stop。
+  // 阻断这些会造成 Claude Code 无法压缩或退出的死锁。
+  // 参见：https://github.com/wise-claw/wise/issues/213
   if (isCriticalContextStop(stopContext)) {
     return {
       shouldBlock: false,
@@ -1915,9 +1903,9 @@ export async function checkPersistentModes(
     };
   }
 
-  // Explicit /cancel paths must always bypass continuation re-enforcement.
-  // This prevents cancel races where stop-hook persistence can re-arm Ralph/Ultrawork
-  // (self-heal, max-iteration extension, reinforcement) during shutdown.
+  // 显式 /cancel 路径必须始终绕过 continuation 重新强化。
+  // 防止关闭期间 stop 钩子持久化重新武装 Ralph/Ultrawork
+  // （自愈、最大迭代延长、强化）的取消竞态。
   if (isExplicitCancelCommand(stopContext)) {
     return {
       shouldBlock: false,
@@ -1926,8 +1914,8 @@ export async function checkPersistentModes(
     };
   }
 
-  // Session-scoped cancel signal from state_clear during /cancel flow.
-  // Cache once and pass to sub-functions to avoid TOCTOU re-reads (issue #1058).
+  // /cancel 流程中来自 state_clear 的会话级取消信号。
+  // 缓存一次并传给子函数以避免 TOCTOU 重读（issue #1058）。
   const cancelInProgress = isSessionCancelInProgress(workingDir, sessionId);
   if (cancelInProgress) {
     return {
@@ -1937,7 +1925,7 @@ export async function checkPersistentModes(
     };
   }
 
-  // Check for user abort - skip all continuation enforcement
+  // 检查用户中止——跳过所有 continuation 强制
   if (isUserAbort(stopContext)) {
     return {
       shouldBlock: false,
@@ -1946,11 +1934,11 @@ export async function checkPersistentModes(
     };
   }
 
-  // CRITICAL: Never block rate-limit stops.
-  // When the API returns 429 / quota-exhausted, Claude Code stops the session.
-  // Blocking these stops creates an infinite retry loop: the hook injects a
-  // continuation prompt → Claude hits the rate limit again → stops again → loops.
-  // Fix for: https://github.com/wise-claw/wise/issues/777
+  // 关键：绝不阻断 rate-limit stop。
+  // API 返回 429 / 配额耗尽时，Claude Code 停止会话。
+  // 阻断这些 stop 会造成无限重试循环：钩子注入 continuation prompt →
+  // Claude 再次触发限流 → 再次 stop → 循环。
+  // 修复：https://github.com/wise-claw/wise/issues/777
   if (isRateLimitStop(stopContext)) {
     return {
       shouldBlock: false,
@@ -1959,10 +1947,10 @@ export async function checkPersistentModes(
     };
   }
 
-  // CRITICAL: Never block authentication/authorization failures.
-  // Expired OAuth/unauthorized responses can otherwise trigger an infinite
-  // continuation loop (especially with staged Team mode prompts).
-  // Fix for: issue #1308
+  // 关键：绝不阻断认证/授权失败。
+  // 过期的 OAuth/未授权响应否则可能触发无限 continuation 循环
+  // （尤其配合分阶段 Team 模式 prompt）。
+  // 修复：issue #1308
   if (isAuthenticationError(stopContext)) {
     return {
       shouldBlock: false,
@@ -1971,11 +1959,10 @@ export async function checkPersistentModes(
     };
   }
 
-  // CRITICAL: Never block scheduled wake-up resumptions.
-  // Native ScheduleWakeup-triggered `/loop` turns are resumptions, not signals
-  // to continue or clean up a prior persistent mode. Re-enforcing here can
-  // inject `/cancel` guidance from stale state and cause the scheduled turn to
-  // cancel itself before the real work runs.
+  // 关键：绝不阻断计划的 wakeup 恢复。
+  // 原生 ScheduleWakeup 触发的 `/loop` 轮次是恢复，而非继续或
+  // 清理先前持久模式的信号。此处重新强化可能从过期状态注入
+  // `/cancel` 指引，导致计划轮次在真正工作运行前自我取消。
   if (isScheduledWakeupStop(stopContext)) {
     return {
       shouldBlock: false,
@@ -1984,13 +1971,12 @@ export async function checkPersistentModes(
     };
   }
 
-  // Oversized tool outputs can cause Claude Code to end the current turn after
-  // redirecting the payload to a `tool-results/*.txt` file pointer. That stop is
-  // not a real idle/stall signal: injecting a visible Ralph/Ultrawork/todo
-  // continuation banner immediately after the redirect spams the transcript
-  // while the agent is still mid-task. Suppress only a small consecutive window
-  // of such redirects; if redirects keep repeating, fall through to the normal
-  // persistence checks so genuine stalls still get re-enforced.
+  // 过大的工具输出可能导致 Claude Code 在将载荷重定向到
+  // `tool-results/*.txt` 文件指针后结束当前轮次。该 stop 并非真正的
+  // 空闲/停滞信号：在重定向后立即注入可见的 Ralph/Ultrawork/todo
+  // continuation 横幅会在代理仍任务中时刷屏 transcript。仅抑制
+  // 此类重定向的一个小连续窗口；若重定向持续重复，则回落到常规
+  // 持久化检查，使真正的停滞仍得到重新强化。
   if (isOversizeToolResultRedirectStop(stopContext)) {
     const redirectStopCount = readStopBreaker(
       workingDir,
@@ -2011,9 +1997,9 @@ export async function checkPersistentModes(
     writeStopBreaker(workingDir, 'oversize-tool-result-redirect', 0, sessionId);
   }
 
-  // If this session owns pending async work, quiescence is intentional: Claude
-  // Code will notify on background completion or resume via ScheduleWakeup.
-  // Do not convert that waiting window into a Ralph/persistent-mode stall loop.
+  // 若本会话拥有待处理的异步工作，静默是有意的：Claude
+  // Code 会在后台完成时通知或通过 ScheduleWakeup 恢复。
+  // 不要将该等待窗口转成 Ralph/持久模式停滞循环。
   if (hasPendingOwnedAsyncWork(workingDir, sessionId)) {
     return {
       shouldBlock: false,
@@ -2022,17 +2008,17 @@ export async function checkPersistentModes(
     };
   }
 
-  // First, check for incomplete todos (we need this info for ultrawork)
-  // Note: stopContext already checked above, but pass it for consistency
+  // 首先检查未完成的 todo（ultrawork 需要此信息）
+  // 注意：stopContext 已在上面检查，但为一致性仍传入
   const todoResult = await checkIncompleteTodos(sessionId, workingDir, stopContext);
   const hasIncompleteTodos = todoResult.count > 0;
 
-  // Consult the workflow ledger ONCE before direct mode-priority shortcuts.
-  // `resolveAuthoritativeWorkflowSkill()` returns the root of the live chain
-  // (autopilot in `autopilot → ralph`), so stop enforcement bubbles up to the
-  // live parent rather than the child currently executing beneath it.
-  // Tombstoned slots are tracked separately so stale mode files from crashed
-  // sessions don't re-arm priority checks until TTL prune or fresh activation.
+  // 在直接模式优先级捷径前查询一次工作流账本。
+  // `resolveAuthoritativeWorkflowSkill()` 返回活动链的根
+  // （`autopilot → ralph` 中的 autopilot），使 stop 强制上溯到
+  // 活动父级，而非当前在其下执行的子级。
+  // 已打墓碑的槽单独跟踪，使崩溃会话的过期模式文件在 TTL 修剪或
+  // 新鲜激活前不会重新武装优先级检查。
   const tombstonedWorkflowModes = new Set<string>();
   let workflowAuthority: string | null = null;
   try {
@@ -2045,16 +2031,15 @@ export async function checkPersistentModes(
       if (slot.completed_at) tombstonedWorkflowModes.add(name);
     }
   } catch {
-    // Ledger unavailable — fall back to legacy mode-file detection.
+    // 账本不可用——回退到遗留模式文件检测。
   }
 
-  // Authority-first ordering for nested workflow runs.
+  // 嵌套工作流运行的权威优先排序。
   //
-  // `resolveAuthoritativeWorkflowSkill()` returns the root of the live chain.
-  // In `autopilot → ralph`, autopilot is the authoritative parent while ralph
-  // runs beneath it — stop enforcement must resolve to the live parent so its
-  // iteration accounting keeps advancing. The legacy ordering (ralph > autopilot)
-  // still applies whenever the ledger is silent or authority already is ralph.
+  // `resolveAuthoritativeWorkflowSkill()` 返回活动链的根。
+  // 在 `autopilot → ralph` 中，autopilot 是权威父级，ralph
+  // 在其下运行——stop 强制必须解析到活动父级，使其迭代记账持续推进。
+  // 账本沉默或权威已是 ralph 时，遗留排序（ralph > autopilot）仍适用。
   const autopilotPriorityFirst = workflowAuthority === 'autopilot';
 
   const runAutopilotPriority = async (): Promise<PersistentModeResult | null> => {
@@ -2082,10 +2067,9 @@ export async function checkPersistentModes(
   };
 
   const runRalphPriority = async (): Promise<PersistentModeResult | null> => {
-    // Skip when the authoritative registry says Ralph is inactive. This keeps
-    // Stop enforcement aligned with state_list_active and ignores stale
-    // restored/cache artifacts (including tombstoned workflow slots) after
-    // cancel/state_clear has made the registry empty.
+    // 当权威注册表表明 Ralph 非活动时跳过。使 Stop 强制与
+    // state_list_active 对齐，并忽略 cancel/state_clear 使注册表为空后的
+    // 过期恢复/缓存产物（含已打墓碑的工作流槽）。
     if (tombstonedWorkflowModes.has('ralph') || !isModeActive('ralph', workingDir, sessionId)) return null;
     return checkRalphLoop(sessionId, workingDir, cancelInProgress);
   };
@@ -2102,18 +2086,18 @@ export async function checkPersistentModes(
     if (autopilotResult) return autopilotResult;
   }
 
-  // Priority 1.6: Autoresearch (stateful single-mission runtime)
+  // 优先级 1.6：Autoresearch（有状态单任务运行时）
   const autoresearchResult = await checkAutoresearch(sessionId, workingDir, cancelInProgress);
   if (autoresearchResult) {
     return autoresearchResult;
   }
 
-  // Priority 1.7: Ralplan (standalone consensus planning)
-  // Ralplan consensus loops (Planner/Architect/Critic) need hard-blocking.
-  // When ralplan runs under ralph, checkRalphLoop() handles it (Priority 1).
-  // Return ANY non-null result (including circuit breaker shouldBlock=false with message).
-  // Suppressed when the ralplan slot is tombstoned so noisy re-handoff stops
-  // on completion until the tombstone TTL expires or a fresh slot reopens.
+  // 优先级 1.7：Ralplan（独立共识规划）
+  // Ralplan 共识循环（Planner/Architect/Critic）需要硬阻断。
+  // ralplan 在 ralph 下运行时由 checkRalphLoop() 处理（优先级 1）。
+  // 返回任意非 null 结果（含断路器 shouldBlock=false 带 message）。
+  // ralplan 槽已打墓碑时抑制，使完成时吵闹的重新交接停止，
+  // 直到墓碑 TTL 过期或新槽重新开启。
   if (!tombstonedWorkflowModes.has('ralplan')) {
     const ralplanResult = await checkRalplan(sessionId, workingDir, cancelInProgress);
     if (ralplanResult) {
@@ -2121,10 +2105,10 @@ export async function checkPersistentModes(
     }
   }
 
-  // Priority 1.8: Team Pipeline (standalone team mode)
-  // When team runs without ralph, this provides stop-hook blocking.
-  // When team runs with ralph, checkRalphLoop() handles it (Priority 1).
-  // Return ANY non-null result (including circuit breaker shouldBlock=false with message).
+  // 优先级 1.8：Team Pipeline（独立 team 模式）
+  // team 不带 ralph 运行时由此提供 stop 钩子阻断。
+  // team 带 ralph 运行时由 checkRalphLoop() 处理（优先级 1）。
+  // 返回任意非 null 结果（含断路器 shouldBlock=false 带 message）。
   if (!tombstonedWorkflowModes.has('team')) {
     const teamResult = await checkTeamPipeline(sessionId, workingDir, cancelInProgress);
     if (teamResult) {
@@ -2132,7 +2116,7 @@ export async function checkPersistentModes(
     }
   }
 
-  // Priority 2: Ultrawork Mode (performance mode with persistence)
+  // 优先级 2：Ultrawork 模式（带持久化的性能模式）
   if (!tombstonedWorkflowModes.has('ultrawork') && isModeActive('ultrawork', workingDir, sessionId)) {
     const ultraworkResult = await checkUltrawork(sessionId, workingDir, hasIncompleteTodos, cancelInProgress);
     if (ultraworkResult) {
@@ -2140,9 +2124,9 @@ export async function checkPersistentModes(
     }
   }
 
-  // Priority 3: Skill Active State (issue #1033)
-  // Skills like code-review, plan, tdd, etc. write skill-active-state.json
-  // when invoked via the Skill tool. This prevents premature stops mid-skill.
+  // 优先级 3：Skill 活动状态（issue #1033）
+  // code-review、plan、tdd 等 skill 通过 Skill 工具调用时写入
+  // skill-active-state.json。防止 skill 进行中过早 stop。
   try {
     const { checkSkillActiveState } = await import('../skill-state/index.js');
     const skillResult = checkSkillActiveState(workingDir, sessionId);
@@ -2150,17 +2134,17 @@ export async function checkPersistentModes(
       return {
         shouldBlock: true,
         message: skillResult.message,
-        mode: 'ultrawork' as const, // Reuse ultrawork mode type for compatibility
+        mode: 'ultrawork' as const, // 复用 ultrawork 模式类型以保持兼容
         metadata: {
           phase: `skill:${skillResult.skillName || 'unknown'}`,
         }
       };
     }
   } catch {
-    // If skill-state module is unavailable, skip gracefully
+    // skill-state 模块不可用时优雅跳过
   }
 
-  // No blocking needed
+  // 无需阻断
   return {
     shouldBlock: false,
     message: '',
@@ -2169,9 +2153,9 @@ export async function checkPersistentModes(
 }
 
 /**
- * Create hook output for Claude Code.
- * Returns `continue: false` when `shouldBlock` is true to hard-block the stop event.
- * Returns `continue: true` for terminal states, escape hatches, and errors.
+ * 为 Claude Code 创建钩子输出。
+ * `shouldBlock` 为 true 时返回 `continue: false` 以硬阻断 stop 事件。
+ * 终态、逃生出口与错误时返回 `continue: true`。
  */
 export function createHookOutput(result: PersistentModeResult): {
   continue: boolean;

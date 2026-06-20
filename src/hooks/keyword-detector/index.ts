@@ -1,10 +1,9 @@
 /**
- * Keyword Detector Hook
+ * 关键词检测钩子
  *
- * Detects magic keywords in user prompts and returns the appropriate
- * mode message to inject into context.
+ * 检测用户 prompt 中的魔法关键词，并返回需注入上下文的相应模式消息。
  *
- * Ported from oh-my-opencode's keyword-detector hook.
+ * 移植自 oh-my-opencode 的 keyword-detector 钩子。
  */
 
 import {
@@ -15,23 +14,23 @@ import {
 } from '../task-size-detector/index.js';
 
 export type KeywordType =
-  | 'cancel'      // Priority 1
-  | 'ralph'       // Priority 2
-  | 'autopilot'   // Priority 3
-  | 'team'        // Priority 4.5 (team mode)
-  | 'ultrawork'   // Priority 5
-  | 'ralplan'     // Priority 8
-  | 'tdd'         // Priority 9
-  | 'code-review' // Priority 10
-  | 'security-review' // Priority 10.5
-  | 'ultrathink'  // Priority 11
-  | 'deepsearch'  // Priority 12
-  | 'deep-interview' // Priority 13.5
-  | 'analyze'     // Priority 13
-  | 'codex'       // Priority 15
-  | 'gemini'      // Priority 16
-  | 'cursor'      // Priority 17
-  | 'ccg';        // Priority 8.5 (Claude-Codex-Gemini orchestration)
+  | 'cancel'      // 优先级 1
+  | 'ralph'       // 优先级 2
+  | 'autopilot'   // 优先级 3
+  | 'team'        // 优先级 4.5（team 模式）
+  | 'ultrawork'   // 优先级 5
+  | 'ralplan'     // 优先级 8
+  | 'tdd'         // 优先级 9
+  | 'code-review' // 优先级 10
+  | 'security-review' // 优先级 10.5
+  | 'ultrathink'  // 优先级 11
+  | 'deepsearch'  // 优先级 12
+  | 'deep-interview' // 优先级 13.5
+  | 'analyze'     // 优先级 13
+  | 'codex'       // 优先级 15
+  | 'gemini'      // 优先级 16
+  | 'cursor'      // 优先级 17
+  | 'ccg';        // 优先级 8.5（Claude-Codex-Gemini 编排）
 
 export interface DetectedKeyword {
   type: KeywordType;
@@ -40,16 +39,16 @@ export interface DetectedKeyword {
 }
 
 /**
- * Keyword patterns for each mode
+ * 每个模式的关键词模式
  */
 const KEYWORD_PATTERNS: Record<KeywordType, RegExp> = {
   cancel: /\b(cancelwise|stopwise)\b/i,
   ralph: /\b(ralph)\b(?!-)|(랄프)(?!로렌)|(ラルフ)(?!・?ローレン)/i,
   autopilot: /\b(autopilot|auto[\s-]?pilot|fullsend|full\s+auto)\b|(오토파일럿)|(オートパイロット)/i,
   ultrawork: /\b(ultrawork|ulw)\b|(울트라워크)|(ウルトラワーク)/i,
-  // Team keyword detection disabled — team mode is now explicit-only via /team skill.
-  // This prevents infinite spawning when Claude workers receive prompts containing "team".
-  team: /(?!x)x/,  // never-match placeholder (type system requires the key)
+  // team 关键词检测已禁用 —— team 模式现已改为仅通过 /team 技能显式触发。
+  // 这样可避免 Claude worker 收到含 "team" 的 prompt 时无限派生子代理。
+  team: /(?!x)x/,  // 永不匹配的占位符（类型系统需要该键）
   ralplan: /\b(ralplan)\b|(랄플랜)|(ラルプラン)/i,
   tdd: /\b(tdd)\b|\btest\s+first\b|(테스트\s?퍼스트)|(テスト\s?ファースト)/i,
   'code-review': /\b(code\s+review|review\s+code)\b|(코드\s?리뷰)(?!어)|(コード\s?レビュー)(?!ア)/i,
@@ -65,29 +64,26 @@ const KEYWORD_PATTERNS: Record<KeywordType, RegExp> = {
 };
 
 /**
- * Matches the upstream Ouroboros CLI invocation form at the start of the
- * prompt: `ouroboros <sub>`, `ooo <sub>`, or `/ouroboros:<sub>`. Used as a
- * skip predicate for the deep-interview trigger so direct CLI calls are
- * not rerouted into the WISE skill.
+ * 匹配 prompt 开头的上游 Ouroboros CLI 调用形式：
+ * `ouroboros <sub>`、`ooo <sub>` 或 `/ouroboros:<sub>`。用作 deep-interview 触发器的
+ * 跳过判定，使直接 CLI 调用不会被改路由到 WISE 技能。
  */
 const OUROBOROS_BRAND_AT_START = /^\s*\/?(?:ouroboros|ooo)\b/i;
 
 /**
- * Optional per-keyword skip predicate. When the predicate returns true for
- * a given prompt, the corresponding keyword regex match is suppressed even
- * if it would otherwise fire. Used for narrow false-positive guards.
+ * 可选的逐关键词跳过判定。当判定对给定 prompt 返回 true 时，即使对应关键词
+ * 正则本应命中，该匹配也会被抑制。用于窄范围的误报防护。
  *
- * `deep-interview` matches the bare brand name `ouroboros`, which fires on
- * upstream CLI invocations like `ouroboros auto "X"`, `ooo auto`, and
- * `/ouroboros:auto`. The predicate defers to the upstream CLI in those
- * cases without changing what the trigger recognizes elsewhere.
+ * `deep-interview` 会匹配裸品牌名 `ouroboros`，这会在上游 CLI 调用
+ * （如 `ouroboros auto "X"`、`ooo auto`、`/ouroboros:auto`）时触发。该判定
+ * 在这些场景下让位于上游 CLI，而不改变触发器在其他位置的识别行为。
  */
 const KEYWORD_SKIP_PREDICATES: Partial<Record<KeywordType, (text: string) => boolean>> = {
   'deep-interview': (text) => OUROBOROS_BRAND_AT_START.test(text),
 };
 
 /**
- * Priority order for keyword detection
+ * 关键词检测的优先级顺序
  */
 const KEYWORD_PRIORITY: KeywordType[] = [
   'cancel', 'ralph', 'autopilot', 'team', 'ultrawork',
@@ -96,10 +92,9 @@ const KEYWORD_PRIORITY: KeywordType[] = [
 ];
 
 /**
- * Canonical workflow skills detected via explicit slash invocation.
- * Mirrors `CANONICAL_WORKFLOW_SKILLS` in `skill-state/index.ts`. Listed here
- * (rather than imported) to keep the keyword-detector free of cross-module
- * dependencies on skill-state.
+ * 通过显式斜杠调用检测的规范工作流技能。
+ * 镜像 `skill-state/index.ts` 中的 `CANONICAL_WORKFLOW_SKILLS`。此处列出
+ * （而非 import）是为了让 keyword-detector 不依赖 skill-state，避免跨模块依赖。
  */
 const CANONICAL_WORKFLOW_SLASH_SKILLS = [
   'autopilot',
@@ -116,11 +111,9 @@ export type CanonicalWorkflowSlashSkill =
   (typeof CANONICAL_WORKFLOW_SLASH_SKILLS)[number];
 
 /**
- * Map workflow slash skills to keyword types so explicit slash invocations
- * surface alongside ordinary keyword detection. Skills with no dedicated
- * KeywordType (`ultraqa`, `self-improve`) are intentionally absent — the
- * bridge handles their seeding via the parser result instead of through the
- * keyword-priority loop.
+ * 将工作流斜杠技能映射到关键词类型，使显式斜杠调用能与普通关键词检测一并浮现。
+ * 没有专属 KeywordType 的技能（`ultraqa`、`self-improve`）有意缺省 ——
+ * 桥接通过解析器结果而非关键词优先级循环来注入它们。
  */
 const SLASH_SKILL_TO_KEYWORD_TYPE: Partial<
   Record<CanonicalWorkflowSlashSkill, KeywordType>
@@ -143,24 +136,22 @@ const WORKFLOW_SLASH_PATTERN = new RegExp(
 );
 
 export interface ExplicitWorkflowSlashInvocation {
-  /** Canonical workflow skill name (lowercase, no `wise:` prefix). */
+  /** 规范工作流技能名（小写，无 `wise:` 前缀）。 */
   skill: CanonicalWorkflowSlashSkill;
-  /** Trailing arguments after the slash command. */
+  /** 斜杠命令后的尾随参数。 */
   args: string;
-  /** Raw matched prefix (including any namespace prefix and the skill name). */
+  /** 原始匹配前缀（含任意命名空间前缀和技能名）。 */
   raw: string;
 }
 
 /**
- * Parse an explicit workflow slash invocation at the start of a prompt.
+ * 解析 prompt 开头的显式工作流斜杠调用。
  *
- * Recognizes `/<skill>`, `/wise:<skill>`, and `/wise:<skill>` for
- * the canonical workflow skill list. Code fences and inline backticks are
- * stripped first so quoted commands do not match. The trailing lookahead
- * (whitespace, end-of-text, or punctuation) prevents file paths like
- * `/ralph-logs/foo.txt` from matching `/ralph`.
+ * 针对规范工作流技能列表，识别 `/<skill>`、`/wise:<skill>` 和 `/wise:<skill>`。
+ * 会先剥离代码围栏和行内反引号，使被引用的命令不致匹配。尾随前瞻
+ * （空白、文本结尾或标点）可防止 `/ralph-logs/foo.txt` 这类文件路径匹配 `/ralph`。
  *
- * Returns `null` when no explicit invocation is present.
+ * 不存在显式调用时返回 `null`。
  */
 export function parseExplicitWorkflowSlashInvocation(
   promptText: string,
@@ -175,15 +166,15 @@ export function parseExplicitWorkflowSlashInvocation(
 }
 
 /**
- * Remove code blocks from text to prevent false positives
- * Handles both fenced code blocks and inline code
+ * 从文本中移除代码块以防误报
+ * 同时处理围栏代码块和行内代码
  */
 export function removeCodeBlocks(text: string): string {
-  // Remove fenced code blocks (``` or ~~~)
+  // 移除围栏代码块（``` 或 ~~~）
   let result = text.replace(/```[\s\S]*?```/g, '');
   result = result.replace(/~~~[\s\S]*?~~~/g, '');
 
-  // Remove inline code (single backticks)
+  // 移除行内代码（单反引号）
   result = result.replace(/`[^`]+`/g, '');
 
   return result;
@@ -316,40 +307,35 @@ function stripPastedCommandPayloads(text: string): string {
 
 
 /**
- * Regex matching non-Latin script characters for prompt translation detection.
- * Uses Unicode script ranges (not raw non-ASCII) to avoid false positives on emoji and accented Latin.
- * Covers: CJK (Japanese/Chinese), Korean, Cyrillic, Arabic, Devanagari, Thai, Myanmar.
+ * 用于 prompt 翻译检测、匹配非拉丁文字字符的正则。
+ * 使用 Unicode 文字范围（而非原始非 ASCII）以避免对 emoji 和带重音拉丁字符的误报。
+ * 覆盖：CJK（日文/中文）、韩文、西里尔文、阿拉伯文、天城文、泰文、缅文。
  */
 export const NON_LATIN_SCRIPT_PATTERN =
-  // eslint-disable-next-line no-misleading-character-class -- Intentional: detecting script presence, not matching grapheme clusters
+  // eslint-disable-next-line no-misleading-character-class -- 故意为之：检测文字存在，而非匹配字形簇
   /[\u3000-\u9FFF\uAC00-\uD7AF\u0400-\u04FF\u0600-\u06FF\u0900-\u097F\u0E00-\u0E7F\u1000-\u109F]/u;
 
 /**
- * Character class for a single file-path segment. Includes `\w.-` plus the same
- * non-Latin script ranges as NON_LATIN_SCRIPT_PATTERN, so CJK/etc. file names
- * (e.g. `docs/\u30B3\u30FC\u30C9\u30EC\u30D3\u30E5\u30FC.md`) are recognized as paths and stripped before
- * keyword detection. Without this, a CJK alias embedded in a path survives
- * sanitization and falsely activates its mode (path detection is ASCII-only
- * with a bare `[\w.-]`). Building the path regex from this shared constant
- * avoids the class drifting across its repeated uses below.
+ * \u5355\u4E2A\u6587\u4EF6\u8DEF\u5F84\u6BB5\u7684\u5B57\u7B26\u7C7B\u3002\u5305\u542B `\w.-` \u4EE5\u53CA\u4E0E NON_LATIN_SCRIPT_PATTERN \u76F8\u540C\u7684
+ * \u975E\u62C9\u4E01\u6587\u5B57\u8303\u56F4\uFF0C\u4F7F CJK \u7B49\u6587\u4EF6\u540D\uFF08\u5982 `docs/\u30B3\u30FC\u30C9\u30EC\u30D3\u30E5\u30FC.md`\uFF09
+ * \u80FD\u88AB\u8BC6\u522B\u4E3A\u8DEF\u5F84\u5E76\u5728\u5173\u952E\u8BCD\u68C0\u6D4B\u524D\u5265\u79BB\u3002\u5426\u5219\u5D4C\u5165\u8DEF\u5F84\u7684 CJK \u522B\u540D\u4F1A\u6B8B\u7559\u8FC7\u6E05\u7406\uFF0C
+ * \u8BEF\u6FC0\u6D3B\u5176\u6A21\u5F0F\uFF08\u8DEF\u5F84\u68C0\u6D4B\u7528\u88F8 `[\w.-]`\uFF0C\u4EC5 ASCII\uFF09\u3002\u4ECE\u8BE5\u5171\u4EAB\u5E38\u91CF\u6784\u5EFA\u8DEF\u5F84\u6B63\u5219\uFF0C
+ * \u53EF\u907F\u514D\u5B57\u7B26\u7C7B\u5728\u4E0B\u65B9\u591A\u5904\u91CD\u590D\u4F7F\u7528\u4E2D\u53D1\u751F\u6F02\u79FB\u3002
  */
 const PATH_SEGMENT_CHARS =
   '[\\w.\\-\\u3000-\\u9FFF\\uAC00-\\uD7AF\\u0400-\\u04FF\\u0600-\\u06FF\\u0900-\\u097F\\u0E00-\\u0E7F\\u1000-\\u109F]';
 
 /**
- * File-path matcher used by sanitizeForKeywordDetection. Requires at least one
- * slash-terminated directory segment `(?:SEG+/)+` (optionally preceded by a `/`;
- * a leading `./` is absorbed by the first segment since SEG includes `.`), then a
- * final segment bounded as a (CJK-capable) stem ending in an ASCII `.ext` OR an
- * ASCII-only extensionless name. Directory/stem segments are Unicode-aware
- * (PATH_SEGMENT_CHARS) so CJK file names strip too, while a no-space CJK directive
- * after a path is NOT consumed by a greedy tail. Structurally identical to the
- * runtime `.mjs` path stripper, so index.ts and the .mjs produce the same keyword
- * outcome for every path input — no detector/bundle divergence. Bare slash-commands
- * like `/ralph` lack an internal slash so they are not stripped here (and are
- * detected pre-sanitization via parseExplicitWorkflowSlashInvocation anyway).
+ * sanitizeForKeywordDetection 使用的文件路径匹配器。要求至少一个以斜杠结尾的
+ * 目录段 `(?:SEG+/)+`（可选地以 `/` 开头；前导 `./` 会被首段吸收，因为 SEG 含 `.`），
+ * 随后是最终段：以 ASCII `.ext` 结尾的（支持 CJK）词干，或纯 ASCII 无扩展名名称。
+ * 目录/词干段支持 Unicode（PATH_SEGMENT_CHARS），因此 CJK 文件名也会被剥离；
+ * 而路径后无空格的 CJK 指令不会被贪婪尾部消费。与运行时 `.mjs` 路径剥离器结构
+ * 相同，使 index.ts 和 .mjs 对每个路径输入产生相同关键词结果 —— 检测器与打包产物
+ * 无分歧。像 `/ralph` 这类裸斜杠命令没有内部斜杠，故此处不剥离（且本就通过
+ * parseExplicitWorkflowSlashInvocation 在清理前检测）。
  */
-/* eslint-disable no-misleading-character-class -- Same script ranges as NON_LATIN_SCRIPT_PATTERN: intentional range set, not grapheme clusters */
+/* eslint-disable no-misleading-character-class -- 与 NON_LATIN_SCRIPT_PATTERN 相同的文字范围：故意的范围集合，非字形簇 */
 const FILE_PATH_PATTERN = new RegExp(
   '(^|[\\s"\'`(])(?:\\/)?(?:' +
     PATH_SEGMENT_CHARS +
@@ -361,27 +347,27 @@ const FILE_PATH_PATTERN = new RegExp(
 /* eslint-enable no-misleading-character-class */
 
 /**
-* Sanitize text for keyword detection by removing structural noise.
- * Strips XML tags, URLs, file paths, and code blocks.
+* 通过移除结构性噪声为关键词检测清理文本。
+ * 剥离 XML 标签、URL、文件路径和代码块。
  */
 export function sanitizeForKeywordDetection(text: string): string {
   let result = stripPastedCommandPayloads(text);
-  // Remove HTML/markdown comments first so keywords inside comments cannot trigger modes
+  // 先移除 HTML/markdown 注释，避免注释内的关键词触发模式
   result = result.replace(/<!--[\s\S]*?-->/g, '');
-  // Remove XML tag blocks (opening + content + closing; tag names must match)
+  // 移除 XML 标签块（开标签 + 内容 + 闭标签；标签名须匹配）
   result = result.replace(/<(\w[\w-]*)[\s>][\s\S]*?<\/\1>/g, '');
-  // Remove self-closing XML tags
+  // 移除自闭合 XML 标签
   result = result.replace(/<\w[\w-]*(?:\s[^>]*)?\s*\/>/g, '');
-  // Remove URLs
+  // 移除 URL
   result = result.replace(/https?:\/\/\S+/g, '');
-  // Remove block quotes and markdown table rows - they are typically reference content
+  // 移除引用块和 markdown 表格行 —— 它们通常是参考内容
   result = result.replace(/^\s*>\s.*$/gm, '');
   result = result.replace(/^\s*\|(?:[^|\n]*\|){2,}\s*$/gm, '');
   result = result.replace(/^\s*\|?(?:\s*:?-{3,}:?\s*\|){1,}\s*$/gm, '');
-  // Remove file paths — requires leading / or ./ or multi-segment dir/file.ext.
-  // Unicode-aware segments (FILE_PATH_PATTERN) so CJK file names are stripped too.
+  // 移除文件路径 —— 要求以 / 或 ./ 开头，或多段 dir/file.ext。
+  // 段支持 Unicode（FILE_PATH_PATTERN），CJK 文件名也会被剥离。
   result = result.replace(FILE_PATH_PATTERN, '$1');
-  // Remove code blocks (fenced and inline)
+  // 移除代码块（围栏与行内）
   result = removeCodeBlocks(result);
   return result;
 }
@@ -468,8 +454,8 @@ function hasActivationIntentNearKeyword(context: string, keyword: string): boole
   const escaped = escapeRegExp(keyword.trim());
   if (!escaped) return false;
 
-  // Help-question phrasing like "How do I use autopilot?" should not be
-  // treated as activation intent.
+  // 求助式提问（如 "How do I use autopilot?"）不应
+  // 被视为激活意图。
   const helpQuestionPatterns = [
     new RegExp(`\\bhow\\s+do\\s+i\\s+use\\b[^\\n]{0,40}\\b${escaped}\\b`, 'i'),
     new RegExp(`\\bwhat(?:'s|\\s+is)\\b[^\\n]{0,40}\\b${escaped}\\b[^\\n]{0,40}\\bhow\\s+to\\s+use\\b`, 'i'),
@@ -532,8 +518,8 @@ function hasDiagnosticIntentNearKeyword(context: string, keyword: string): boole
     new RegExp(`\\b${escaped}\\b[^\\n]{0,48}\\b(?:keeps?\\s+(?:looping|re-?running)|has\\s+(?:a\\s+)?(?:bug|issue|problem|error)|is\\s+(?:stuck|broken|failing)|loop(?:ing)?)\\b`, 'i'),
     new RegExp(`\\b(?:bug|issue|problem|error)\\b[^\\n]{0,16}\\b(?:with|in)\\s+\\b${escaped}\\b`, 'i'),
     new RegExp(`${escaped}.{0,14}(?:자꾸|계속).{0,14}(?:재실행|반복|루프|멈추)`, 'u'),
-    // Japanese: repeated-failure complaint — direct mirror of the Korean 자꾸/계속 line above
-    // (frequency adverb + problem verb). No P2 subject-particle pattern / no work-request escape: Korean parity.
+    // 日文：重复失败抱怨 —— 上方韩文 자꾸/계속 行的直接镜像
+    // （频度副词 + 问题动词）。无 P2 主语助词模式 / 无工作请求逃逸：与韩文对齐。
     new RegExp(`${escaped}[^\\n]{0,16}(?:また|何度も|ずっと|頻繁|繰り返|いつも)[^\\n]{0,16}(?:失敗|エラー|ループ|止ま|落ち|再実行|動かな|フリーズ|壊れ|クラッシュ|こけ|暴走|無限)`, 'u'),
   ];
 
@@ -585,14 +571,14 @@ function isInformationalKeywordContext(text: string, position: number, keywordLe
     const hasActivationIntent = hasActivationIntentNearKeyword(context, keywordText);
     const hasExecutionDirective = /\b(?:fix|debug|investigate|resolve|handle|patch|address|implement|build)\b/i.test(context);
 
-    // Explicit command + execution intent should remain actionable even if the
-    // surrounding message also contains a help question.
+    // 显式命令 + 执行意图应保持可操作，即使
+    // 周围消息也含有求助提问。
     if (hasActivationIntent && hasExecutionDirective) {
       return false;
     }
 
-    // Help-style informational queries must not activate execution modes,
-    // even when they contain phrases like "use <keyword>".
+    // 求助式信息查询不得激活执行模式，
+    // 即使其中含有 "use <keyword>" 之类的短语。
     if (hasInformationalIntent && hasStrongHelpQueryIntent) {
       return true;
     }
@@ -682,7 +668,7 @@ function findActionableRalplanMatch(
 }
 
 /**
- * Extract prompt text from message parts
+ * 从消息部件中提取 prompt 文本
  */
 export function extractPromptText(
   parts: Array<{ type: string; text?: string; [key: string]: unknown }>
@@ -694,7 +680,7 @@ export function extractPromptText(
 }
 
 /**
- * Detect keywords in text and return matches with type info
+ * 检测文本中的关键词并返回带类型信息的匹配
  */
 export function detectKeywordsWithType(
   text: string,
@@ -702,12 +688,10 @@ export function detectKeywordsWithType(
 ): DetectedKeyword[] {
   const detected: DetectedKeyword[] = [];
 
-  // Check for an explicit canonical workflow slash invocation BEFORE sanitization.
-  // The general sanitizer strips bare `/word` tokens as file paths, so bare
-  // commands like `/ralph fix auth` would otherwise never match. This must be
-  // robust to surrounding whitespace, namespace prefixes (`/wise:`,
-  // `/wise:`), and code-fence/backtick wrapping (handled inside
-  // the parser via removeCodeBlocks).
+  // 在清理前检查显式规范工作流斜杠调用。
+  // 通用清理器会把裸 `/word` 记号当作文件路径剥离，因此 `/ralph fix auth` 这类
+  // 裸命令否则永不会匹配。此处须对周围空白、命名空间前缀（`/wise:`、
+  // `/wise:`）以及代码围栏/反引号包裹（由解析器内 removeCodeBlocks 处理）健壮。
   const explicitSlash = parseExplicitWorkflowSlashInvocation(text);
   const explicitSlashType = explicitSlash
     ? SLASH_SKILL_TO_KEYWORD_TYPE[explicitSlash.skill]
@@ -723,15 +707,15 @@ export function detectKeywordsWithType(
 
   const cleanedText = sanitizeForKeywordDetection(text);
 
-  // Check each keyword type
+  // 检查每个关键词类型
   for (const type of KEYWORD_PRIORITY) {
-    // Team keyword detection disabled — team mode is now explicit-only via /team skill
+    // team 关键词检测已禁用 —— team 模式现已改为仅通过 /team 技能显式触发
     if (type === 'team') {
       continue;
     }
 
-    // Skip the type that the explicit-slash detector already surfaced so we
-    // do not emit duplicate entries for the same intent.
+    // 跳过显式斜杠检测器已浮现的类型，避免
+    // 为同一意图发出重复条目。
     if (explicitSlashType && type === explicitSlashType) {
       continue;
     }
@@ -758,14 +742,14 @@ export function detectKeywordsWithType(
 }
 
 /**
- * Check if text contains any magic keyword
+ * 检查文本是否含有任意魔法关键词
  */
 export function hasKeyword(text: string): boolean {
   return detectKeywordsWithType(text).length > 0;
 }
 
 /**
- * Get all detected keywords with conflict resolution applied
+ * 获取所有已检测关键词（已应用冲突解决）
  */
 export function getAllKeywords(text: string): KeywordType[] {
   const detected = detectKeywordsWithType(text);
@@ -774,20 +758,20 @@ export function getAllKeywords(text: string): KeywordType[] {
 
   let types = [...new Set(detected.map(d => d.type))];
 
-  // Exclusive: cancel suppresses everything
+  // 互斥：cancel 抑制一切
   if (types.includes('cancel')) return ['cancel'];
 
-  // Mutual exclusion: team beats autopilot
+  // 互斥：team 胜过 autopilot
   if (types.includes('team') && types.includes('autopilot')) {
     types = types.filter(t => t !== 'autopilot');
   }
 
-  // Sort by priority order
+  // 按优先级顺序排序
   return KEYWORD_PRIORITY.filter(k => types.includes(k));
 }
 
 /**
- * Options for task-size-aware keyword filtering
+ * 任务大小感知的关键词过滤选项
  */
 export interface TaskSizeFilterOptions {
   /** Enable task-size detection. Default: true */
@@ -801,7 +785,7 @@ export interface TaskSizeFilterOptions {
 }
 
 /**
- * Result of task-size-aware keyword detection
+ * 任务大小感知的关键词检测结果
  */
 export interface TaskSizeAwareKeywordsResult {
   keywords: KeywordType[];
@@ -810,11 +794,11 @@ export interface TaskSizeAwareKeywordsResult {
 }
 
 /**
- * Get all keywords with task-size-based filtering applied.
- * For small tasks, heavy orchestration modes (ralph/autopilot/team/ultrawork etc.)
- * are suppressed to avoid over-orchestration.
+ * 获取所有关键词（已应用基于任务大小的过滤）。
+ * 对小任务，抑制重型编排模式（ralph/autopilot/team/ultrawork 等），
+ * 以避免过度编排。
  *
- * This is the recommended function to use in the bridge hook for keyword detection.
+ * 推荐在桥接钩子中使用本函数进行关键词检测。
  */
 export function getAllKeywordsWithSizeCheck(
   text: string,
@@ -836,7 +820,7 @@ export function getAllKeywordsWithSizeCheck(
   const thresholds: TaskSizeThresholds = { smallWordLimit, largeWordLimit };
   const taskSizeResult = classifyTaskSize(text, thresholds);
 
-  // Only suppress heavy modes for small tasks
+  // 仅对小任务抑制重型模式
   if (taskSizeResult.size !== 'small') {
     return { keywords, taskSizeResult, suppressedKeywords: [] };
   }
@@ -858,7 +842,7 @@ export function getAllKeywordsWithSizeCheck(
 }
 
 /**
- * Get the highest priority keyword detected with conflict resolution
+ * 获取已检测到的最高优先级关键词（已应用冲突解决）
  */
 export function getPrimaryKeyword(text: string): DetectedKeyword | null {
   const allKeywords = getAllKeywords(text);
@@ -867,10 +851,10 @@ export function getPrimaryKeyword(text: string): DetectedKeyword | null {
     return null;
   }
 
-  // Get the highest priority keyword type
+  // 获取最高优先级的关键词类型
   const primaryType = allKeywords[0];
 
-  // Find the original detected keyword for this type
+  // 查找该类型的原始已检测关键词
   const detected = detectKeywordsWithType(text);
   const match = detected.find(d => d.type === primaryType);
 
@@ -878,8 +862,8 @@ export function getPrimaryKeyword(text: string): DetectedKeyword | null {
 }
 
 /**
- * Execution mode keywords subject to the ralplan-first gate (issue #997).
- * These modes spin up heavy orchestration and should not run on vague requests.
+ * 受 ralplan 优先门控（issue #997）约束的执行模式关键词。
+ * 这些模式会启动重型编排，不应在模糊请求上运行。
  */
 export const EXECUTION_GATE_KEYWORDS = new Set<KeywordType>([
   'ralph',
@@ -889,83 +873,83 @@ export const EXECUTION_GATE_KEYWORDS = new Set<KeywordType>([
 ]);
 
 /**
- * Escape hatch prefixes that bypass the ralplan gate.
+ * 绕过 ralplan 门控的逃逸前缀。
  */
 const GATE_BYPASS_PREFIXES = ['force:', '!'];
 
 /**
- * Positive signals that the prompt IS well-specified enough for direct execution.
- * If ANY of these are present, the prompt auto-passes the gate (fast path).
+ * 表明 prompt 已足够具体、可直接执行的正向信号。
+ * 若存在任意一个，prompt 即自动通过门控（快速路径）。
  */
 const WELL_SPECIFIED_SIGNALS: RegExp[] = [
-  // References specific files by extension
+  // 通过扩展名引用具体文件
   /\b[\w/.-]+\.(?:ts|js|py|go|rs|java|tsx|jsx|vue|svelte|rb|c|cpp|h|css|scss|html|json|yaml|yml|toml)\b/,
-  // References specific paths with directory separators
+  // 通过目录分隔符引用具体路径
   /(?:src|lib|test|spec|app|pages|components|hooks|utils|services|api|dist|build|scripts)\/\w+/,
-  // References specific functions/classes/methods by keyword
+  // 通过关键字引用具体函数/类/方法
   /\b(?:function|class|method|interface|type|const|let|var|def|fn|struct|enum)\s+\w{2,}/i,
-  // CamelCase identifiers (likely symbol names: processKeyword, getUserById)
+  // 驼峰标识符（可能是符号名：processKeyword、getUserById）
   /\b[a-z]+(?:[A-Z][a-z]+)+\b/,
-  // PascalCase identifiers (likely class/type names: KeywordDetector, UserModel)
+  // 帕斯卡标识符（可能是类/类型名：KeywordDetector、UserModel）
   /\b[A-Z][a-z]+(?:[A-Z][a-z0-9]*)+\b/,
-  // snake_case identifiers with 2+ segments (likely symbol names: user_model, get_user)
+  // 含 2+ 段的下划线标识符（可能是符号名：user_model、get_user）
   /\b[a-z]+(?:_[a-z]+)+\b/,
-  // Bare issue/PR number (#123, #42)
+  // 裸 issue/PR 编号（#123、#42）
   /(?:^|\s)#\d+\b/,
-  // Has numbered steps or bullet list (structured request)
+  // 含编号步骤或项目符号列表（结构化请求）
   /(?:^|\n)\s*(?:\d+[.)]\s|-\s+\S|\*\s+\S)/m,
-  // Has acceptance criteria or test spec keywords
+  // 含验收标准或测试规约关键字
   /\b(?:acceptance\s+criteria|test\s+(?:spec|plan|case)|should\s+(?:return|throw|render|display|create|delete|update))\b/i,
-  // Has specific error or issue reference
+  // 含具体错误或 issue 引用
   /\b(?:error:|bug\s*#?\d+|issue\s*#\d+|stack\s*trace|exception|TypeError|ReferenceError|SyntaxError)\b/i,
-  // Has a code block with substantial content.
-  // NOTE: In the bridge.ts integration, cleanedText has code blocks pre-stripped by
-  // removeCodeBlocks(), so this regex will not match there. It remains useful for
-  // direct callers of isUnderspecifiedForExecution() that pass raw prompt text.
+  // 含内容充实的代码块。
+  // 注意：在 bridge.ts 集成中，cleanedText 的代码块已被
+  // removeCodeBlocks() 预先剥离，因此该正则在那里不会匹配。它对直接调用
+  // isUnderspecifiedForExecution() 并传入原始 prompt 文本的调用者仍有用。
   /```[\s\S]{20,}?```/,
-  // PR or commit reference
+  // PR 或 commit 引用
   /\b(?:PR\s*#\d+|commit\s+[0-9a-f]{7}|pull\s+request)\b/i,
-  // "in <specific-path>" pattern
+  // "in <具体路径>" 模式
   /\bin\s+[\w/.-]+\.(?:ts|js|py|go|rs|java|tsx|jsx)\b/,
-  // Test runner commands (explicit test target)
+  // 测试运行器命令（显式测试目标）
   /\b(?:npm\s+test|npx\s+(?:vitest|jest)|pytest|cargo\s+test|go\s+test|make\s+test)\b/i,
 ];
 
 /**
- * Check if a prompt is underspecified for direct execution.
- * Returns true if the prompt lacks enough specificity for heavy execution modes.
+ * 检查 prompt 是否过于笼统、不适合直接执行。
+ * 当 prompt 缺乏足够具体性以支撑重型执行模式时返回 true。
  *
- * Conservative: only gates clearly vague prompts. Borderline cases pass through.
+ * 保守策略：仅门控明显模糊的 prompt。边界情形放行。
  */
 export function isUnderspecifiedForExecution(text: string): boolean {
   const trimmed = text.trim();
   if (!trimmed) return true;
 
-  // Escape hatch: force: or ! prefix bypasses the gate
+  // 逃逸口：force: 或 ! 前缀绕过门控
   for (const prefix of GATE_BYPASS_PREFIXES) {
     if (trimmed.startsWith(prefix)) return false;
   }
 
-  // If any well-specified signal is present, pass through
+  // 若存在任意足够具体的信号，则放行
   if (WELL_SPECIFIED_SIGNALS.some(p => p.test(trimmed))) return false;
 
-  // Strip mode keywords for effective word counting
+  // 剥离模式关键词以便有效词数统计
   const stripped = trimmed
     .replace(/\b(?:ralph|autopilot|team|ultrawork|ulw)\b/gi, '')
     .trim();
   const effectiveWords = stripped.split(/\s+/).filter(w => w.length > 0).length;
 
-  // Short prompts without well-specified signals are underspecified
+  // 无足够具体信号的短 prompt 视为过于笼统
   if (effectiveWords <= 15) return true;
 
   return false;
 }
 
 /**
- * Apply the ralplan-first gate (issue #997): if execution keywords are present
- * but the prompt is underspecified, redirect to ralplan.
+ * 应用 ralplan 优先门控（issue #997）：若存在执行关键词但 prompt 过于笼统，
+ * 则重定向到 ralplan。
  *
- * Returns the modified keyword list and gate metadata.
+ * 返回修改后的关键词列表和门控元数据。
  */
 export function applyRalplanGate(
   keywords: KeywordType[],
@@ -975,28 +959,28 @@ export function applyRalplanGate(
     return { keywords, gateApplied: false, gatedKeywords: [] };
   }
 
-  // Don't gate if cancel is present (cancel always wins)
+  // 存在 cancel 时不门控（cancel 始终胜出）
   if (keywords.includes('cancel')) {
     return { keywords, gateApplied: false, gatedKeywords: [] };
   }
 
-  // Don't gate if ralplan is already in the list
+  // 列表中已有 ralplan 时不门控
   if (keywords.includes('ralplan')) {
     return { keywords, gateApplied: false, gatedKeywords: [] };
   }
 
-  // Check if any execution keywords are present
+  // 检查是否存在任意执行关键词
   const executionKeywords = keywords.filter(k => EXECUTION_GATE_KEYWORDS.has(k));
   if (executionKeywords.length === 0) {
     return { keywords, gateApplied: false, gatedKeywords: [] };
   }
 
-  // Check if prompt is underspecified
+  // 检查 prompt 是否过于笼统
   if (!isUnderspecifiedForExecution(text)) {
     return { keywords, gateApplied: false, gatedKeywords: [] };
   }
 
-  // Gate: replace execution keywords with ralplan
+  // 门控：用 ralplan 替换执行关键词
   const filtered = keywords.filter(k => !EXECUTION_GATE_KEYWORDS.has(k));
   if (!filtered.includes('ralplan')) {
     filtered.push('ralplan');

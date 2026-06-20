@@ -1,7 +1,7 @@
 /**
- * Skill Loader
+ * 技能加载器
  *
- * Loads and caches skills from disk.
+ * 从磁盘加载并缓存技能。
  */
 
 import { readFileSync } from 'fs';
@@ -13,15 +13,15 @@ import { DEBUG_ENABLED } from './constants.js';
 import type { LearnedSkill, SkillMetadata } from './types.js';
 
 /**
- * Create SHA-256 hash of content.
+ * 为内容创建 SHA-256 哈希。
  */
 function createContentHash(content: string): string {
   return createHash('sha256').update(content).digest('hex').slice(0, 16);
 }
 
 /**
- * Load all skills for a project.
- * Project skills override user skills with same ID.
+ * 加载项目的全部技能。
+ * 项目级技能会覆盖同 ID 的用户级技能。
  */
 export function loadAllSkills(projectRoot: string | null): LearnedSkill[] {
   const candidates = findSkillFiles(projectRoot);
@@ -52,7 +52,7 @@ export function loadAllSkills(projectRoot: string | null): LearnedSkill[] {
         priority: candidate.scope === 'project' ? 1 : 0,
       };
 
-      // Project skills override user skills with same ID
+      // 项目级技能覆盖同 ID 的用户级技能
       const existing = seenIds.get(skillId);
       if (!existing || skill.priority > existing.priority) {
         seenIds.set(skillId, skill);
@@ -64,12 +64,12 @@ export function loadAllSkills(projectRoot: string | null): LearnedSkill[] {
     }
   }
 
-  // Return skills sorted by priority (project first)
+  // 返回按优先级排序的技能（项目级优先）
   return Array.from(seenIds.values()).sort((a, b) => b.priority - a.priority);
 }
 
 /**
- * Load a specific skill by ID.
+ * 按 ID 加载特定技能。
  */
 export function loadSkillById(skillId: string, projectRoot: string | null): LearnedSkill | null {
   const skills = loadAllSkills(projectRoot);
@@ -77,7 +77,7 @@ export function loadSkillById(skillId: string, projectRoot: string | null): Lear
 }
 
 /**
- * Find skills matching keywords in user message.
+ * 查找与用户消息中关键词匹配的技能。
  */
 export function findMatchingSkills(
   message: string,
@@ -91,7 +91,7 @@ export function findMatchingSkills(
     let score = 0;
     let hasMatch = false;
 
-    // Check trigger matches
+    // 检查触发器匹配
     for (const trigger of skill.metadata.triggers) {
       if (messageLower.includes(trigger.toLowerCase())) {
         score += 10;
@@ -99,7 +99,7 @@ export function findMatchingSkills(
       }
     }
 
-    // Check tag matches
+    // 检查标签匹配
     if (skill.metadata.tags) {
       for (const tag of skill.metadata.tags) {
         if (messageLower.includes(tag.toLowerCase())) {
@@ -109,14 +109,14 @@ export function findMatchingSkills(
       }
     }
 
-    // Only apply quality/usage boosts if there was a trigger or tag match
+    // 仅在存在触发器或标签匹配时才应用质量/用量加成
     if (hasMatch) {
-      // Boost by quality score
+      // 按质量分加成
       if (skill.metadata.quality) {
         score += skill.metadata.quality / 20;
       }
 
-      // Boost by usage count
+      // 按使用次数加成
       if (skill.metadata.usageCount) {
         score += Math.min(skill.metadata.usageCount, 10);
       }

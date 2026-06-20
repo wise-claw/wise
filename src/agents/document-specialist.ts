@@ -1,10 +1,10 @@
 /**
- * Document Specialist Agent - Documentation and External Reference Finder
+ * Document Specialist Agent - 文档与外部参考查找器
  *
- * Searches external resources: official docs, GitHub, Stack Overflow.
- * For internal codebase searches, use explore agent instead.
+ * 搜索外部资源：官方文档、GitHub、Stack Overflow。
+ * 内部代码库搜索请改用 explore agent。
  *
- * Ported from oh-my-opencode's document specialist agent.
+ * 从 oh-my-opencode 的 document specialist agent 移植。
  */
 
 import type { AgentConfig, AgentPromptMetadata } from "./types.js";

@@ -10,7 +10,7 @@ export class GitLabProvider implements GitProvider {
   detectFromRemote(url: string): boolean {
     const lower = url.toLowerCase();
     if (lower.includes('gitlab.com')) return true;
-    // Self-hosted: match hostname label containing 'gitlab', not path/query
+    // 自托管：匹配主机名中包含 'gitlab' 的标签，而非路径/查询串
     const hostMatch = lower.match(/^(?:https?:\/\/|ssh:\/\/[^@]*@|[^@]+@)([^/:]+)/);
     const host = hostMatch ? hostMatch[1] : '';
     return /(^|[.-])gitlab([.-]|$)/.test(host);

@@ -1,20 +1,20 @@
 /**
- * Context Injector
+ * 上下文注入器
  *
- * Handles injection of collected context into prompts/messages.
+ * 负责将收集到的上下文注入到 prompt/message 中。
  *
- * Ported from oh-my-opencode's context-injector.
+ * 移植自 oh-my-opencode 的 context-injector。
  */
 
 import type { ContextCollector } from './collector.js';
 import type { InjectionResult, InjectionStrategy, OutputPart } from './types.js';
 
-/** Default separator between injected context and original content */
+/** 注入的上下文与原始内容之间的默认分隔符 */
 const DEFAULT_SEPARATOR = '\n\n---\n\n';
 
 /**
- * Inject pending context into an array of output parts.
- * Finds the first text part and prepends the context to it.
+ * 将待处理上下文注入到一组 output parts 中。
+ * 找到第一个文本 part 并把上下文前置到其中。
  */
 export function injectPendingContext(
   collector: ContextCollector,
@@ -57,7 +57,7 @@ export function injectPendingContext(
 }
 
 /**
- * Inject pending context into a raw text string.
+ * 将待处理上下文注入到原始文本字符串中。
  */
 export function injectContextIntoText(
   collector: ContextCollector,
@@ -98,13 +98,13 @@ export function injectContextIntoText(
 }
 
 /**
- * Create a hook handler for context injection.
- * This is a factory function for creating Claude Code compatible hooks.
+ * 创建用于上下文注入的 hook 处理器。
+ * 这是一个工厂函数，用于创建 Claude Code 兼容的 hook。
  */
 export function createContextInjectorHook(collector: ContextCollector) {
   return {
     /**
-     * Process a user message and inject any pending context.
+     * 处理用户消息并注入任何待处理上下文。
      */
     processUserMessage: (
       sessionId: string,
@@ -119,17 +119,17 @@ export function createContextInjectorHook(collector: ContextCollector) {
     },
 
     /**
-     * Register context for injection into the next message.
+     * 注册上下文，以便注入到下一条消息。
      */
     registerContext: collector.register.bind(collector),
 
     /**
-     * Check if there's pending context.
+     * 检查是否存在待处理上下文。
      */
     hasPending: collector.hasPending.bind(collector),
 
     /**
-     * Clear pending context without injecting.
+     * 清空待处理上下文但不注入。
      */
     clear: collector.clear.bind(collector),
   };

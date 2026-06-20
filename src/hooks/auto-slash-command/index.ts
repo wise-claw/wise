@@ -1,13 +1,13 @@
 /**
- * Auto Slash Command Hook
+ * 自动斜杠命令钩子
  *
- * Detects and expands slash commands in user prompts.
- * Complements Claude Code's native slash command system by adding:
- * - Skill-based commands from ~/.claude/skills/ and .claude/skills/
- * - Project-level commands from .claude/commands/
- * - Template expansion with $ARGUMENTS placeholder
+ * 检测并展开用户 prompt 中的斜杠命令。
+ * 作为 Claude Code 原生斜杠命令系统的补充，新增：
+ * - 来自 ~/.claude/skills/ 和 .claude/skills/ 的基于技能的命令
+ * - 来自 .claude/commands/ 的项目级命令
+ * - 支持 $ARGUMENTS 占位符的模板展开
  *
- * Adapted from oh-my-opencode's auto-slash-command hook.
+ * 改编自 oh-my-opencode 的 auto-slash-command 钩子。
  */
 
 import {
@@ -29,7 +29,7 @@ import type {
   AutoSlashCommandResult,
 } from './types.js';
 
-// Re-export all submodules
+// 重新导出所有子模块
 export * from './types.js';
 export * from './constants.js';
 export {
@@ -46,21 +46,21 @@ export {
   listAvailableCommands,
 } from './executor.js';
 
-/** Track processed commands to avoid duplicate expansion */
+/** 记录已处理的命令以避免重复展开 */
 const sessionProcessedCommands = new Set<string>();
 
 /**
- * Create auto slash command hook handlers
+ * 创建自动斜杠命令钩子处理器
  */
 export function createAutoSlashCommandHook() {
   return {
     /**
-     * Hook name identifier
+     * 钩子名称标识符
      */
     name: HOOK_NAME,
 
     /**
-     * Process a user message to detect and expand slash commands
+     * 处理用户消息以检测并展开斜杠命令
      */
     processMessage: (
       input: AutoSlashCommandHookInput,
@@ -68,7 +68,7 @@ export function createAutoSlashCommandHook() {
     ): AutoSlashCommandResult => {
       const promptText = extractPromptText(parts);
 
-      // Skip if already processed (contains our tags)
+      // 若已处理（包含我们的标签）则跳过
       if (
         promptText.includes(AUTO_SLASH_COMMAND_TAG_OPEN) ||
         promptText.includes(AUTO_SLASH_COMMAND_TAG_CLOSE)
@@ -82,14 +82,14 @@ export function createAutoSlashCommandHook() {
         return { detected: false };
       }
 
-      // Deduplicate within session
+      // 会话内去重
       const commandKey = `${input.sessionId}:${input.messageId}:${parsed.command}`;
       if (sessionProcessedCommands.has(commandKey)) {
         return { detected: false };
       }
       sessionProcessedCommands.add(commandKey);
 
-      // Execute the command
+      // 执行命令
       const result = executeSlashCommand(parsed);
 
       if (result.success && result.replacementText) {
@@ -102,7 +102,7 @@ export function createAutoSlashCommandHook() {
         };
       }
 
-      // Command not found or error
+      // 命令未找到或出错
       const errorMessage = `${AUTO_SLASH_COMMAND_TAG_OPEN}\n[AUTO-SLASH-COMMAND ERROR]\n${result.error}\n\nOriginal input: ${parsed.raw}\n${AUTO_SLASH_COMMAND_TAG_CLOSE}`;
 
       return {
@@ -113,24 +113,24 @@ export function createAutoSlashCommandHook() {
     },
 
     /**
-     * Get list of available commands
+     * 获取可用命令列表
      */
     listCommands: () => {
       return listAvailableCommands();
     },
 
     /**
-     * Find a specific command by name
+     * 按名称查找指定命令
      */
     findCommand: (name: string) => {
       return findCommand(name);
     },
 
     /**
-     * Clear processed commands cache for a session
+     * 清除某个会话的已处理命令缓存
      */
     clearSession: (sessionId: string) => {
-      // Clear all commands for this session
+      // 清除该会话的所有命令
       const keysToDelete: string[] = [];
       for (const key of sessionProcessedCommands) {
         if (key.startsWith(`${sessionId}:`)) {
@@ -145,7 +145,7 @@ export function createAutoSlashCommandHook() {
 }
 
 /**
- * Process a prompt for slash command expansion (simple utility function)
+ * 处理 prompt 以展开斜杠命令（简单工具函数）
  */
 export function processSlashCommand(prompt: string): AutoSlashCommandResult {
   const hook = createAutoSlashCommandHook();

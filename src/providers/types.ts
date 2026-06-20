@@ -1,11 +1,11 @@
 /**
- * Git Provider Abstraction Types
+ * Git Provider 抽象类型
  *
- * Shared interfaces for multi-provider git hosting support.
- * Providers: GitHub, GitLab, Bitbucket, Azure DevOps, Gitea/Forgejo.
+ * 用于多 provider git 托管支持的共享接口。
+ * Providers：GitHub、GitLab、Bitbucket、Azure DevOps、Gitea/Forgejo。
  */
 
-/** Supported git hosting provider identifiers */
+/** 支持的 git 托管 provider 标识符 */
 export type ProviderName =
   | 'github'
   | 'gitlab'
@@ -15,7 +15,7 @@ export type ProviderName =
   | 'forgejo'
   | 'unknown';
 
-/** Parsed remote URL information */
+/** 解析后的远程 URL 信息 */
 export interface RemoteUrlInfo {
   provider: ProviderName;
   host: string;
@@ -23,7 +23,7 @@ export interface RemoteUrlInfo {
   repo: string;
 }
 
-/** Pull request / merge request information */
+/** Pull request / merge request 信息 */
 export interface PRInfo {
   title: string;
   headBranch?: string;
@@ -33,7 +33,7 @@ export interface PRInfo {
   author?: string;
 }
 
-/** Issue / work item information */
+/** Issue / work item 信息 */
 export interface IssueInfo {
   title: string;
   body?: string;
@@ -42,45 +42,45 @@ export interface IssueInfo {
 }
 
 /**
- * Git hosting provider interface.
+ * Git 托管 provider 接口。
  *
- * Each provider implements this to support PR/issue operations
- * via its CLI tool or REST API.
+ * 每个 provider 实现该接口，通过其 CLI 工具或 REST API
+ * 支持 PR/issue 操作。
  */
 export interface GitProvider {
-  /** Provider identifier */
+  /** Provider 标识符 */
   readonly name: ProviderName;
 
-  /** Human-readable name (e.g., "GitHub", "GitLab") */
+  /** 人类可读名称（例如 "GitHub"、"GitLab"） */
   readonly displayName: string;
 
-  /** What this provider calls PRs: 'PR' or 'MR' */
+  /** 该 provider 对 PR 的称呼：'PR' 或 'MR' */
   readonly prTerminology: 'PR' | 'MR';
 
   /**
-   * Git refspec pattern for fetching PR/MR branches.
-   * Use {number} as placeholder for the PR/MR number
-   * and {branch} for the local branch name.
-   * Example: "pull/{number}/head:{branch}" for GitHub.
-   * Null if provider doesn't support refspec-based fetching.
+   * 用于拉取 PR/MR 分支的 Git refspec 模式。
+   * 使用 {number} 作为 PR/MR 编号占位符，
+   * {branch} 作为本地分支名占位符。
+   * 示例：GitHub 为 "pull/{number}/head:{branch}"。
+   * 若 provider 不支持基于 refspec 的拉取，则为 null。
    */
   readonly prRefspec: string | null;
 
-  /** Check if a remote URL belongs to this provider */
+  /** 检查某远程 URL 是否属于该 provider */
   detectFromRemote(url: string): boolean;
 
-  /** Probe an API endpoint to detect this provider (for self-hosted) */
+  /** 探测 API 接口以识别该 provider（用于自托管场景） */
   detectFromApi?(baseUrl: string): Promise<boolean>;
 
-  /** Fetch PR/MR information */
+  /** 拉取 PR/MR 信息 */
   viewPR(number: number, owner?: string, repo?: string): PRInfo | null | Promise<PRInfo | null>;
 
-  /** Fetch issue/work-item information */
+  /** 拉取 issue/work-item 信息 */
   viewIssue(number: number, owner?: string, repo?: string): IssueInfo | null | Promise<IssueInfo | null>;
 
-  /** Check if the provider's CLI is authenticated */
+  /** 检查该 provider 的 CLI 是否已通过鉴权 */
   checkAuth(): boolean;
 
-  /** Return the required CLI tool name, or null if API-only */
+  /** 返回所需的 CLI 工具名；若仅使用 API 则返回 null */
   getRequiredCLI(): string | null;
 }

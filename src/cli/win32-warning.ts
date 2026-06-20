@@ -2,9 +2,9 @@ import chalk from 'chalk';
 import { isTmuxAvailable } from './tmux-utils.js';
 
 /**
- * Warn if running on native Windows (win32) without tmux available.
- * Called at CLI startup from src/cli/index.ts.
- * If a tmux-compatible binary (e.g. psmux) is on PATH, the warning is skipped.
+ * 当运行在原生 Windows (win32) 且 tmux 不可用时发出警告。
+ * 在 CLI 启动时由 src/cli/index.ts 调用。
+ * 若 PATH 上存在 tmux 兼容二进制 (例如 psmux),则跳过警告。
  */
 export function warnIfWin32(): void {
   if (process.platform === 'win32' && !isTmuxAvailable()) {

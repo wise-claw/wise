@@ -1,10 +1,10 @@
 /**
- * Model Routing Feature
+ * 模型路由特性
  *
- * Intelligent model routing system that routes sub-agent tasks to appropriate
- * models (Opus/Sonnet/Haiku) based on task complexity.
+ * 智能模型路由系统，根据任务复杂度将子代理任务路由到合适的
+ * 模型（Opus/Sonnet/Haiku）。
  *
- * Usage:
+ * 用法：
  * ```typescript
  * import { routeTask, routeWithEscalation, adaptPromptForTier } from './model-routing';
  *
@@ -18,7 +18,7 @@
  * ```
  */
 
-// Re-export types
+// 重新导出类型
 export type {
   ComplexityTier,
   ComplexitySignals,
@@ -41,7 +41,7 @@ export {
   TIER_PROMPT_STRATEGIES,
 } from './types.js';
 
-// Re-export signal extraction
+// 重新导出信号提取
 export {
   extractLexicalSignals,
   extractStructuralSignals,
@@ -49,7 +49,7 @@ export {
   extractAllSignals,
 } from './signals.js';
 
-// Re-export scoring
+// 重新导出评分
 export {
   calculateComplexityScore,
   calculateComplexityTier,
@@ -58,7 +58,7 @@ export {
   calculateConfidence,
 } from './scorer.js';
 
-// Re-export rules
+// 重新导出规则
 export {
   DEFAULT_ROUTING_RULES,
   evaluateRules,
@@ -67,7 +67,7 @@ export {
   mergeRules,
 } from './rules.js';
 
-// Re-export router
+// 重新导出路由
 export {
   routeTask,
   routeWithEscalation,
@@ -80,7 +80,7 @@ export {
   quickTierForAgent,
 } from './router.js';
 
-// Re-export prompt adaptations
+// 重新导出 prompt 适配
 export {
   adaptPromptForTier,
   getPromptStrategy,
@@ -91,12 +91,12 @@ export {
   TIER_TASK_INSTRUCTIONS,
 } from './prompts/index.js';
 
-// Local imports for routeAndAdaptTask convenience function
+// 为 routeAndAdaptTask 便捷函数做的本地导入
 import { routeWithEscalation } from './router.js';
 import { adaptPromptForTier } from './prompts/index.js';
 
 /**
- * Convenience function to route and adapt prompt in one call
+ * 一次性完成路由与 prompt 适配的便捷函数
  */
 export function routeAndAdaptTask(
   taskPrompt: string,

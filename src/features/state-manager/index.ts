@@ -1,15 +1,15 @@
 /**
- * State Manager
+ * 状态管理器
  *
- * Unified state management that standardizes state file locations:
- * - Local state: .wise/state/{name}.json
- * - Global state: XDG-aware user WISE state with legacy ~/.wise/state fallback
+ * 统一的状态管理，标准化状态文件位置：
+ * - 本地状态：.wise/state/{name}.json
+ * - 全局状态：XDG 感知的用户 WISE 状态，兜底到旧版 ~/.wise/state
  *
- * Features:
- * - Type-safe read/write operations
- * - Auto-create directories
- * - Legacy location support (for migration)
- * - State cleanup utilities
+ * 特性：
+ * - 类型安全的读写操作
+ * - 自动创建目录
+ * - 支持旧版位置（用于迁移）
+ * - 状态清理工具
  */
 
 import * as fs from "fs";
@@ -37,22 +37,22 @@ import {
   DEFAULT_STATE_CONFIG,
 } from "./types.js";
 
-// Standard state directories
-/** Get the absolute path to the local state directory, resolved from the git worktree root. */
+// 标准状态目录
+/** 获取本地状态目录的绝对路径，从 git worktree 根解析。 */
 function getLocalStateDir(): string {
   return path.join(validateWorkingDirectory(), WisePaths.STATE);
 }
 /**
- * @deprecated for mode state. Global state directory is only used for analytics and daemon state.
- * Mode state should use LOCAL_STATE_DIR exclusively.
+ * @deprecated 用于模式状态。全局状态目录仅用于分析和守护进程状态。
+ * 模式状态应只用 LOCAL_STATE_DIR。
  */
 const GLOBAL_STATE_DIR = getGlobalWiseStateRoot();
 
-/** Maximum age for state files before they are considered stale (4 hours) */
+/** 状态文件被视为陈旧前的最大时长（4 小时） */
 const MAX_STATE_AGE_MS = 4 * 60 * 60 * 1000;
 
-// Read cache: avoids re-reading unchanged state files within TTL
-const STATE_CACHE_TTL_MS = 5_000; // 5 seconds
+// 读缓存：在 TTL 内避免重复读取未变化的状态文件
+const STATE_CACHE_TTL_MS = 5_000; // 5 秒
 const MAX_CACHE_SIZE = 200;
 interface CacheEntry {
   data: unknown;
@@ -62,14 +62,14 @@ interface CacheEntry {
 const stateCache = new Map<string, CacheEntry>();
 
 /**
- * Clear the state read cache.
- * Exported for testing and for write/clear operations to invalidate stale entries.
+ * 清空状态读缓存。
+ * 导出供测试以及写/清操作用于作废陈旧条目。
  */
 export function clearStateCache(): void {
   stateCache.clear();
 }
 
-// Legacy state locations (for backward compatibility)
+// 旧版状态位置（用于向后兼容）
 const LEGACY_LOCATIONS: Record<string, string[]> = {
   boulder: [".wise/state/boulder.json"],
   autopilot: [".wise/state/autopilot-state.json"],
@@ -86,7 +86,7 @@ const LEGACY_LOCATIONS: Record<string, string[]> = {
 };
 
 /**
- * Get the standard path for a state file
+ * 获取状态文件的标准路径
  */
 export function getStatePath(name: string, location: StateLocation): string {
   const baseDir =
@@ -95,7 +95,7 @@ export function getStatePath(name: string, location: StateLocation): string {
 }
 
 /**
- * Get legacy paths for a state file (for migration)
+ * 获取状态文件的旧版路径（用于迁移）
  */
 export function getLegacyPaths(name: string, location: StateLocation = StateLocation.LOCAL): string[] {
   const legacyPaths = [...(LEGACY_LOCATIONS[name] || [])];
@@ -108,7 +108,7 @@ export function getLegacyPaths(name: string, location: StateLocation = StateLoca
 }
 
 /**
- * Ensure state directory exists
+ * 确保状态目录存在
  */
 export function ensureStateDir(location: StateLocation): void {
   const dir =
@@ -129,10 +129,10 @@ function warnStateReadFailure(kind: "state" | "legacy state", filePath: string, 
 }
 
 /**
- * Read state from file
+ * 从文件读取状态
  *
- * Checks standard location first, then legacy locations if enabled.
- * Returns both the data and where it was found.
+ * 先检查标准位置，启用时再检查旧版位置。
+ * 返回数据及其所在位置。
  */
 export function readState<T = StateData>(
   name: string,
@@ -143,16 +143,16 @@ export function readState<T = StateData>(
   const standardPath = getStatePath(name, location);
   const legacyPaths = checkLegacy ? getLegacyPaths(name, location) : [];
 
-  // Try standard location first
+  // 先尝试标准位置
   if (fs.existsSync(standardPath)) {
     try {
-      // Get mtime BEFORE reading to prevent TOCTOU cache poisoning.
-      // Previously mtime was read AFTER readFileSync, so a concurrent write
-      // between the two could cache stale data under the new mtime.
+      // 在读取前获取 mtime，以防 TOCTOU 缓存投毒。
+      // 此前 mtime 在 readFileSync 之后读取，因此两次操作间的
+      // 并发写入可能以新的 mtime 缓存陈旧数据。
       const statBefore = fs.statSync(standardPath);
       const mtimeBefore = statBefore.mtimeMs;
 
-      // Check cache: entry exists, mtime matches, TTL not expired
+      // 检查缓存：条目存在、mtime 匹配、TTL 未过期
       const cached = stateCache.get(standardPath);
       if (
         cached &&
@@ -167,13 +167,13 @@ export function readState<T = StateData>(
         };
       }
 
-      // Cache miss or stale — read from disk
+      // 缓存未命中或陈旧 —— 从磁盘读取
       const content = fs.readFileSync(standardPath, "utf-8");
       const data = JSON.parse(content) as T;
 
-      // Verify mtime unchanged during read to prevent caching inconsistent data.
-      // If the file was modified between our statBefore and readFileSync, we still
-      // return the data but do NOT cache it — the next read will re-read from disk.
+      // 校验读取期间 mtime 未变，以防缓存不一致的数据。
+      // 若文件在 statBefore 与 readFileSync 之间被修改，仍
+      // 返回数据但不缓存 —— 下次读取会重新从磁盘读取。
       try {
         const statAfter = fs.statSync(standardPath);
         if (statAfter.mtimeMs === mtimeBefore) {
@@ -188,7 +188,7 @@ export function readState<T = StateData>(
           });
         }
       } catch {
-        // statSync failed — skip caching, data is still returned
+        // statSync 失败 —— 跳过缓存，数据仍会返回
       }
 
       return {
@@ -198,12 +198,12 @@ export function readState<T = StateData>(
         legacyLocations: [],
       };
     } catch (error) {
-      // Invalid JSON or read error - treat as not found
+      // 非法 JSON 或读取错误 —— 视为未找到
       warnStateReadFailure("state", standardPath, error);
     }
   }
 
-  // Try legacy locations
+  // 尝试旧版位置
   if (checkLegacy) {
     for (const legacyPath of legacyPaths) {
       const resolvedPath = resolveLegacyStatePath(legacyPath);
@@ -232,10 +232,10 @@ export function readState<T = StateData>(
 }
 
 /**
- * Write state to file
+ * 将状态写入文件
  *
- * Always writes to the standard location.
- * Creates directories if they don't exist.
+ * 始终写入标准位置。
+ * 目录不存在时自动创建。
  */
 export function writeState<T = StateData>(
   name: string,
@@ -246,11 +246,11 @@ export function writeState<T = StateData>(
   const createDirs = options?.createDirs ?? DEFAULT_STATE_CONFIG.createDirs;
   const statePath = getStatePath(name, location);
 
-  // Invalidate cache on write
+  // 写入时作废缓存
   stateCache.delete(statePath);
 
   try {
-    // Ensure directory exists
+    // 确保目录存在
     if (createDirs) {
       ensureStateDir(location);
     }
@@ -271,16 +271,16 @@ export function writeState<T = StateData>(
 }
 
 /**
- * Clear state from all locations (standard + legacy)
+ * 从所有位置（标准 + 旧版）清除状态
  *
- * Removes the state file from both standard and legacy locations.
- * Returns information about what was removed.
+ * 从标准和旧版位置删除状态文件。
+ * 返回已删除内容的信息。
  */
 export function clearState(
   name: string,
   location?: StateLocation,
 ): StateClearResult {
-  // Invalidate cache for all possible locations
+  // 作废所有可能位置的缓存
   const locationsForCache: StateLocation[] = location
     ? [location]
     : [StateLocation.LOCAL, StateLocation.GLOBAL];
@@ -294,12 +294,12 @@ export function clearState(
     errors: [],
   };
 
-  // Determine which locations to check
+  // 确定要检查哪些位置
   const locationsToCheck: StateLocation[] = location
     ? [location]
     : [StateLocation.LOCAL, StateLocation.GLOBAL];
 
-  // Remove from standard locations
+  // 从标准位置删除
   for (const loc of locationsToCheck) {
     const standardPath = getStatePath(name, loc);
     try {
@@ -317,7 +317,7 @@ export function clearState(
     }
   }
 
-  // Remove from legacy locations
+  // 从旧版位置删除
   const legacyPaths = getLegacyPaths(name, location ?? StateLocation.LOCAL);
   for (const legacyPath of legacyPaths) {
     const resolvedPath = resolveLegacyStatePath(legacyPath);
@@ -341,16 +341,16 @@ export function clearState(
 }
 
 /**
- * Migrate state from legacy location to standard location
+ * 将状态从旧版位置迁移到标准位置
  *
- * Finds state in legacy locations and moves it to the standard location.
- * Deletes the legacy file after successful migration.
+ * 在旧版位置查找状态并移动到标准位置。
+ * 迁移成功后删除旧版文件。
  */
 export function migrateState(
   name: string,
   location: StateLocation = StateLocation.LOCAL,
 ): StateMigrationResult {
-  // Check if already in standard location
+  // 检查是否已在标准位置
   const standardPath = getStatePath(name, location);
   if (fs.existsSync(standardPath)) {
     return {
@@ -358,7 +358,7 @@ export function migrateState(
     };
   }
 
-  // Look for legacy state
+  // 查找旧版状态
   const readResult = readState(name, location, { checkLegacy: true });
   if (!readResult.exists || !readResult.foundAt || !readResult.data) {
     return {
@@ -367,7 +367,7 @@ export function migrateState(
     };
   }
 
-  // Check if it's actually from a legacy location
+  // 检查是否确实来自旧版位置
   const isLegacy = readResult.foundAt !== standardPath;
   if (!isLegacy) {
     return {
@@ -375,7 +375,7 @@ export function migrateState(
     };
   }
 
-  // Write to standard location
+  // 写入标准位置
   const writeResult = writeState(name, readResult.data, location);
   if (!writeResult.success) {
     return {
@@ -384,11 +384,11 @@ export function migrateState(
     };
   }
 
-  // Delete legacy file
+  // 删除旧版文件
   try {
     fs.unlinkSync(readResult.foundAt);
   } catch (error) {
-    // Migration succeeded but cleanup failed - not critical
+    // 迁移成功但清理失败 —— 非关键
     console.warn(
       `Failed to delete legacy state at ${readResult.foundAt}:`,
       error,
@@ -403,24 +403,24 @@ export function migrateState(
 }
 
 /**
- * List all state files
+ * 列出所有状态文件
  *
- * Returns information about all state files in the specified location(s).
+ * 返回指定位置中所有状态文件的信息。
  */
 export function listStates(options?: ListStatesOptions): StateFileInfo[] {
   const results: StateFileInfo[] = [];
   const includeLegacy = options?.includeLegacy ?? false;
   const pattern = options?.pattern;
 
-  // Helper to check if name matches pattern
+  // 辅助：检查名称是否匹配模式
   const matchesPattern = (name: string): boolean => {
     if (!pattern) return true;
-    // Simple glob: * matches anything
+    // 简单 glob：* 匹配任意内容
     const regex = new RegExp("^" + pattern.replace(/\*/g, ".*") + "$");
     return regex.test(name);
   };
 
-  // Helper to add state files from a directory
+  // 辅助：从目录添加状态文件
   const addStatesFromDir = (
     dir: string,
     location: StateLocation,
@@ -433,7 +433,7 @@ export function listStates(options?: ListStatesOptions): StateFileInfo[] {
       for (const file of files) {
         if (!file.endsWith(".json")) continue;
 
-        const name = file.slice(0, -5); // Remove .json
+        const name = file.slice(0, -5); // 去除 .json
         if (!matchesPattern(name)) continue;
 
         const filePath = path.join(dir, file);
@@ -453,7 +453,7 @@ export function listStates(options?: ListStatesOptions): StateFileInfo[] {
     }
   };
 
-  // Check standard locations
+  // 检查标准位置
   if (!options?.location || options.location === StateLocation.LOCAL) {
     addStatesFromDir(getLocalStateDir(), StateLocation.LOCAL);
   }
@@ -461,21 +461,21 @@ export function listStates(options?: ListStatesOptions): StateFileInfo[] {
     addStatesFromDir(GLOBAL_STATE_DIR, StateLocation.GLOBAL);
   }
 
-  // Check legacy locations if requested
+  // 如有要求则检查旧版位置
   if (includeLegacy) {
-    // Add logic to scan legacy locations
-    // This would require knowing all possible legacy locations
-    // For now, we skip this as legacy locations are name-specific
+    // 补充扫描旧版位置的逻辑
+    // 这需要知道所有可能的旧版位置
+    // 暂且跳过，因为旧版位置与名称一一对应
   }
 
   return results;
 }
 
 /**
- * Cleanup orphaned state files
+ * 清理孤立状态文件
  *
- * Removes state files that haven't been modified in a long time.
- * Useful for cleaning up abandoned states.
+ * 删除长时间未修改的状态文件。
+ * 适合清理被遗弃的状态。
  */
 export function cleanupOrphanedStates(options?: CleanupOptions): CleanupResult {
   const maxAgeDays = options?.maxAgeDays ?? 30;
@@ -495,7 +495,7 @@ export function cleanupOrphanedStates(options?: CleanupOptions): CleanupResult {
   const states = listStates({ includeLegacy: false });
 
   for (const state of states) {
-    // Skip excluded patterns
+    // 跳过被排除的模式
     if (
       exclude.some((pattern) => {
         const regex = new RegExp("^" + pattern.replace(/\*/g, ".*") + "$");
@@ -505,12 +505,12 @@ export function cleanupOrphanedStates(options?: CleanupOptions): CleanupResult {
       continue;
     }
 
-    // Check if old enough
+    // 检查是否足够陈旧
     if (state.modified > cutoffDate) {
       continue;
     }
 
-    // Delete or record for dry run
+    // 删除或为 dry run 记录
     if (dryRun) {
       result.wouldDelete?.push(state.path);
       result.spaceFreed += state.size;
@@ -532,12 +532,11 @@ export function cleanupOrphanedStates(options?: CleanupOptions): CleanupResult {
 }
 
 /**
- * Determine whether a state's metadata indicates staleness.
+ * 判断状态的元数据是否表明其已陈旧。
  *
- * A state is stale when **both** `updatedAt` and `heartbeatAt` (if present)
- * are older than `maxAgeMs`.  If either timestamp is recent the state is
- * considered alive — this allows long-running workflows that send heartbeats
- * to survive the stale-check.
+ * 当 `updatedAt` 和 `heartbeatAt`（如存在）都早于
+ * `maxAgeMs` 时，状态即为陈旧。任一时间戳较新则视为存活 ——
+ * 这让发送心跳的长时间运行工作流能通过陈旧检查。
  */
 export function isStateStale(
   meta: { updatedAt?: string; heartbeatAt?: string },
@@ -551,17 +550,17 @@ export function isStateStale(
     ? new Date(meta.heartbeatAt).getTime()
     : undefined;
 
-  // If updatedAt is recent, not stale
+  // 若 updatedAt 较新，则不陈旧
   if (updatedAt && !isNaN(updatedAt) && now - updatedAt <= maxAgeMs) {
     return false;
   }
 
-  // If heartbeatAt is recent, not stale
+  // 若 heartbeatAt 较新，则不陈旧
   if (heartbeatAt && !isNaN(heartbeatAt) && now - heartbeatAt <= maxAgeMs) {
     return false;
   }
 
-  // At least one timestamp must exist and be parseable to declare staleness
+  // 至少存在一个可解析的时间戳才能判定为陈旧
   const hasValidTimestamp =
     (updatedAt !== undefined && !isNaN(updatedAt)) ||
     (heartbeatAt !== undefined && !isNaN(heartbeatAt));
@@ -570,17 +569,16 @@ export function isStateStale(
 }
 
 /**
- * Scan all state files in a directory and mark stale ones as inactive.
+ * 扫描目录中所有状态文件，将陈旧的标记为非活动。
  *
- * A state is considered stale if both `_meta.updatedAt` and
- * `_meta.heartbeatAt` are older than `maxAgeMs` (defaults to
- * MAX_STATE_AGE_MS = 4 hours).  States with a recent heartbeat are
- * skipped so that long-running workflows are not killed prematurely.
+ * 当 `_meta.updatedAt` 和 `_meta.heartbeatAt` 都早于
+ * `maxAgeMs`（默认 MAX_STATE_AGE_MS = 4 小时）时，状态即视为陈旧。
+ * 心跳较新的状态会被跳过，避免长时间运行的工作流被提前终止。
  *
- * This is the **only** place that deactivates stale states — the read
- * path (`readState`) is a pure read with no side-effects.
+ * 这是停用陈旧状态的**唯一**位置 —— 读路径（`readState`）
+ * 是无副作用的纯读。
  *
- * @returns Number of states that were marked inactive.
+ * @returns 被标记为非活动的状态数量。
  */
 export function cleanupStaleStates(
   directory?: string,
@@ -595,7 +593,7 @@ export function cleanupStaleStates(
   let cleaned = 0;
   const now = Date.now();
 
-  // Helper: scan JSON files in a directory and mark stale active states inactive
+  // 辅助：扫描目录中的 JSON 文件，将陈旧的活动状态标记为非活动
   const scanDir = (dir: string): void => {
     try {
       const files = fs.readdirSync(dir);
@@ -623,28 +621,28 @@ export function cleanupStaleStates(
               `[state-manager] cleanupStaleStates: marking "${file}" inactive (last updated ${meta.updatedAt ?? "unknown"})`,
             );
             data.active = false;
-            // Invalidate cache for this path
+            // 作废该路径的缓存
             stateCache.delete(filePath);
             try {
               atomicWriteJsonSync(filePath, data);
               cleaned++;
             } catch {
-              /* best-effort */
+              /* 尽力而为 */
             }
           }
         } catch {
-          // Skip files that can't be read/parsed
+          // 跳过无法读取/解析的文件
         }
       }
     } catch {
-      // Directory read error
+      // 目录读取错误
     }
   };
 
-  // Scan top-level state files (.wise/state/*.json)
+  // 扫描顶层状态文件（.wise/state/*.json）
   scanDir(stateDir);
 
-  // Scan session directories (.wise/state/sessions/*/*.json)
+  // 扫描会话目录（.wise/state/sessions/*/*.json）
   const sessionsDir = path.join(stateDir, "sessions");
   if (fs.existsSync(sessionsDir)) {
     try {
@@ -657,36 +655,36 @@ export function cleanupStaleStates(
         }
       }
     } catch {
-      // Sessions directory read error
+      // 会话目录读取错误
     }
   }
 
   return cleaned;
 }
 
-// File locking for atomic read-modify-write operations
-const LOCK_STALE_MS = 30_000; // locks older than 30s are considered stale
-const LOCK_TIMEOUT_MS = 5_000; // max time to wait for lock acquisition
-const LOCK_POLL_MS = 10; // busy-wait interval between lock attempts
+// 用于原子读-改-写操作的文件锁
+const LOCK_STALE_MS = 30_000; // 超过 30s 的锁视为陈旧
+const LOCK_TIMEOUT_MS = 5_000; // 获取锁的最大等待时间
+const LOCK_POLL_MS = 10; // 锁尝试之间的忙等间隔
 
 /**
- * Execute a function while holding an exclusive file lock.
- * Uses O_EXCL lockfile for cross-process mutual exclusion.
- * Stale locks (older than LOCK_STALE_MS) are automatically broken.
+ * 在持有独占文件锁的情况下执行函数。
+ * 使用 O_EXCL 锁文件实现跨进程互斥。
+ * 陈旧锁（超过 LOCK_STALE_MS）会被自动打破。
  *
- * @throws Error if the lock cannot be acquired within LOCK_TIMEOUT_MS
+ * @throws 若在 LOCK_TIMEOUT_MS 内无法获取锁则抛出错误
  */
 function withFileLock<R>(filePath: string, fn: () => R): R {
   const lockPath = `${filePath}.lock`;
   const lockDir = path.dirname(lockPath);
   const deadline = Date.now() + LOCK_TIMEOUT_MS;
 
-  // Ensure directory exists for lock file
+  // 确保锁文件所在目录存在
   if (!fs.existsSync(lockDir)) {
     fs.mkdirSync(lockDir, { recursive: true });
   }
 
-  // Acquire lock via exclusive file creation
+  // 通过独占创建文件获取锁
   while (true) {
     try {
       const fd = fs.openSync(lockPath, "wx", 0o600);
@@ -696,19 +694,19 @@ function withFileLock<R>(filePath: string, fn: () => R): R {
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
 
-      // Lock exists — check for staleness
+      // 锁已存在 —— 检查是否陈旧
       try {
         const lockStat = fs.statSync(lockPath);
         if (Date.now() - lockStat.mtimeMs > LOCK_STALE_MS) {
           try {
             fs.unlinkSync(lockPath);
           } catch {
-            /* race OK */
+            /* 竞态可接受 */
           }
           continue;
         }
       } catch {
-        // Lock disappeared — retry immediately
+        // 锁已消失 —— 立即重试
         continue;
       }
 
@@ -716,10 +714,10 @@ function withFileLock<R>(filePath: string, fn: () => R): R {
         throw new Error(`Timed out acquiring state lock: ${lockPath}`);
       }
 
-      // Brief pause before retry (sync spin intentional — this is a sync lock function)
+      // 重试前短暂暂停（刻意同步自旋 —— 这是一个同步锁函数）
       const waitEnd = Date.now() + LOCK_POLL_MS;
       while (Date.now() < waitEnd) {
-        /* spin */
+        /* 自旋 */
       }
     }
   }
@@ -730,17 +728,17 @@ function withFileLock<R>(filePath: string, fn: () => R): R {
     try {
       fs.unlinkSync(lockPath);
     } catch {
-      /* best-effort */
+      /* 尽力而为 */
     }
   }
 }
 
 /**
- * State Manager Class
+ * 状态管理器类
  *
- * Object-oriented interface for managing a specific state.
+ * 用于管理特定状态的面向对象接口。
  *
- * @deprecated For mode state (autopilot, ralph, ultrawork, etc.), use `writeModeState`/`readModeState` from `src/lib/mode-state-io.ts` instead. StateManager is retained for non-mode state only.
+ * @deprecated 对于模式状态（autopilot、ralph、ultrawork 等），请改用 `src/lib/mode-state-io.ts` 中的 `writeModeState`/`readModeState`。StateManager 仅保留用于非模式状态。
  */
 export class StateManager<T = StateData> {
   constructor(
@@ -779,8 +777,8 @@ export class StateManager<T = StateData> {
   update(updater: (current: T | undefined) => T): boolean {
     const statePath = getStatePath(this.name, this.location);
     return withFileLock(statePath, () => {
-      // Invalidate cache to force a fresh read under lock,
-      // preventing stale cached data from being used as the base for updates.
+      // 作废缓存以强制在锁内重新读取，
+      // 防止以陈旧缓存数据作为更新的基础。
       stateCache.delete(statePath);
       const current = this.get();
       const updated = updater(current);
@@ -790,7 +788,7 @@ export class StateManager<T = StateData> {
 }
 
 /**
- * Create a state manager for a specific state
+ * 为特定状态创建状态管理器
  */
 export function createStateManager<T = StateData>(
   name: string,
@@ -799,7 +797,7 @@ export function createStateManager<T = StateData>(
   return new StateManager<T>(name, location);
 }
 
-// Re-export types for external use
+// 重导出类型供外部使用
 export type {
   StateConfig,
   StateReadResult,
@@ -813,7 +811,7 @@ export type {
   StateData,
 };
 
-// Re-export enum, constants, and functions from types
+// 从 types 重导出枚举、常量和函数
 export {
   StateLocation,
   DEFAULT_STATE_CONFIG,

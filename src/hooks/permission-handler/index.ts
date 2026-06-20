@@ -41,22 +41,22 @@ const SAFE_PATTERNS = [
   /^prettier /,
   /^cargo (check|clippy|build)/,
   /^ls( |$)/,
-  // REMOVED: cat, head, tail - they allow reading arbitrary files
+  // 已移除：cat、head、tail —— 它们允许读取任意文件
 ];
 
-// Shell metacharacters that enable command chaining and injection
-// See GitHub Issue #146 for full list of dangerous characters
-// Note: Quotes ("') intentionally excluded - they're needed for paths with spaces
-// and command substitution is already caught by $ detection
+// 支持命令拼接与注入的 shell 元字符
+// 完整危险字符列表参见 GitHub Issue #146
+// 注意：引号 ("') 被刻意排除——带空格的路径需要它们，
+// 且命令替换已由 $ 检测覆盖
 const DANGEROUS_SHELL_CHARS = /[;&|`$()<>\n\r\t\0\\{}\[\]*?~!#]/;
 
-// Heredoc operator detection (<<, <<-, <<~, with optional quoting of delimiter)
+// Heredoc 操作符检测（<<、<<-、<<~，定界符可选引用）
 const HEREDOC_PATTERN = /<<[-~]?\s*['"]?\w+['"]?/;
 
 /**
- * Patterns that are safe to auto-allow even when they contain heredoc content.
- * Matched against the first line of the command (before the heredoc body).
- * Issue #608: Prevents full heredoc body from being stored in settings.local.json.
+ * 即使包含 heredoc 内容也可安全自动放行的模式。
+ * 与命令首行（heredoc 正文之前）进行匹配。
+ * Issue #608：防止完整 heredoc 正文被写入 settings.local.json。
  */
 const SAFE_HEREDOC_PATTERNS = [
   /^git commit\b/,
@@ -549,13 +549,13 @@ export function isSafeAutoApprovedCommand(command: string, cwd: string): boolean
 }
 
 /**
- * Check if a command matches safe patterns
+ * 检查命令是否匹配安全模式
  */
 export function isSafeCommand(command: string): boolean {
   const trimmed = command.trim();
 
-  // SECURITY: Reject ANY command with shell metacharacters
-  // These allow command chaining that bypasses safe pattern checks
+  // 安全：拒绝任何含 shell 元字符的命令
+  // 这些字符允许命令拼接，从而绕过安全模式检查
   if (DANGEROUS_SHELL_CHARS.test(trimmed)) {
     return false;
   }
@@ -564,38 +564,36 @@ export function isSafeCommand(command: string): boolean {
 }
 
 /**
- * Check if a command is a heredoc command with a safe base command.
- * Issue #608: Heredoc commands contain shell metacharacters (<<, \n, $, etc.)
- * that cause isSafeCommand() to reject them. When they fall through to Claude
- * Code's native permission flow and the user approves "Always allow", the entire
- * heredoc body (potentially hundreds of lines) gets stored in settings.local.json.
+ * 检查命令是否为带安全基础命令的 heredoc 命令。
+ * Issue #608：heredoc 命令包含 shell 元字符（<<、\n、$ 等），会导致 isSafeCommand() 拒绝它们。
+ * 当它们落入 Claude Code 原生权限流程且用户选择"始终允许"时，
+ * 整段 heredoc 正文（可能上百行）会被写入 settings.local.json。
  *
- * This function detects heredoc commands and checks whether the base command
- * (first line) matches known-safe patterns, allowing auto-approval without
- * polluting settings.local.json.
+ * 本函数检测 heredoc 命令并校验基础命令（首行）是否匹配已知安全模式，
+ * 从而允许自动放行而不污染 settings.local.json。
  */
 export function isHeredocWithSafeBase(command: string): boolean {
   const trimmed = command.trim();
 
-  // Heredoc commands from Claude Code are always multi-line
+  // 来自 Claude Code 的 heredoc 命令总是多行的
   if (!trimmed.includes('\n')) {
     return false;
   }
 
-  // Must contain a heredoc operator
+  // 必须包含 heredoc 操作符
   if (!HEREDOC_PATTERN.test(trimmed)) {
     return false;
   }
 
-  // Extract the first line as the base command
+  // 提取首行作为基础命令
   const firstLine = trimmed.split('\n')[0].trim();
 
-  // Check if the first line starts with a safe pattern
+  // 检查首行是否以安全模式开头
   return SAFE_HEREDOC_PATTERNS.some(pattern => pattern.test(firstLine));
 }
 
 /**
- * Check if an active mode (autopilot/ultrawork/ralph/team) is running
+ * 检查是否有活动模式（autopilot/ultrawork/ralph/team）正在运行
  */
 export function isActiveModeRunning(directory: string): boolean {
   const stateDir = path.join(getWiseRoot(directory), 'state');
@@ -615,17 +613,17 @@ export function isActiveModeRunning(directory: string): boolean {
   for (const stateFile of activeStateFiles) {
     const statePath = path.join(stateDir, stateFile);
     if (fs.existsSync(statePath)) {
-      // JSON state files: check active/status fields
+      // JSON 状态文件：检查 active/status 字段
       try {
         const content = fs.readFileSync(statePath, 'utf-8');
         const state = JSON.parse(content);
 
-        // Check if mode is active
+        // 检查模式是否处于活动状态
         if (state.active === true || state.status === 'running' || state.status === 'active') {
           return true;
         }
       } catch (_error) {
-        // Ignore parse errors, continue checking
+        // 忽略解析错误，继续检查
         continue;
       }
     }
@@ -635,11 +633,11 @@ export function isActiveModeRunning(directory: string): boolean {
 }
 
 /**
- * Process permission request and decide whether to auto-allow
+ * 处理权限请求并决定是否自动放行
  */
 export function processPermissionRequest(input: PermissionRequestInput): HookOutput {
-  // Only process Bash tool for command auto-approval
-  // Normalize tool name - handle both proxy_ prefixed and unprefixed versions
+  // 仅处理 Bash 工具的命令自动放行
+  // 规范化工具名——同时处理带 proxy_ 前缀与无前缀的版本
   const toolName = input.tool_name.replace(/^proxy_/, '');
   if (toolName !== 'Bash') {
     return { continue: true };
@@ -652,7 +650,7 @@ export function processPermissionRequest(input: PermissionRequestInput): HookOut
 
   const shouldAskBashPermission = hasClaudePermissionAsk(input.cwd, 'Bash', command);
 
-  // Auto-allow safe commands
+  // 自动放行安全命令
   if (!shouldAskBashPermission && isSafeAutoApprovedCommand(command, input.cwd)) {
     const reason = isHeredocWithSafeBase(command)
       ? 'Safe command with heredoc content'
@@ -669,12 +667,12 @@ export function processPermissionRequest(input: PermissionRequestInput): HookOut
     };
   }
 
-  // Default: let normal permission flow handle it
+  // 默认：交由常规权限流程处理
   return { continue: true };
 }
 
 /**
- * Main hook entry point
+ * 主钩子入口
  */
 export async function handlePermissionRequest(input: PermissionRequestInput): Promise<HookOutput> {
   return processPermissionRequest(input);

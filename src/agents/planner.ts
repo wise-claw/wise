@@ -1,9 +1,9 @@
 /**
- * Planner Agent
+ * Planner Agent - 策略规划顾问
  *
- * Strategic planning consultant.
+ * 策略规划顾问。
  *
- * Ported from oh-my-opencode's agent definitions.
+ * 从 oh-my-opencode 的 agent 定义移植。
  */
 
 import type { AgentConfig, AgentPromptMetadata } from './types.js';

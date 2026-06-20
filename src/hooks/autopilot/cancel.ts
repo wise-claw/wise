@@ -1,8 +1,8 @@
 /**
- * Autopilot Cancellation
+ * Autopilot 取消逻辑
  *
- * Handles cancellation of autopilot, cleaning up all related state
- * including any active Ralph or UltraQA modes.
+ * 处理 autopilot 的取消，清理所有相关状态，
+ * 包括任何处于活跃状态的 Ralph 或 UltraQA 模式。
  */
 
 import {
@@ -22,8 +22,8 @@ export interface CancelResult {
 }
 
 /**
- * Cancel autopilot and clean up all related state
- * Progress is preserved for potential resume
+ * 取消 autopilot 并清理所有相关状态
+ * 进度予以保留以便后续恢复
  */
 export function cancelAutopilot(directory: string, sessionId?: string): CancelResult {
   const state = readAutopilotState(directory, sessionId);
@@ -42,10 +42,10 @@ export function cancelAutopilot(directory: string, sessionId?: string): CancelRe
     };
   }
 
-  // Track what we cleaned up
+  // 记录已清理的内容
   const cleanedUp: string[] = [];
 
-  // Clean up any active Ralph state
+  // 清理任何活跃的 Ralph 状态
   const ralphState = sessionId
     ? readRalphState(directory, sessionId)
     : readRalphState(directory);
@@ -66,7 +66,7 @@ export function cancelAutopilot(directory: string, sessionId?: string): CancelRe
     cleanedUp.push('ralph');
   }
 
-  // Clean up any active UltraQA state
+  // 清理任何活跃的 UltraQA 状态
   const ultraqaState = sessionId
     ? readUltraQAState(directory, sessionId)
     : readUltraQAState(directory);
@@ -79,7 +79,7 @@ export function cancelAutopilot(directory: string, sessionId?: string): CancelRe
     cleanedUp.push('ultraqa');
   }
 
-  // Mark autopilot as inactive but preserve state for resume
+  // 将 autopilot 标记为非活跃，但保留状态以便恢复
   state.active = false;
   writeAutopilotState(directory, state, sessionId);
 
@@ -95,7 +95,7 @@ export function cancelAutopilot(directory: string, sessionId?: string): CancelRe
 }
 
 /**
- * Fully clear autopilot state (no preserve)
+ * 完全清除 autopilot 状态（不保留）
  */
 export function clearAutopilot(directory: string, sessionId?: string): CancelResult {
   const state = readAutopilotState(directory, sessionId);
@@ -107,7 +107,7 @@ export function clearAutopilot(directory: string, sessionId?: string): CancelRes
     };
   }
 
-  // Clean up all related state
+  // 清理所有相关状态
   const ralphState = sessionId
     ? readRalphState(directory, sessionId)
     : readRalphState(directory);
@@ -137,7 +137,7 @@ export function clearAutopilot(directory: string, sessionId?: string): CancelRes
     }
   }
 
-  // Clear autopilot state completely
+  // 完全清除 autopilot 状态
   clearAutopilotState(directory, sessionId);
 
   return {
@@ -146,17 +146,17 @@ export function clearAutopilot(directory: string, sessionId?: string): CancelRes
   };
 }
 
-/** Maximum age (ms) for state to be considered resumable (1 hour) */
+/** 状态被视为可恢复的最大时长（毫秒，1 小时） */
 export const STALE_STATE_MAX_AGE_MS = 60 * 60 * 1000;
 
 /**
- * Check if autopilot can be resumed.
+ * 检查 autopilot 是否可恢复。
  *
- * Guards against stale state reuse (issue #609):
- * - Rejects terminal phases (complete/failed)
- * - Rejects states still marked active (session may still be running)
- * - Rejects stale states older than STALE_STATE_MAX_AGE_MS
- * - Auto-cleans stale state files to prevent future false positives
+ * 防止复用过期状态（issue #609）：
+ * - 拒绝终态阶段（complete/failed）
+ * - 拒绝仍标记为活跃的状态（会话可能仍在运行）
+ * - 拒绝超过 STALE_STATE_MAX_AGE_MS 的过期状态
+ * - 自动清理过期状态文件以避免未来的误判
  */
 export function canResumeAutopilot(directory: string, sessionId?: string): {
   canResume: boolean;
@@ -169,22 +169,21 @@ export function canResumeAutopilot(directory: string, sessionId?: string): {
     return { canResume: false };
   }
 
-  // Cannot resume terminal states
+  // 终态无法恢复
   if (state.phase === 'complete' || state.phase === 'failed') {
     return { canResume: false, state, resumePhase: state.phase };
   }
 
-  // Cannot resume a state that claims to be actively running — it may belong
-  // to another session that is still alive.
+  // 无法恢复声称仍在活跃运行的状态——它可能属于另一个仍然存活的会话。
   if (state.active) {
     return { canResume: false, state, resumePhase: state.phase };
   }
 
-  // Reject stale states: if the state file hasn't been touched in over an hour
-  // it is from a previous session and should not be resumed.
+  // 拒绝过期状态：如果状态文件已超过一小时未变动，
+  // 则它来自之前的会话，不应被恢复。
   const ageMs = getAutopilotStateAge(directory, sessionId);
   if (ageMs !== null && ageMs > STALE_STATE_MAX_AGE_MS) {
-    // Auto-cleanup stale state to prevent future false positives
+    // 自动清理过期状态以避免未来误判
     clearAutopilotState(directory, sessionId);
     return { canResume: false, state, resumePhase: state.phase };
   }
@@ -197,7 +196,7 @@ export function canResumeAutopilot(directory: string, sessionId?: string): {
 }
 
 /**
- * Resume a paused autopilot session
+ * 恢复已暂停的 autopilot 会话
  */
 export function resumeAutopilot(directory: string, sessionId?: string): {
   success: boolean;
@@ -213,7 +212,7 @@ export function resumeAutopilot(directory: string, sessionId?: string): {
     };
   }
 
-  // Re-activate
+  // 重新激活
   state.active = true;
   state.iteration++;
 
@@ -232,7 +231,7 @@ export function resumeAutopilot(directory: string, sessionId?: string): {
 }
 
 /**
- * Format cancel message for display
+ * 格式化取消消息以供展示
  */
 export function formatCancelMessage(result: CancelResult): string {
   if (!result.success) {

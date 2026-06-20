@@ -1,20 +1,19 @@
 /**
- * Directory README Injector Types
+ * 目录 README 注入器类型
  *
- * Type definitions for tracking injected README files per session.
+ * 用于按会话追踪已注入 README 文件的类型定义。
  *
- * Ported from oh-my-opencode's directory-readme-injector hook.
+ * 移植自 oh-my-opencode 的 directory-readme-injector 钩子。
  */
 
 /**
- * Storage data for tracking which directory READMEs have been injected
- * into a session's context.
+ * 用于追踪哪些目录 README 已被注入到会话上下文的存储数据。
  */
 export interface InjectedPathsData {
-  /** Session identifier */
+  /** 会话标识符 */
   sessionID: string;
-  /** List of directory paths whose READMEs have been injected */
+  /** 已注入 README 的目录路径列表 */
   injectedPaths: string[];
-  /** Timestamp of last update */
+  /** 最后更新的时间戳 */
   updatedAt: number;
 }

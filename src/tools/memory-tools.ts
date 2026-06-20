@@ -1,7 +1,7 @@
 /**
- * Project Memory MCP Tools
+ * 项目记忆 MCP 工具
  *
- * Provides tools for reading and writing project memory.
+ * 提供读取和写入项目记忆的工具。
  */
 
 import { z } from 'zod';
@@ -22,7 +22,7 @@ import { mergeProjectMemory } from '../lib/project-memory-merge.js';
 import { ToolDefinition } from './types.js';
 
 // ============================================================================
-// project_memory_read - Read project memory
+// project_memory_read - 读取项目记忆
 // ============================================================================
 
 export const projectMemoryReadTool: ToolDefinition<{
@@ -61,7 +61,7 @@ export const projectMemoryReadTool: ToolDefinition<{
         };
       }
 
-      // Return specific section
+      // 返回指定分区
       const sectionMap: Record<string, keyof ProjectMemory | 'notes' | 'directives'> = {
         techStack: 'techStack',
         build: 'build',
@@ -94,7 +94,7 @@ export const projectMemoryReadTool: ToolDefinition<{
 };
 
 // ============================================================================
-// project_memory_write - Write project memory
+// project_memory_write - 写入项目记忆
 // ============================================================================
 
 export const projectMemoryWriteTool: ToolDefinition<{
@@ -115,7 +115,7 @@ export const projectMemoryWriteTool: ToolDefinition<{
     try {
       const root = validateWorkingDirectory(workingDirectory);
 
-      // Ensure .wise directory exists
+      // 确保 .wise 目录存在
       ensureWiseDir('', root);
 
       let finalMemory: ProjectMemory;
@@ -131,7 +131,7 @@ export const projectMemoryWriteTool: ToolDefinition<{
         finalMemory = memory as unknown as ProjectMemory;
       }
 
-      // Ensure required fields
+      // 确保必填字段
       if (!finalMemory.version) finalMemory.version = '1.0.0';
       if (!finalMemory.lastScanned) finalMemory.lastScanned = Date.now();
       if (!finalMemory.projectRoot) finalMemory.projectRoot = root;
@@ -156,7 +156,7 @@ export const projectMemoryWriteTool: ToolDefinition<{
 };
 
 // ============================================================================
-// project_memory_add_note - Add a custom note
+// project_memory_add_note - 添加自定义备注
 // ============================================================================
 
 export const projectMemoryAddNoteTool: ToolDefinition<{
@@ -177,7 +177,7 @@ export const projectMemoryAddNoteTool: ToolDefinition<{
     try {
       const root = validateWorkingDirectory(workingDirectory);
 
-      // Ensure memory exists
+      // 确保记忆存在
       const memory = await loadProjectMemory(root);
       if (!memory) {
         return {
@@ -208,7 +208,7 @@ export const projectMemoryAddNoteTool: ToolDefinition<{
 };
 
 // ============================================================================
-// project_memory_add_directive - Add a user directive
+// project_memory_add_directive - 添加用户指令
 // ============================================================================
 
 export const projectMemoryAddDirectiveTool: ToolDefinition<{
@@ -231,7 +231,7 @@ export const projectMemoryAddDirectiveTool: ToolDefinition<{
     try {
       const root = validateWorkingDirectory(workingDirectory);
 
-      // Ensure memory exists
+      // 确保记忆存在
       const memory = await loadProjectMemory(root);
       if (!memory) {
         return {
@@ -271,7 +271,7 @@ export const projectMemoryAddDirectiveTool: ToolDefinition<{
 };
 
 /**
- * All memory tools for registration
+ * 全部记忆工具，用于注册
  */
 export const memoryTools = [
   projectMemoryReadTool,

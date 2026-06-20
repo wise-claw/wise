@@ -1,16 +1,16 @@
 /**
- * Rate Limit Wait Feature
+ * Rate Limit Wait 功能
  *
- * Auto-resume Claude Code sessions when rate limits reset.
+ * 当速率限制重置时自动恢复 Claude Code 会话。
  *
- * Usage:
- *   wise wait status         - Show current rate limit status
- *   wise wait daemon start   - Start the background daemon
- *   wise wait daemon stop    - Stop the daemon
- *   wise wait detect         - Scan for blocked Claude Code sessions
+ * 用法：
+ *   wise wait status         - 显示当前速率限制状态
+ *   wise wait daemon start   - 启动后台守护进程
+ *   wise wait daemon stop    - 停止守护进程
+ *   wise wait detect         - 扫描被阻塞的 Claude Code 会话
  */
 
-// Type exports
+// 类型导出
 export type {
   RateLimitStatus,
   TmuxPane,
@@ -23,7 +23,7 @@ export type {
   DaemonResponse,
 } from './types.js';
 
-// Rate limit monitor exports
+// 速率限制监控导出
 export {
   checkRateLimitStatus,
   formatTimeUntilReset,
@@ -32,7 +32,7 @@ export {
   shouldMonitorBlockedPanes,
 } from './rate-limit-monitor.js';
 
-// tmux detector exports
+// tmux 检测器导出
 export {
   isTmuxAvailable,
   isInsideTmux,
@@ -46,7 +46,7 @@ export {
   formatBlockedPanesSummary,
 } from './tmux-detector.js';
 
-// Daemon exports
+// 守护进程导出
 export {
   readDaemonState,
   isDaemonRunning,

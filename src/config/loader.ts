@@ -1,10 +1,10 @@
 /**
- * Configuration Loader
+ * 配置加载器
  *
- * Handles loading and merging configuration from multiple sources:
- * - User config: ~/.config/claude-wise/config.jsonc
- * - Project config: .claude/wise.jsonc
- * - Environment variables
+ * 负责从多个来源加载与合并配置：
+ * - 用户配置：~/.config/claude-wise/config.jsonc
+ * - 项目配置：.claude/wise.jsonc
+ * - 环境变量
  */
 
 import { readFileSync, existsSync } from "fs";
@@ -30,15 +30,15 @@ import { normalizeDelegationRole } from "../features/delegation-routing/types.js
 import { isDeprecatedMcpProvider } from "../features/delegation-routing/index.js";
 
 /**
- * Default configuration.
+ * 默认配置。
  *
- * Model IDs are resolved from environment variables (WISE_MODEL_HIGH,
- * WISE_MODEL_MEDIUM, WISE_MODEL_LOW) with built-in fallbacks.
- * User/project config files can further override via deepMerge.
+ * 模型 ID 从环境变量（WISE_MODEL_HIGH、WISE_MODEL_MEDIUM、WISE_MODEL_LOW）
+ * 解析，并带有内置兜底值。
+ * 用户/项目配置文件可通过 deepMerge 进一步覆盖。
  *
- * Note: env vars for external model defaults (WISE_CODEX_DEFAULT_MODEL,
- * WISE_GEMINI_DEFAULT_MODEL) are read lazily in loadEnvConfig() to avoid
- * capturing stale values at module load time.
+ * 注意：外部模型默认值的环境变量（WISE_CODEX_DEFAULT_MODEL、
+ * WISE_GEMINI_DEFAULT_MODEL）在 loadEnvConfig() 中惰性读取，以避免在
+ * 模块加载时捕获到过期值。
  */
 export function buildDefaultConfig(): PluginConfig {
   const defaultTierModels = getDefaultTierModels();
@@ -68,8 +68,8 @@ export function buildDefaultConfig(): PluginConfig {
     },
     features: {
       parallelExecution: true,
-      lspTools: true, // Real LSP integration with language servers
-      astTools: true, // Real AST tools using ast-grep
+      lspTools: true, // 真正的语言服务器 LSP 集成
+      astTools: true, // 基于 ast-grep 的真正 AST 工具
       continuationEnforcement: true,
       autoContextInjection: true,
     },
@@ -92,7 +92,7 @@ export function buildDefaultConfig(): PluginConfig {
       analyze: ["analyze", "investigate", "examine"],
       ultrathink: ["ultrathink", "think", "reason", "ponder"],
     },
-    // Intelligent model routing configuration
+    // 智能模型路由配置
     routing: {
       enabled: true,
       defaultTier: "MEDIUM",
@@ -141,8 +141,8 @@ export function buildDefaultConfig(): PluginConfig {
         "grep",
       ],
     },
-    // External models configuration (Codex, Gemini)
-    // Static defaults only — env var overrides applied in loadEnvConfig()
+    // 外部模型配置（Codex、Gemini）
+    // 仅静态默认值——环境变量覆盖在 loadEnvConfig() 中应用
     externalModels: {
       defaults: {
         codexModel: BUILTIN_EXTERNAL_MODEL_DEFAULTS.codexModel,
@@ -154,14 +154,14 @@ export function buildDefaultConfig(): PluginConfig {
         crossProviderOrder: ["codex", "gemini"],
       },
     },
-    // Delegation routing configuration (opt-in feature for external model routing)
+    // 委派路由配置（外部模型路由的可选功能）
     delegationRouting: {
       enabled: false,
       defaultProvider: "claude",
       roles: {},
     },
-    // /team role routing (Option E — /team-scoped per-role provider & model)
-    // Empty defaults: zero behavior change until user opts in.
+    // /team 角色路由（方案 E——/team 作用域内的按角色 provider 与 model）
+    // 默认为空：用户启用前行为零变化。
     team: {
       ops: {},
       roleRouting: {},
@@ -201,7 +201,7 @@ export function buildDefaultConfig(): PluginConfig {
 export const DEFAULT_CONFIG: PluginConfig = buildDefaultConfig();
 
 /**
- * Configuration file locations
+ * 配置文件位置
  */
 export function getConfigPaths(): { user: string; project: string } {
   const userConfigDir = getConfigDir();
@@ -213,7 +213,7 @@ export function getConfigPaths(): { user: string; project: string } {
 }
 
 /**
- * Load and parse a JSONC file
+ * 加载并解析 JSONC 文件
  */
 export function loadJsoncFile(path: string): PluginConfig | null {
   if (!existsSync(path)) {
@@ -231,7 +231,7 @@ export function loadJsoncFile(path: string): PluginConfig | null {
 }
 
 /**
- * Deep merge two objects
+ * 深度合并两个对象
  */
 export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
   const result = { ...target };
@@ -265,12 +265,12 @@ export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
 }
 
 /**
- * Load configuration from environment variables
+ * 从环境变量加载配置
  */
 export function loadEnvConfig(): Partial<PluginConfig> {
   const config: Partial<PluginConfig> = {};
 
-  // MCP API keys
+  // MCP API 密钥
   if (process.env.EXA_API_KEY) {
     config.mcpServers = {
       ...config.mcpServers,
@@ -278,7 +278,7 @@ export function loadEnvConfig(): Partial<PluginConfig> {
     };
   }
 
-  // Feature flags from environment
+  // 来自环境的功能开关
   if (process.env.WISE_PARALLEL_EXECUTION !== undefined) {
     config.features = {
       ...config.features,
@@ -303,7 +303,7 @@ export function loadEnvConfig(): Partial<PluginConfig> {
     }
   }
 
-  // Routing configuration from environment
+  // 来自环境的路由配置
   if (process.env.WISE_ROUTING_ENABLED !== undefined) {
     config.routing = {
       ...config.routing,
@@ -328,7 +328,7 @@ export function loadEnvConfig(): Partial<PluginConfig> {
     }
   }
 
-  // Model alias overrides from environment (issue #1211)
+  // 来自环境的模型别名覆盖（issue #1211）
   const aliasKeys = ["HAIKU", "SONNET", "OPUS"] as const;
   const modelAliases: Record<string, string> = {};
   for (const key of aliasKeys) {
@@ -355,7 +355,7 @@ export function loadEnvConfig(): Partial<PluginConfig> {
     };
   }
 
-  // External models configuration from environment
+  // 来自环境的外部模型配置
   const externalModelsDefaults: ExternalModelsConfig["defaults"] = {};
 
   if (process.env.WISE_EXTERNAL_MODELS_DEFAULT_PROVIDER) {
@@ -369,7 +369,7 @@ export function loadEnvConfig(): Partial<PluginConfig> {
     externalModelsDefaults.codexModel =
       process.env.WISE_EXTERNAL_MODELS_DEFAULT_CODEX_MODEL;
   } else if (process.env.WISE_CODEX_DEFAULT_MODEL) {
-    // Legacy fallback
+    // 旧版兜底
     externalModelsDefaults.codexModel = process.env.WISE_CODEX_DEFAULT_MODEL;
   }
 
@@ -377,7 +377,7 @@ export function loadEnvConfig(): Partial<PluginConfig> {
     externalModelsDefaults.geminiModel =
       process.env.WISE_EXTERNAL_MODELS_DEFAULT_GEMINI_MODEL;
   } else if (process.env.WISE_GEMINI_DEFAULT_MODEL) {
-    // Legacy fallback
+    // 旧版兜底
     externalModelsDefaults.geminiModel = process.env.WISE_GEMINI_DEFAULT_MODEL;
   }
 
@@ -385,7 +385,7 @@ export function loadEnvConfig(): Partial<PluginConfig> {
     externalModelsDefaults.grokModel =
       process.env.WISE_EXTERNAL_MODELS_DEFAULT_GROK_MODEL;
   } else if (process.env.WISE_GROK_DEFAULT_MODEL) {
-    // Legacy fallback
+    // 旧版兜底
     externalModelsDefaults.grokModel = process.env.WISE_GROK_DEFAULT_MODEL;
   }
 
@@ -404,7 +404,7 @@ export function loadEnvConfig(): Partial<PluginConfig> {
     }
   }
 
-  // Only add externalModels if any env vars were set
+  // 仅在设置了任一环境变量时才添加 externalModels
   if (
     Object.keys(externalModelsDefaults).length > 0 ||
     externalModelsFallback.onModelFailure !== "provider_chain"
@@ -415,7 +415,7 @@ export function loadEnvConfig(): Partial<PluginConfig> {
     };
   }
 
-  // Delegation routing configuration from environment
+  // 来自环境的委派路由配置
   if (process.env.WISE_DELEGATION_ROUTING_ENABLED !== undefined) {
     config.delegationRouting = {
       ...config.delegationRouting,
@@ -433,8 +433,8 @@ export function loadEnvConfig(): Partial<PluginConfig> {
     }
   }
 
-  // /team role routing env override (WISE_TEAM_ROLE_OVERRIDES — single JSON var).
-  // Best-effort: invalid JSON logs and is ignored (no throw on env path).
+  // /team 角色路由环境覆盖（WISE_TEAM_ROLE_OVERRIDES——单个 JSON 变量）。
+  // 尽力而为：无效 JSON 会记录日志并被忽略（环境路径不抛错）。
   const teamRoleOverrides = parseTeamRoleOverridesFromEnv();
   if (teamRoleOverrides) {
     config.team = {
@@ -450,7 +450,7 @@ export function loadEnvConfig(): Partial<PluginConfig> {
 }
 
 /**
- * Load and merge all configuration sources
+ * 加载并合并所有配置来源
  */
 function warnOnDeprecatedDelegationRouting(config: PluginConfig): void {
   const deprecatedProviders = new Set<DelegationProvider>();
@@ -477,14 +477,14 @@ function warnOnDeprecatedDelegationRouting(config: PluginConfig): void {
 }
 
 /**
- * Validate `team.roleRouting` parsed from the merged config.
+ * 校验从合并后配置解析出的 `team.roleRouting`。
  *
- * Walks the raw parsed object (not TS types) so deepMerge escapes are caught.
- * Throws a descriptive error naming offending key + allowed values.
+ * 遍历原始解析对象（而非 TS 类型），以捕获 deepMerge 的逃逸情况。
+ * 抛出描述性错误，指明违规键与允许的值。
  */
 const CANONICAL_TEAM_ROLE_SET = new Set<string>(CANONICAL_TEAM_ROLES);
 const KNOWN_AGENT_NAME_SET = new Set<string>(KNOWN_AGENT_NAMES);
-// /team CLI workers — codex/gemini/grok/cursor here are CLI integrations, NOT the deprecated MCP delegationRouting providers.
+// /team CLI worker——这里的 codex/gemini/grok/cursor 是 CLI 集成，并非已废弃的 MCP delegationRouting provider。
 const TEAM_ROLE_PROVIDERS = new Set(["claude", "codex", "gemini", "grok", "cursor"]);
 const TEAM_ROLE_TIERS = new Set(["HIGH", "MEDIUM", "LOW"]);
 
@@ -534,7 +534,7 @@ export function validateTeamConfig(config: PluginConfig): void {
     }
     const spec = rawSpec as Record<string, unknown>;
 
-    // Orchestrator entry: only `model` is allowed.
+    // orchestrator 条目：仅允许 `model`。
     if (normalized === "orchestrator") {
       for (const key of Object.keys(spec)) {
         if (key !== "model") {
@@ -578,8 +578,8 @@ export function validateTeamConfig(config: PluginConfig): void {
 function isValidModelValue(value: unknown): value is string {
   if (typeof value !== "string") return false;
   if (value.length === 0) return false;
-  // Accept tier names OR explicit model IDs (any non-empty string).
-  // Tier names are canonicalized during resolution; explicit IDs pass through.
+  // 接受层级名称或显式模型 ID（任意非空字符串）。
+  // 层级名称在解析时会规范化；显式 ID 原样透传。
   return TEAM_ROLE_TIERS.has(value) || value.length > 0;
 }
 
@@ -606,31 +606,31 @@ function parseTeamRoleOverridesFromEnv(): Record<string, TeamRoleAssignmentSpec>
 export function loadConfig(): PluginConfig {
   const paths = getConfigPaths();
 
-  // Start with fresh defaults so env-based model overrides are resolved at call time
+  // 以全新默认值开始，以便基于环境的模型覆盖在调用时解析
   let config = buildDefaultConfig();
 
-  // Merge user config
+  // 合并用户配置
   const userConfig = loadJsoncFile(paths.user);
   if (userConfig) {
     config = deepMerge(config, userConfig);
   }
 
-  // Merge project config (takes precedence over user)
+  // 合并项目配置（优先级高于用户配置）
   const projectConfig = loadJsoncFile(paths.project);
   if (projectConfig) {
     config = deepMerge(config, projectConfig);
   }
 
-  // Merge environment variables (highest precedence)
+  // 合并环境变量（最高优先级）
   const envConfig = loadEnvConfig();
   config = deepMerge(config, envConfig);
 
-  // Auto-enable forceInherit for non-standard providers (issues #1201, #1025)
-  // Only auto-enable if user hasn't explicitly set it via config or env var.
-  // Triggers for: CC Switch / LiteLLM (non-Claude model IDs), custom
-  // ANTHROPIC_BASE_URL, AWS Bedrock (CLAUDE_CODE_USE_BEDROCK=1), and
-  // Google Vertex AI (CLAUDE_CODE_USE_VERTEX=1). Passing Claude-specific
-  // tier names (sonnet/opus/haiku) causes 400 errors on these platforms.
+  // 为非标准 provider 自动启用 forceInherit（issues #1201、#1025）
+  // 仅当用户未通过配置或环境变量显式设置时才自动启用。
+  // 触发条件：CC Switch / LiteLLM（非 Claude 模型 ID）、自定义
+  // ANTHROPIC_BASE_URL、AWS Bedrock（CLAUDE_CODE_USE_BEDROCK=1），以及
+  // Google Vertex AI（CLAUDE_CODE_USE_VERTEX=1）。在这些平台上传入 Claude
+  // 专属层级名称（sonnet/opus/haiku）会导致 400 错误。
   if (
     config.routing?.forceInherit !== true &&
     process.env.WISE_ROUTING_FORCE_INHERIT === undefined &&
@@ -644,8 +644,8 @@ export function loadConfig(): PluginConfig {
 
   warnOnDeprecatedDelegationRouting(config);
 
-  // Validate /team role routing post-merge. Throws on invalid shape,
-  // walking the parsed object so deepMerge bypasses surface here.
+  // 合并后校验 /team 角色路由。形状非法时抛错，
+  // 遍历解析对象，使 deepMerge 绕过在此暴露。
   validateTeamConfig(config);
 
   return config;
@@ -710,13 +710,13 @@ export function compactWiseStartupGuidance(content: string): string {
 }
 
 /**
- * Find and load AGENTS.md or CLAUDE.md files for context injection
+ * 查找并加载 AGENTS.md 或 CLAUDE.md 文件用于上下文注入
  */
 export function findContextFiles(startDir?: string): string[] {
   const files: string[] = [];
   const searchDir = startDir ?? process.cwd();
 
-  // Files to look for
+  // 要查找的文件
   const contextFileNames = [
     "AGENTS.md",
     "CLAUDE.md",
@@ -724,7 +724,7 @@ export function findContextFiles(startDir?: string): string[] {
     ".claude/AGENTS.md",
   ];
 
-  // Search in current directory and parent directories
+  // 在当前目录及父级目录中搜索
   let currentDir = searchDir;
   const searchedDirs = new Set<string>();
 
@@ -747,7 +747,7 @@ export function findContextFiles(startDir?: string): string[] {
 }
 
 /**
- * Load context from AGENTS.md/CLAUDE.md files
+ * 从 AGENTS.md/CLAUDE.md 文件加载上下文
  */
 export function loadContextFromFiles(files: string[]): string {
   const contexts: string[] = [];
@@ -778,7 +778,7 @@ export function loadContextFromFiles(files: string[]): string {
 }
 
 /**
- * Generate JSON Schema for configuration (for editor autocomplete)
+ * 为配置生成 JSON Schema（用于编辑器自动补全）
  */
 export function generateConfigSchema(): object {
   return {

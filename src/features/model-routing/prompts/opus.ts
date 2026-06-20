@@ -1,15 +1,15 @@
 /**
- * Opus-Optimized Prompt Adaptations
+ * Opus 专用 prompt 适配
  *
- * Opus (HIGH tier) prompts are designed for:
- * - Deep, nuanced reasoning
- * - Complex multi-step analysis
- * - Strategic thinking and planning
- * - Handling ambiguity with sophisticated judgment
+ * Opus（HIGH tier）的 prompt 设计目标：
+ * - 深入、细致的推理
+ * - 复杂的多步分析
+ * - 战略性思考与规划
+ * - 以成熟的判断力处理模糊性
  */
 
 /**
- * Opus prompt prefix for enhanced reasoning
+ * Opus prompt 前缀 - 用于增强推理
  */
 export const OPUS_PROMPT_PREFIX = `<thinking_mode>deep</thinking_mode>
 
@@ -31,7 +31,7 @@ You are operating at the highest capability tier. Apply sophisticated reasoning:
 `;
 
 /**
- * Opus prompt suffix for verification
+ * Opus prompt 后缀 - 用于校验
  */
 export const OPUS_PROMPT_SUFFIX = `
 
@@ -43,14 +43,14 @@ export const OPUS_PROMPT_SUFFIX = `
 `;
 
 /**
- * Adapt a base prompt for Opus execution
+ * 将基础 prompt 适配为 Opus 执行版本
  */
 export function adaptPromptForOpus(basePrompt: string): string {
   return OPUS_PROMPT_PREFIX + basePrompt + OPUS_PROMPT_SUFFIX;
 }
 
 /**
- * Opus-specific delegation template
+ * Opus 专用委派模板
  */
 export const OPUS_DELEGATION_TEMPLATE = `## HIGH-TIER TASK DELEGATION
 
@@ -80,7 +80,7 @@ Apply your full reasoning capabilities. Quality over speed.
 `;
 
 /**
- * Opus debugging template
+ * Opus 调试模板
  */
 export const OPUS_DEBUG_TEMPLATE = `## DEEP DEBUGGING ANALYSIS
 
@@ -113,7 +113,7 @@ Be thorough. The goal is to solve this once, correctly.
 `;
 
 /**
- * Opus architecture review template
+ * Opus 架构评审模板
  */
 export const OPUS_ARCHITECTURE_TEMPLATE = `## ARCHITECTURAL ANALYSIS
 

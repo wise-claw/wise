@@ -1,9 +1,9 @@
 /**
- * Agent Usage Reminder Types
+ * Agent Usage Reminder 类型
  *
- * Tracks agent usage to encourage delegation to specialized agents.
+ * 跟踪代理使用情况，以鼓励委派给专用代理。
  *
- * Ported from oh-my-opencode's agent-usage-reminder hook.
+ * 移植自 oh-my-opencode 的 agent-usage-reminder 钩子。
  */
 
 export interface AgentUsageState {

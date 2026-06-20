@@ -1,11 +1,11 @@
 /**
- * Code Simplifier Stop Hook
+ * Code Simplifier Stop 钩子
  *
- * Intercepts Stop events to automatically delegate recently modified files
- * to the code-simplifier agent for cleanup and simplification.
+ * 拦截 Stop 事件，自动把最近修改的文件委派给
+ * code-simplifier agent 做清理与简化。
  *
- * Opt-in via global WISE config.json (XDG-aware on Linux/Unix, legacy ~/.wise fallback)
- * Default: disabled (opt-in only)
+ * 通过全局 WISE config.json 显式开启（Linux/Unix 下感知 XDG，旧版回退 ~/.wise）
+ * 默认：禁用（仅 opt-in）
  */
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync, unlinkSync } from 'fs';
@@ -13,21 +13,21 @@ import { join } from 'path';
 import { execSync } from 'child_process';
 import { getGlobalWiseConfigCandidates } from '../../utils/paths.js';
 
-/** Config shape for the code-simplifier feature */
+/** code-simplifier 特性的配置形态 */
 export interface CodeSimplifierConfig {
   enabled: boolean;
-  /** File extensions to include (default: common source extensions) */
+  /** 纳入的文件扩展名（默认：常见源码扩展名） */
   extensions?: string[];
-  /** Maximum number of files to simplify per stop event (default: 10) */
+  /** 每次 stop 事件最多简化的文件数（默认：10） */
   maxFiles?: number;
 }
 
-/** Global WISE config shape (subset relevant to code-simplifier) */
+/** 全局 WISE 配置形态（与 code-simplifier 相关的子集） */
 interface WiseGlobalConfig {
   codeSimplifier?: CodeSimplifierConfig;
 }
 
-/** Result returned to the Stop hook dispatcher */
+/** 返回给 Stop 钩子派发器的结果 */
 export interface CodeSimplifierHookResult {
   shouldBlock: boolean;
   message: string;
@@ -36,13 +36,13 @@ export interface CodeSimplifierHookResult {
 const DEFAULT_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.py', '.go', '.rs'];
 const DEFAULT_MAX_FILES = 10;
 
-/** Marker filename used to prevent re-triggering within the same turn cycle */
+/** 用于防止在同一轮次内重复触发的标记文件名 */
 export const TRIGGER_MARKER_FILENAME = 'code-simplifier-triggered.marker';
 
 /**
- * Read the global WISE config from the XDG-aware location, with legacy
- * ~/.wise/config.json fallback for backward compatibility.
- * Returns null if the file does not exist or cannot be parsed.
+ * 从感知 XDG 的位置读取全局 WISE 配置，并回退到旧版
+ * ~/.wise/config.json 以保持向后兼容。
+ * 文件不存在或无法解析时返回 null。
  */
 export function readWiseConfig(): WiseGlobalConfig | null {
   for (const configPath of getGlobalWiseConfigCandidates('config.json')) {
@@ -61,8 +61,8 @@ export function readWiseConfig(): WiseGlobalConfig | null {
 }
 
 /**
- * Check whether the code-simplifier feature is enabled in config.
- * Disabled by default — requires explicit opt-in.
+ * 检查 config 中是否启用了 code-simplifier 特性。
+ * 默认禁用 —— 需要显式 opt-in。
  */
 export function isCodeSimplifierEnabled(): boolean {
   const config = readWiseConfig();
@@ -70,8 +70,8 @@ export function isCodeSimplifierEnabled(): boolean {
 }
 
 /**
- * Get list of recently modified source files via `git diff HEAD --name-only`.
- * Returns an empty array if git is unavailable or no files are modified.
+ * 通过 `git diff HEAD --name-only` 获取最近修改的源码文件列表。
+ * git 不可用或无文件被修改时返回空数组。
  */
 export function getModifiedFiles(
   cwd: string,
@@ -98,15 +98,15 @@ export function getModifiedFiles(
 }
 
 /**
- * Check whether the code-simplifier was already triggered this turn
- * (marker file present in the state directory).
+ * 检查本轮 code-simplifier 是否已被触发过
+ *（state 目录中存在标记文件）。
  */
 export function isAlreadyTriggered(stateDir: string): boolean {
   return existsSync(join(stateDir, TRIGGER_MARKER_FILENAME));
 }
 
 /**
- * Write the trigger marker to prevent re-triggering in the same turn cycle.
+ * 写入触发标记，防止在同一轮次内重复触发。
  */
 export function writeTriggerMarker(stateDir: string): void {
   try {
@@ -115,13 +115,13 @@ export function writeTriggerMarker(stateDir: string): void {
     }
     writeFileSync(join(stateDir, TRIGGER_MARKER_FILENAME), new Date().toISOString(), 'utf-8');
   } catch {
-    // Ignore write errors — marker is best-effort
+    // 忽略写入错误 —— 标记是尽力而为的
   }
 }
 
 /**
- * Clear the trigger marker after a completed simplification round,
- * allowing the hook to trigger again on the next turn.
+ * 在一轮简化完成后清除触发标记，
+ * 使钩子能在下一轮再次触发。
  */
 export function clearTriggerMarker(stateDir: string): void {
   try {
@@ -130,12 +130,12 @@ export function clearTriggerMarker(stateDir: string): void {
       unlinkSync(markerPath);
     }
   } catch {
-    // Ignore removal errors
+    // 忽略删除错误
   }
 }
 
 /**
- * Build the message injected into Claude's context when code-simplifier triggers.
+ * 构建当 code-simplifier 触发时注入到 Claude 上下文中的消息。
  */
 export function buildSimplifierMessage(files: string[]): string {
   const fileList = files.map((f) => `  - ${f}`).join('\n');
@@ -149,14 +149,14 @@ Use: Task(subagent_type="wise:code-simplifier", prompt="Simplify the recently mo
 }
 
 /**
- * Process the code-simplifier stop hook.
+ * 处理 code-simplifier stop 钩子。
  *
- * Logic:
- * 1. Return early (no block) if the feature is disabled
- * 2. If already triggered this turn (marker present), clear marker and allow stop
- * 3. Get modified files via git diff HEAD
- * 4. Return early if no relevant files are modified
- * 5. Write trigger marker and inject the simplifier delegation message
+ * 逻辑：
+ * 1. 若特性被禁用则提前返回（不阻断）
+ * 2. 若本轮已触发过（存在标记），清除标记并允许 stop
+ * 3. 通过 git diff HEAD 获取修改的文件
+ * 4. 若无相关文件被修改则提前返回
+ * 5. 写入触发标记并注入 simplifier 委派消息
  */
 export function processCodeSimplifier(
   cwd: string,
@@ -166,7 +166,7 @@ export function processCodeSimplifier(
     return { shouldBlock: false, message: '' };
   }
 
-  // If already triggered this turn, clear marker and allow stop
+  // 若本轮已触发过，清除标记并允许 stop
   if (isAlreadyTriggered(stateDir)) {
     clearTriggerMarker(stateDir);
     return { shouldBlock: false, message: '' };

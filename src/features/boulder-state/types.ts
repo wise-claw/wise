@@ -1,54 +1,54 @@
 /**
- * Boulder State Types
+ * Boulder State 类型
  *
- * Manages the active work plan state for WISE orchestrator.
- * Named after WISE's boulder - the eternal task that must be rolled.
+ * 管理 WISE 编排器的活跃工作计划状态。
+ * 以 WISE 的 boulder 命名——那必须不断推滚的永恒任务。
  *
- * Ported from oh-my-opencode's boulder-state.
+ * 移植自 oh-my-opencode 的 boulder-state。
  */
 
 /**
- * State tracking for an active work plan
+ * 活跃工作计划的状态追踪
  */
 export interface BoulderState {
-  /** Absolute path to the active plan file */
+  /** 活跃计划文件的绝对路径 */
   active_plan: string;
-  /** ISO timestamp when work started */
+  /** 工作开始时的 ISO 时间戳 */
   started_at: string;
-  /** Session IDs that have worked on this plan */
+  /** 参与过该计划的会话 ID 列表 */
   session_ids: string[];
-  /** Plan name derived from filename */
+  /** 从文件名派生的计划名称 */
   plan_name: string;
-  /** Whether this boulder is currently active */
+  /** 该 boulder 当前是否活跃 */
   active: boolean;
-  /** ISO timestamp of last state update (for stale detection) */
+  /** 最近一次状态更新的 ISO 时间戳（用于过期检测） */
   updatedAt: string;
-  /** Optional metadata */
+  /** 可选的元数据 */
   metadata?: Record<string, unknown>;
 }
 
 /**
- * Progress tracking for a plan's checkboxes
+ * 计划复选框的进度追踪
  */
 export interface PlanProgress {
-  /** Total number of checkboxes */
+  /** 复选框总数 */
   total: number;
-  /** Number of completed checkboxes */
+  /** 已完成的复选框数量 */
   completed: number;
-  /** Whether all tasks are done */
+  /** 是否所有任务都已完成 */
   isComplete: boolean;
 }
 
 /**
- * Summary of available plans
+ * 可用计划的摘要
  */
 export interface PlanSummary {
-  /** Plan file path */
+  /** 计划文件路径 */
   path: string;
-  /** Plan name */
+  /** 计划名称 */
   name: string;
-  /** Progress stats */
+  /** 进度统计 */
   progress: PlanProgress;
-  /** Last modified time */
+  /** 最近修改时间 */
   lastModified: Date;
 }

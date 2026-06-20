@@ -1,7 +1,7 @@
 /**
- * Skill Writer
+ * 技能写入器
  *
- * Writes skill files to disk with proper formatting.
+ * 将技能文件以正确格式写入磁盘。
  */
 
 import { writeFileSync, existsSync } from 'fs';
@@ -14,7 +14,7 @@ import { ensureClaudeCodeUserSkillCompat } from '../../utils/user-skill-compat.j
 import type { SkillMetadata, SkillExtractionRequest, QualityValidation } from './types.js';
 
 /**
- * Generate a unique skill ID.
+ * 生成唯一的技能 ID。
  */
 function generateSkillId(): string {
   const timestamp = Date.now().toString(36);
@@ -23,7 +23,7 @@ function generateSkillId(): string {
 }
 
 /**
- * Sanitize a string for use as filename.
+ * 清理字符串以用作文件名。
  */
 function sanitizeFilename(name: string): string {
   return name
@@ -34,7 +34,7 @@ function sanitizeFilename(name: string): string {
 }
 
 /**
- * Result of skill writing operation.
+ * 技能写入操作的结果。
  */
 export interface WriteSkillResult {
   success: boolean;
@@ -44,14 +44,14 @@ export interface WriteSkillResult {
 }
 
 /**
- * Write a new skill from extraction request.
+ * 根据抽取请求写入新技能。
  */
 export function writeSkill(
   request: SkillExtractionRequest,
   projectRoot: string | null,
   skillName: string
 ): WriteSkillResult {
-  // Validate first
+  // 先校验
   const validation = validateExtractionRequest(request);
 
   if (!validation.valid) {
@@ -62,7 +62,7 @@ export function writeSkill(
     };
   }
 
-  // Ensure directory exists
+  // 确保目录存在
   if (!ensureSkillsDir(request.targetScope, projectRoot || undefined)) {
     return {
       success: false,
@@ -71,7 +71,7 @@ export function writeSkill(
     };
   }
 
-  // Generate metadata
+  // 生成元数据
   const metadata: SkillMetadata = {
     id: generateSkillId(),
     name: skillName,
@@ -84,7 +84,7 @@ export function writeSkill(
     usageCount: 0,
   };
 
-  // Generate content
+  // 生成内容
   const frontmatter = generateSkillFrontmatter(metadata);
   const content = `${frontmatter}
 
@@ -102,7 +102,7 @@ ${request.solution}
   const skillsDir = getSkillsDir(request.targetScope, projectRoot || undefined);
   const filePath = join(skillsDir, filename);
 
-  // Check for duplicates
+  // 检查重复
   if (existsSync(filePath)) {
     return {
       success: false,
@@ -134,13 +134,13 @@ ${request.solution}
 }
 
 /**
- * Check if a skill with similar triggers already exists.
+ * 检查是否已存在具有相似触发词的技能。
  */
 export function checkDuplicateTriggers(
   triggers: string[],
   projectRoot: string | null
 ): { isDuplicate: boolean; existingSkillId?: string } {
-  // Import dynamically to avoid circular dependency
+  // 动态引入以避免循环依赖
   const { loadAllSkills } = require('./loader.js');
   const skills = loadAllSkills(projectRoot);
 

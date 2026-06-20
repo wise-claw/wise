@@ -1,7 +1,7 @@
 /**
- * Mode Registry Types
+ * 模式注册表类型
  *
- * Defines the supported execution modes and their state file locations.
+ * 定义支持的执行模式及其状态文件位置。
  */
 
 export type ExecutionMode =
@@ -15,17 +15,17 @@ export type ExecutionMode =
   | 'self-improve';
 
 export interface ModeConfig {
-  /** Display name for the mode */
+  /** 模式的显示名称 */
   name: string;
-  /** Primary state file path (relative to .wise/state/) */
+  /** 主状态文件路径（相对于 .wise/state/） */
   stateFile: string;
-  /** Alternative/marker file path (relative to .wise/state/) */
+  /** 备用/标记文件路径（相对于 .wise/state/） */
   markerFile?: string;
-  /** Property to check in JSON state (if JSON-based) */
+  /** 在 JSON 状态中检查的属性（若基于 JSON） */
   activeProperty?: string;
-  /** Whether state is SQLite-based (requires marker file) */
+  /** 状态是否基于 SQLite（需要标记文件） */
   isSqlite?: boolean;
-  /** Whether mode has global state in ~/.claude/ */
+  /** 模式是否在 ~/.claude/ 中存在全局状态 */
   hasGlobalState?: boolean;
 }
 

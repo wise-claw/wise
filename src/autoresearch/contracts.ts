@@ -205,8 +205,8 @@ export async function loadAutoresearchMissionContract(missionDirArg: string): Pr
   if (!existsSync(missionDir)) {
     throw contractError(`mission-dir does not exist: ${missionDir}`);
   }
-  // Resolve symlinks so the path matches git's canonical output (e.g., /private/var on macOS)
-  try { missionDir = realpathSync(missionDir); } catch { /* keep resolved path */ }
+  // 解析符号链接，使路径与 git 的规范输出一致（例如 macOS 上的 /private/var）
+  try { missionDir = realpathSync(missionDir); } catch { /* 保留已解析的路径 */ }
 
   const repoRoot = readGit(missionDir, ['rev-parse', '--show-toplevel']);
   ensurePathInside(repoRoot, missionDir);

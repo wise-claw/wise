@@ -1,9 +1,9 @@
 /**
- * Critic Agent
+ * 评审者代理
  *
- * Expert plan reviewer with ruthless evaluation standards.
+ * 专家计划评审者，以严苛标准进行评估。
  *
- * Ported from oh-my-opencode's agent definitions.
+ * 从 oh-my-opencode 的 agent 定义移植。
  */
 
 import type { AgentConfig, AgentPromptMetadata } from './types.js';

@@ -1,15 +1,15 @@
 /**
- * Sonnet-Optimized Prompt Adaptations
+ * Sonnet 专用 prompt 适配
  *
- * Sonnet (MEDIUM tier) prompts are designed for:
- * - Balanced reasoning with good speed
- * - Focused task execution
- * - Clear deliverables with structured output
- * - Efficient multi-step workflows
+ * Sonnet（MEDIUM tier）的 prompt 设计目标：
+ * - 兼顾推理与良好速度的平衡
+ * - 聚焦的任务执行
+ * - 结构化输出的清晰交付物
+ * - 高效的多步工作流
  */
 
 /**
- * Sonnet prompt prefix for focused execution
+ * Sonnet prompt 前缀 - 用于聚焦执行
  */
 export const SONNET_PROMPT_PREFIX = `## Task Execution Mode
 
@@ -18,7 +18,7 @@ Execute this task efficiently with clear deliverables:
 `;
 
 /**
- * Sonnet prompt suffix for verification
+ * Sonnet prompt 后缀 - 用于校验
  */
 export const SONNET_PROMPT_SUFFIX = `
 
@@ -27,14 +27,14 @@ Focus on delivering the requested outcome. Be thorough but efficient.
 `;
 
 /**
- * Adapt a base prompt for Sonnet execution
+ * 将基础 prompt 适配为 Sonnet 执行版本
  */
 export function adaptPromptForSonnet(basePrompt: string): string {
   return SONNET_PROMPT_PREFIX + basePrompt + SONNET_PROMPT_SUFFIX;
 }
 
 /**
- * Sonnet delegation template
+ * Sonnet 委派模板
  */
 export const SONNET_DELEGATION_TEMPLATE = `## TASK DELEGATION
 
@@ -64,7 +64,7 @@ Execute efficiently. Report completion status.
 `;
 
 /**
- * Sonnet implementation template
+ * Sonnet 实现模板
  */
 export const SONNET_IMPLEMENTATION_TEMPLATE = `## IMPLEMENTATION TASK
 
@@ -91,7 +91,7 @@ Match existing code style. Test your changes.
 `;
 
 /**
- * Sonnet research template
+ * Sonnet 研究模板
  */
 export const SONNET_RESEARCH_TEMPLATE = `## RESEARCH TASK
 
@@ -129,7 +129,7 @@ Cite sources. Provide actionable information.
 `;
 
 /**
- * Sonnet frontend template
+ * Sonnet 前端模板
  */
 export const SONNET_FRONTEND_TEMPLATE = `## FRONTEND TASK
 

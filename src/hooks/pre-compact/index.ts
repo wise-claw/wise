@@ -1,12 +1,12 @@
 /**
- * PreCompact Hook - State Preservation Before Context Compaction
+ * PreCompact 钩子——上下文压缩前的状态保留
  *
- * Creates checkpoints before compaction to preserve critical state including:
- * - Active mode states (autopilot, ralph, ultrawork)
- * - TODO summary
- * - Wisdom from notepads
+ * 在压缩前创建检查点以保留关键状态，包括：
+ * - 活动模式状态（autopilot、ralph、ultrawork）
+ * - TODO 摘要
+ * - 来自记事本的 wisdom
  *
- * This ensures no critical information is lost during context window compaction.
+ * 确保上下文窗口压缩期间不会丢失关键信息。
  */
 
 import {
@@ -23,7 +23,7 @@ import { getWiseRoot } from '../../lib/worktree-paths.js';
 import { initJobDb, getActiveJobs, getRecentJobs, getJobStats } from '../../lib/job-state-db.js';
 
 // ============================================================================
-// Types
+// 类型
 // ============================================================================
 
 export interface PreCompactInput {
@@ -60,41 +60,39 @@ export interface CompactCheckpoint {
 
 export interface HookOutput {
   continue: boolean;
-  /** System message for context injection (Claude Code compatible) */
+  /** 用于上下文注入的系统消息（兼容 Claude Code） */
   systemMessage?: string;
 }
 
 // ============================================================================
-// Constants
+// 常量
 // ============================================================================
 
 const CHECKPOINT_DIR = "checkpoints";
 
 // ============================================================================
-// Compaction Mutex - prevents concurrent compaction for the same directory
+// 压缩互斥锁——防止同一目录并发压缩
 // ============================================================================
 
 /**
- * Per-directory in-flight compaction promises.
- * When a compaction is already running for a directory, new callers
- * await the existing promise instead of running concurrently.
- * This prevents race conditions when multiple subagent results
- * arrive simultaneously (ultrawork/team).
+ * 每个目录的进行中压缩 Promise。
+ * 当某目录已有压缩在运行时，新的调用方等待已有 Promise，
+ * 而非并发运行。避免多个子代理结果同时到达（ultrawork/team）时的竞态。
  */
 const inflightCompactions = new Map<string, Promise<HookOutput>>();
 
 /**
- * Queue depth counter per directory for diagnostics.
- * Tracks how many callers are waiting on an in-flight compaction.
+ * 每个目录的队列深度计数器，用于诊断。
+ * 跟踪有多少调用方正在等待进行中的压缩。
  */
 const compactionQueueDepth = new Map<string, number>();
 
 // ============================================================================
-// Helper Functions
+// 辅助函数
 // ============================================================================
 
 /**
- * Get the checkpoint directory path
+ * 获取检查点目录路径
  */
 export function getCheckpointPath(directory: string): string {
   const checkpointDir = join(getWiseRoot(directory), "state", CHECKPOINT_DIR);
@@ -105,7 +103,7 @@ export function getCheckpointPath(directory: string): string {
 }
 
 /**
- * Export wisdom from notepads to checkpoint
+ * 将记事本中的 wisdom 导出到检查点
  */
 export async function exportWisdomToNotepad(
   directory: string,
@@ -120,7 +118,7 @@ export async function exportWisdomToNotepad(
   let hasWisdom = false;
 
   try {
-    // Read all plan directories
+    // 读取所有 plan 目录
     const planDirs = readdirSync(notepadsDir).filter((name) => {
       const path = join(notepadsDir, name);
       return statSync(path).isDirectory();
@@ -159,7 +157,7 @@ export async function exportWisdomToNotepad(
 }
 
 /**
- * Save summary of active modes
+ * 保存活动模式摘要
  */
 export async function saveModeSummary(
   directory: string,
@@ -233,7 +231,7 @@ export async function saveModeSummary(
 }
 
 /**
- * Read TODO counts from todos.json
+ * 从 todos.json 读取 TODO 计数
  */
 function readTodoSummary(directory: string): {
   pending: number;
@@ -261,7 +259,7 @@ function readTodoSummary(directory: string): {
           };
         }
       } catch {
-        // Continue to next path
+        // 继续检查下一个路径
       }
     }
   }
@@ -270,8 +268,8 @@ function readTodoSummary(directory: string): {
 }
 
 /**
- * Get summary of active and recent background jobs from SQLite DB
- * Queries .wise/state/jobs.db for Codex/Gemini job statuses
+ * 从 SQLite DB 获取活动与近期后台任务摘要
+ * 查询 .wise/state/jobs.db 获取 Codex/Gemini 任务状态
  */
 async function getActiveJobsSummary(directory: string): Promise<{
   activeJobs: Array<{ jobId: string; provider: string; model: string; agentRole: string; spawnedAt: string }>;
@@ -285,9 +283,9 @@ async function getActiveJobsSummary(directory: string): Promise<{
     }
 
     const active = getActiveJobs(undefined, directory);
-    const recent = getRecentJobs(undefined, 5 * 60 * 1000, directory); // Last 5 minutes
+    const recent = getRecentJobs(undefined, 5 * 60 * 1000, directory); // 最近 5 分钟
 
-    // Filter recent to only completed/failed (not active ones which are already listed)
+    // 过滤近期任务，仅保留已完成/失败（不含已列出的活动任务）
     const recentCompleted = recent.filter(j => j.status === 'completed' || j.status === 'failed');
 
     const stats = getJobStats(directory);
@@ -316,7 +314,7 @@ async function getActiveJobsSummary(directory: string): Promise<{
 }
 
 /**
- * Create a compact checkpoint
+ * 创建压缩检查点
  */
 export async function createCompactCheckpoint(
   directory: string,
@@ -341,7 +339,7 @@ export async function createCompactCheckpoint(
 }
 
 /**
- * Format checkpoint summary for context injection
+ * 格式化检查点摘要用于上下文注入
  */
 export function formatCompactSummary(checkpoint: CompactCheckpoint): string {
   const lines: string[] = [
@@ -352,7 +350,7 @@ export function formatCompactSummary(checkpoint: CompactCheckpoint): string {
     "",
   ];
 
-  // Active modes
+  // 活动模式
   const modeCount = Object.keys(checkpoint.active_modes).length;
   if (modeCount > 0) {
     lines.push("## Active Modes");
@@ -385,7 +383,7 @@ export function formatCompactSummary(checkpoint: CompactCheckpoint): string {
     lines.push("");
   }
 
-  // TODO summary
+  // TODO 摘要
   const total =
     checkpoint.todo_summary.pending +
     checkpoint.todo_summary.in_progress +
@@ -400,7 +398,7 @@ export function formatCompactSummary(checkpoint: CompactCheckpoint): string {
     lines.push("");
   }
 
-  // Background jobs
+  // 后台任务
   const jobs = checkpoint.background_jobs;
   if (jobs && (jobs.active.length > 0 || jobs.recent.length > 0)) {
     lines.push("## Background Jobs (Codex/Gemini)");
@@ -430,7 +428,7 @@ export function formatCompactSummary(checkpoint: CompactCheckpoint): string {
     }
   }
 
-  // Wisdom status
+  // Wisdom 状态
   if (checkpoint.wisdom_exported) {
     lines.push("## Wisdom");
     lines.push("");
@@ -448,22 +446,22 @@ export function formatCompactSummary(checkpoint: CompactCheckpoint): string {
 }
 
 /**
- * Internal compaction logic (unserialized).
- * Callers must go through processPreCompact which enforces the mutex.
+ * 内部压缩逻辑（未序列化）。
+ * 调用方必须经由 processPreCompact，由其强制互斥。
  */
 async function doProcessPreCompact(
   input: PreCompactInput,
 ): Promise<HookOutput> {
   const directory = input.cwd;
 
-  // Create checkpoint
+  // 创建检查点
   const checkpoint = await createCompactCheckpoint(directory, input.trigger);
 
-  // Export wisdom
+  // 导出 wisdom
   const { wisdom, exported } = await exportWisdomToNotepad(directory);
   checkpoint.wisdom_exported = exported;
 
-  // Save checkpoint
+  // 保存检查点
   const checkpointPath = getCheckpointPath(directory);
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const checkpointFile = join(checkpointPath, `checkpoint-${timestamp}.json`);
@@ -474,7 +472,7 @@ async function doProcessPreCompact(
     console.error("[PreCompact] Error saving checkpoint:", error);
   }
 
-  // Save wisdom separately if exported
+  // 若已导出则单独保存 wisdom
   if (exported && wisdom) {
     const wisdomFile = join(checkpointPath, `wisdom-${timestamp}.md`);
     try {
@@ -484,11 +482,11 @@ async function doProcessPreCompact(
     }
   }
 
-  // Format summary for context injection
+  // 格式化摘要用于上下文注入
   const summary = formatCompactSummary(checkpoint);
 
-  // Note: hookSpecificOutput only supports PreToolUse, UserPromptSubmit, PostToolUse
-  // Use systemMessage for custom hook events like PreCompact
+  // 注意：hookSpecificOutput 仅支持 PreToolUse、UserPromptSubmit、PostToolUse
+  // 自定义钩子事件（如 PreCompact）使用 systemMessage
   return {
     continue: true,
     systemMessage: summary,
@@ -496,25 +494,24 @@ async function doProcessPreCompact(
 }
 
 /**
- * Main handler for PreCompact hook.
+ * PreCompact 钩子的主处理器。
  *
- * Uses a per-directory mutex to prevent concurrent compaction.
- * When multiple subagent results arrive simultaneously (ultrawork/team),
- * only the first call runs the compaction; subsequent calls await
- * the in-flight result. This fixes issue #453.
+ * 使用按目录的互斥锁防止并发压缩。
+ * 当多个子代理结果同时到达（ultrawork/team）时，
+ * 仅首次调用执行压缩；后续调用等待进行中的结果。修复 issue #453。
  */
 export async function processPreCompact(
   input: PreCompactInput,
 ): Promise<HookOutput> {
   const directory = input.cwd;
 
-  // If compaction is already in progress for this directory, coalesce
+  // 若该目录已有压缩进行中，则合并
   const inflight = inflightCompactions.get(directory);
   if (inflight) {
     const depth = (compactionQueueDepth.get(directory) ?? 0) + 1;
     compactionQueueDepth.set(directory, depth);
     try {
-      // Await the existing compaction result
+      // 等待已有压缩的结果
       return await inflight;
     } finally {
       const current = compactionQueueDepth.get(directory) ?? 1;
@@ -526,7 +523,7 @@ export async function processPreCompact(
     }
   }
 
-  // No in-flight compaction — run it and register the promise
+  // 无进行中的压缩——执行并注册 Promise
   const compactionPromise = doProcessPreCompact(input);
   inflightCompactions.set(directory, compactionPromise);
 
@@ -538,23 +535,23 @@ export async function processPreCompact(
 }
 
 /**
- * Check if compaction is currently in progress for a directory.
- * Useful for diagnostics and testing.
+ * 检查某目录当前是否有压缩进行中。
+ * 用于诊断与测试。
  */
 export function isCompactionInProgress(directory: string): boolean {
   return inflightCompactions.has(directory);
 }
 
 /**
- * Get the number of callers queued behind an in-flight compaction.
- * Returns 0 if no compaction is in progress.
+ * 获取排队等待进行中压缩的调用方数量。
+ * 无压缩进行中时返回 0。
  */
 export function getCompactionQueueDepth(directory: string): number {
   return compactionQueueDepth.get(directory) ?? 0;
 }
 
 // ============================================================================
-// Exports
+// 导出
 // ============================================================================
 
 export default processPreCompact;

@@ -1,11 +1,10 @@
 /**
- * Delegation Routing
+ * 委派路由
  *
- * Unified delegation router that determines which provider/tool
- * to use for a given agent role based on configuration.
+ * 统一的委派路由器，根据配置决定对给定 agent 角色使用哪个提供方/工具。
  */
 
-// Main resolver
+// 主解析器
 export {
   resolveDelegation,
   parseFallbackChain,
@@ -13,14 +12,14 @@ export {
   DEPRECATED_MCP_PROVIDER_WARNING,
 } from './resolver.js';
 
-// Types and constants
+// 类型与常量
 export {
   DEFAULT_DELEGATION_CONFIG,
   ROLE_CATEGORY_DEFAULTS,
   isDelegationEnabled,
 } from './types.js';
 
-// Re-export shared types for convenience
+// 为方便使用而重新导出共享类型
 export type {
   DelegationProvider,
   DelegationTool,

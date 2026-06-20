@@ -1,16 +1,16 @@
 /**
- * Background Agent Concurrency Manager
+ * 后台 Agent 并发管理器
  *
- * Manages concurrency limits for background tasks.
+ * 管理后台任务的并发上限。
  *
- * Adapted from oh-my-opencode's background-agent feature.
+ * 改编自 oh-my-opencode 的 background-agent 功能。
  */
 
 import type { BackgroundTaskConfig } from './types.js';
 
 /**
- * Manages concurrency limits for background tasks.
- * Provides acquire/release semantics with queueing.
+ * 管理后台任务的并发上限。
+ * 提供带排队的 acquire/release 语义。
  */
 export class ConcurrencyManager {
   private config?: BackgroundTaskConfig;
@@ -22,35 +22,35 @@ export class ConcurrencyManager {
   }
 
   /**
-   * Get the concurrency limit for a given key (model/agent name)
+   * 获取给定键（模型/agent 名）的并发上限
    */
   getConcurrencyLimit(key: string): number {
-    // Check model-specific limit
+    // 检查模型专属上限
     const modelLimit = this.config?.modelConcurrency?.[key];
     if (modelLimit !== undefined) {
       return modelLimit === 0 ? Infinity : modelLimit;
     }
 
-    // Check provider-specific limit (first part of key before /)
+    // 检查 provider 专属上限（键中 / 之前的部分）
     const provider = key.split('/')[0];
     const providerLimit = this.config?.providerConcurrency?.[provider];
     if (providerLimit !== undefined) {
       return providerLimit === 0 ? Infinity : providerLimit;
     }
 
-    // Fall back to default
+    // 回退到默认值
     const defaultLimit = this.config?.defaultConcurrency;
     if (defaultLimit !== undefined) {
       return defaultLimit === 0 ? Infinity : defaultLimit;
     }
 
-    // Default to 5 concurrent tasks per key
+    // 默认每个键 5 个并发任务
     return 5;
   }
 
   /**
-   * Acquire a slot for the given key.
-   * Returns immediately if under limit, otherwise queues the request.
+   * 为给定键获取一个槽位。
+   * 未达上限时立即返回，否则将请求排队。
    */
   async acquire(key: string): Promise<void> {
     const limit = this.getConcurrencyLimit(key);
@@ -64,7 +64,7 @@ export class ConcurrencyManager {
       return;
     }
 
-    // Queue the request
+    // 将请求排队
     return new Promise<void>((resolve) => {
       const queue = this.queues.get(key) ?? [];
       queue.push(resolve);
@@ -73,8 +73,8 @@ export class ConcurrencyManager {
   }
 
   /**
-   * Release a slot for the given key.
-   * If there are queued requests, resolves the next one.
+   * 释放给定键的一个槽位。
+   * 若有排队的请求，则 resolve 下一个。
    */
   release(key: string): void {
     const limit = this.getConcurrencyLimit(key);
@@ -84,11 +84,11 @@ export class ConcurrencyManager {
 
     const queue = this.queues.get(key);
     if (queue && queue.length > 0) {
-      // Resolve next queued request
+      // resolve 下一个排队请求
       const next = queue.shift()!;
       next();
     } else {
-      // Decrement count
+      // 计数减一
       const current = this.counts.get(key) ?? 0;
       if (current > 0) {
         this.counts.set(key, current - 1);
@@ -97,21 +97,21 @@ export class ConcurrencyManager {
   }
 
   /**
-   * Get current count for a key
+   * 获取某键的当前计数
    */
   getCount(key: string): number {
     return this.counts.get(key) ?? 0;
   }
 
   /**
-   * Get queue length for a key
+   * 获取某键的排队长度
    */
   getQueueLength(key: string): number {
     return this.queues.get(key)?.length ?? 0;
   }
 
   /**
-   * Check if a key is at capacity
+   * 检查某键是否已达上限
    */
   isAtCapacity(key: string): boolean {
     const limit = this.getConcurrencyLimit(key);
@@ -120,14 +120,14 @@ export class ConcurrencyManager {
   }
 
   /**
-   * Get all active keys and their counts
+   * 获取所有活跃键及其计数
    */
   getActiveCounts(): Map<string, number> {
     return new Map(this.counts);
   }
 
   /**
-   * Clear all counts and queues
+   * 清除所有计数与队列
    */
   clear(): void {
     this.counts.clear();

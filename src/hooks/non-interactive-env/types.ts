@@ -3,7 +3,7 @@ export interface NonInteractiveEnvConfig {
 }
 
 /**
- * Shell hook interface for command interception
+ * 用于命令拦截的 Shell 钩子接口
  */
 export interface ShellHook {
   name: string

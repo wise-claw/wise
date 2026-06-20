@@ -1,10 +1,10 @@
 /**
- * AST Tools using ast-grep
+ * 基于 ast-grep 的 AST 工具
  *
- * Provides AST-aware code search and transformation:
- * - Pattern matching with meta-variables ($VAR, $$$)
- * - Code replacement while preserving structure
- * - Support for 25+ programming languages
+ * 提供感知 AST 的代码搜索与变换能力：
+ * - 支持带元变量（$VAR、$$$）的模式匹配
+ * - 在保留结构的前提下进行代码替换
+ * - 支持 25+ 种编程语言
  */
 
 import { z } from "zod";
@@ -14,14 +14,14 @@ import { createRequire } from "module";
 import { getWorktreeRoot } from "../lib/worktree-paths.js";
 import { isToolPathRestricted } from "../lib/security-config.js";
 
-// Dynamic import for @ast-grep/napi
-// Graceful degradation: if the module is not available (e.g., in bundled/plugin context),
-// tools will return a helpful error message instead of crashing
+// 动态导入 @ast-grep/napi
+// 优雅降级：当模块不可用（例如在打包/插件环境下）时，工具会返回一条
+// 有用的错误信息，而不是直接崩溃
 //
-// IMPORTANT: Uses createRequire() (CJS resolution) instead of dynamic import() (ESM resolution)
-// because ESM resolution does NOT respect NODE_PATH or Module._initPaths().
-// In the MCP server plugin context, @ast-grep/napi is installed globally and resolved
-// via NODE_PATH set in the bundle's startup banner.
+// 重要：使用 createRequire()（CJS 解析）而非动态 import()（ESM 解析），
+// 因为 ESM 解析不会遵循 NODE_PATH 或 Module._initPaths()。
+// 在 MCP server 插件环境下，@ast-grep/napi 全局安装，并通过打包启动横幅中
+// 设置的 NODE_PATH 来解析。
 let sgModule: typeof import("@ast-grep/napi") | null = null;
 let sgLoadFailed = false;
 let sgLoadError = '';
@@ -32,11 +32,11 @@ async function getSgModule(): Promise<typeof import("@ast-grep/napi") | null> {
   }
   if (!sgModule) {
     try {
-      // Use createRequire for CJS-style resolution (respects NODE_PATH)
+      // 使用 createRequire 进行 CJS 风格解析（遵循 NODE_PATH）
       const require = createRequire(import.meta.url || __filename || process.cwd() + '/');
       sgModule = require("@ast-grep/napi") as typeof import("@ast-grep/napi");
     } catch {
-      // Fallback to dynamic import for pure ESM environments
+      // 在纯 ESM 环境下兜底改用动态 import
       try {
         sgModule = await import("@ast-grep/napi");
       } catch (error) {
@@ -50,12 +50,12 @@ async function getSgModule(): Promise<typeof import("@ast-grep/napi") | null> {
 }
 
 /**
- * Validate that a tool path is within the project root boundary.
- * Only enforced when WISE_RESTRICT_TOOL_PATHS=true.
+ * 校验工具路径位于项目根目录边界之内。
+ * 仅在 WISE_RESTRICT_TOOL_PATHS=true 时强制执行。
  *
- * @param inputPath - The path parameter from tool invocation
- * @returns The resolved absolute path
- * @throws Error if path is outside project root when restriction is enabled
+ * @param inputPath - 工具调用传入的路径参数
+ * @returns 解析后的绝对路径
+ * @throws 当开启限制且路径在项目根目录之外时抛出 Error
  */
 export function validateToolPath(inputPath: string): string {
   const resolved = resolve(inputPath);
@@ -81,8 +81,8 @@ export function validateToolPath(inputPath: string): string {
 }
 
 /**
- * Convert lowercase language string to ast-grep Lang enum value
- * This provides type-safe language conversion without using 'as any'
+ * 将小写语言字符串转换为 ast-grep 的 Lang 枚举值
+ * 提供类型安全的语言转换，无需使用 'as any'
  */
 function toLangEnum(
   sg: typeof import("@ast-grep/napi"),
@@ -125,8 +125,8 @@ export interface AstToolDefinition<T extends z.ZodRawShape> {
 }
 
 /**
- * Supported languages for AST analysis
- * Maps to ast-grep language identifiers
+ * AST 分析支持的语言
+ * 映射到 ast-grep 的语言标识
  */
 export const SUPPORTED_LANGUAGES: [string, ...string[]] = [
   "javascript",
@@ -151,7 +151,7 @@ export const SUPPORTED_LANGUAGES: [string, ...string[]] = [
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 /**
- * Map file extensions to ast-grep language identifiers
+ * 将文件扩展名映射到 ast-grep 语言标识
  */
 const EXT_TO_LANG: Record<string, string> = {
   ".js": "javascript",
@@ -186,7 +186,7 @@ const EXT_TO_LANG: Record<string, string> = {
 };
 
 /**
- * Get files matching the language in a directory
+ * 获取目录中匹配指定语言的文件
  */
 function getFilesForLanguage(
   dirPath: string,
@@ -208,7 +208,7 @@ function getFilesForLanguage(
 
         const fullPath = join(dir, entry.name);
 
-        // Skip common non-source directories
+        // 跳过常见的非源码目录
         if (entry.isDirectory()) {
           if (
             ![
@@ -231,7 +231,7 @@ function getFilesForLanguage(
         }
       }
     } catch {
-      // Ignore permission errors
+      // 忽略权限错误
     }
   }
 
@@ -252,7 +252,7 @@ function getFilesForLanguage(
 }
 
 /**
- * Format a match result for display
+ * 格式化匹配结果用于展示
  */
 function formatMatch(
   filePath: string,
@@ -278,7 +278,7 @@ function formatMatch(
 }
 
 /**
- * AST Grep Search Tool - Find code patterns using AST matching
+ * AST Grep 搜索工具 - 通过 AST 匹配查找代码模式
  */
 export const astGrepSearchTool: AstToolDefinition<{
   pattern: z.ZodString;

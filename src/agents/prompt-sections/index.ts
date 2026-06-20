@@ -1,14 +1,14 @@
 /**
- * Prompt Section Builders for Dynamic Orchestrator Prompt Generation
+ * Prompt 分节构建器 —— 动态生成编排器 Prompt
  *
- * This module provides functions to build different sections of the orchestrator prompt
- * dynamically from agent metadata. Adding a new agent automatically updates the orchestrator.
+ * 本模块提供函数，从 agent 元数据动态构建编排器 prompt 的各个分节。
+ * 新增 agent 会自动更新编排器。
  */
 
 import type { AgentConfig, AgentCategory } from '../types.js';
 
 /**
- * Build the header section with core orchestrator identity
+ * 构建包含编排器核心身份的头部小节
  */
 export function buildHeader(): string {
   return `You are the relentless orchestrator of a multi-agent development system.
@@ -22,16 +22,16 @@ You coordinate specialized subagents to accomplish complex software engineering 
 }
 
 /**
- * Build the agent registry section with descriptions
+ * 构建带描述的 agent 注册表小节
  */
 export function buildAgentRegistry(agents: AgentConfig[]): string {
   const lines: string[] = ['## Available Subagents', ''];
 
-  // Group agents by tier (base vs variants)
+  // 按 tier 分组 agent（基础与变体）
   const baseAgents = agents.filter(a => !a.name.includes('-'));
   const tieredAgents = agents.filter(a => a.name.includes('-'));
 
-  // Base agents
+  // 基础 agents
   if (baseAgents.length > 0) {
     lines.push('### Primary Agents');
     for (const agent of baseAgents) {
@@ -41,7 +41,7 @@ export function buildAgentRegistry(agents: AgentConfig[]): string {
     lines.push('');
   }
 
-  // Tiered variants
+  // 分层变体
   if (tieredAgents.length > 0) {
     lines.push('### Tiered Variants');
     lines.push('Use tiered variants for smart model routing based on task complexity:');
@@ -61,12 +61,12 @@ export function buildAgentRegistry(agents: AgentConfig[]): string {
 }
 
 /**
- * Build the trigger table showing when to use each agent
+ * 构建触发条件表，展示每个 agent 的使用时机
  */
 export function buildTriggerTable(agents: AgentConfig[]): string {
   const lines: string[] = ['## Key Triggers', ''];
 
-  // Filter agents with metadata triggers
+  // 过滤带 metadata triggers 的 agents
   const agentsWithTriggers = agents.filter(a => a.metadata?.triggers && a.metadata.triggers.length > 0);
 
   if (agentsWithTriggers.length === 0) {
@@ -90,12 +90,12 @@ export function buildTriggerTable(agents: AgentConfig[]): string {
 }
 
 /**
- * Build tool selection guidance section
+ * 构建工具选择指引小节
  */
 export function buildToolSelectionSection(agents: AgentConfig[]): string {
   const lines: string[] = ['## Tool Selection Guidance', ''];
 
-  // Group by category
+  // 按类别分组
   const categorizedAgents = new Map<AgentCategory, AgentConfig[]>();
   for (const agent of agents) {
     const category = agent.metadata?.category || 'utility';
@@ -130,12 +130,12 @@ export function buildToolSelectionSection(agents: AgentConfig[]): string {
 }
 
 /**
- * Build delegation matrix/guide table
+ * 构建委派矩阵/指引表
  */
 export function buildDelegationMatrix(agents: AgentConfig[]): string {
   const lines: string[] = ['## Delegation Guide', ''];
 
-  // Group by category
+  // 按类别分组
   const categorizedAgents = new Map<AgentCategory, AgentConfig[]>();
   for (const agent of agents) {
     const category = agent.metadata?.category || 'utility';
@@ -165,7 +165,7 @@ export function buildDelegationMatrix(agents: AgentConfig[]): string {
 }
 
 /**
- * Build orchestration principles section
+ * 构建编排原则小节
  */
 export function buildOrchestrationPrinciples(): string {
   return `## Orchestration Principles
@@ -177,7 +177,7 @@ export function buildOrchestrationPrinciples(): string {
 }
 
 /**
- * Build workflow section
+ * 构建工作流小节
  */
 export function buildWorkflow(): string {
   return `## Workflow
@@ -192,7 +192,7 @@ export function buildWorkflow(): string {
 }
 
 /**
- * Build critical rules section
+ * 构建关键规则小节
  */
 export function buildCriticalRules(): string {
   return `## CRITICAL RULES - VIOLATION IS FAILURE
@@ -207,7 +207,7 @@ export function buildCriticalRules(): string {
 }
 
 /**
- * Build completion checklist section
+ * 构建完成检查清单小节
  */
 export function buildCompletionChecklist(): string {
   return `## Completion Checklist
@@ -222,7 +222,7 @@ If ANY checkbox is unchecked, YOU ARE NOT DONE. Continue working.`;
 }
 
 /**
- * Capitalize first letter of a string
+ * 将字符串首字母大写
  */
 function capitalizeFirst(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);

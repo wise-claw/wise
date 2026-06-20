@@ -1,8 +1,8 @@
 /**
- * MCP Bridge for Cross-Tool Interoperability
+ * 用于跨工具互操作的 MCP Bridge
  *
- * Provides MCP tool definitions for communication between WISE and OMX.
- * Tools allow sending tasks and messages between the two systems.
+ * 提供 WISE 与 OMX 之间通信的 MCP 工具定义。
+ * 这些工具允许在两个系统之间发送任务与消息。
  */
 
 import { z } from 'zod';
@@ -79,7 +79,7 @@ function formatArtifactDescriptorLines(label: string, descriptor?: ArtifactDescr
 }
 
 // ============================================================================
-// interop_send_task - Send a task to the other tool
+// interop_send_task - 向另一个工具发送任务
 // ============================================================================
 
 export const interopSendTaskTool: ToolDefinition<{
@@ -137,7 +137,7 @@ export const interopSendTaskTool: ToolDefinition<{
 };
 
 // ============================================================================
-// interop_read_results - Read task results from the other tool
+// interop_read_results - 读取来自另一个工具的任务结果
 // ============================================================================
 
 export const interopReadResultsTool: ToolDefinition<{
@@ -226,7 +226,7 @@ export const interopReadResultsTool: ToolDefinition<{
 };
 
 // ============================================================================
-// interop_send_message - Send a message to the other tool
+// interop_send_message - 向另一个工具发送消息
 // ============================================================================
 
 export const interopSendMessageTool: ToolDefinition<{
@@ -275,7 +275,7 @@ export const interopSendMessageTool: ToolDefinition<{
 };
 
 // ============================================================================
-// interop_read_messages - Read messages from the other tool
+// interop_read_messages - 读取来自另一个工具的消息
 // ============================================================================
 
 export const interopReadMessagesTool: ToolDefinition<{
@@ -316,7 +316,7 @@ export const interopReadMessagesTool: ToolDefinition<{
         };
       }
 
-      // Mark messages as read if requested
+      // 若请求则将消息标记为已读
       if (markAsRead) {
         for (const message of limitedMessages) {
           markMessageAsRead(cwd, message.id);
@@ -361,7 +361,7 @@ export const interopReadMessagesTool: ToolDefinition<{
 };
 
 // ============================================================================
-// interop_list_omx_teams - List active omx teams
+// interop_list_omx_teams - 列出活跃的 omx team
 // ============================================================================
 
 export const interopListOmxTeamsTool: ToolDefinition<{
@@ -415,7 +415,7 @@ export const interopListOmxTeamsTool: ToolDefinition<{
 };
 
 // ============================================================================
-// interop_send_omx_message - Send message to omx team mailbox
+// interop_send_omx_message - 向 omx team 邮箱发送消息
 // ============================================================================
 
 export const interopSendOmxMessageTool: ToolDefinition<{
@@ -484,7 +484,7 @@ export const interopSendOmxMessageTool: ToolDefinition<{
 };
 
 // ============================================================================
-// interop_read_omx_messages - Read messages from omx team mailbox
+// interop_read_omx_messages - 读取 omx team 邮箱中的消息
 // ============================================================================
 
 export const interopReadOmxMessagesTool: ToolDefinition<{
@@ -516,7 +516,7 @@ export const interopReadOmxMessagesTool: ToolDefinition<{
         };
       }
 
-      const limited = messages.slice(-limit); // most recent N messages
+      const limited = messages.slice(-limit); // 最近的 N 条消息
       const lines: string[] = [
         `## OMX Mailbox: ${args.workerName} @ ${args.teamName} (${limited.length}${messages.length > limit ? ` of ${messages.length}` : ''})\n`
       ];
@@ -545,7 +545,7 @@ export const interopReadOmxMessagesTool: ToolDefinition<{
 };
 
 // ============================================================================
-// interop_read_omx_tasks - Read omx team tasks
+// interop_read_omx_tasks - 读取 omx team 任务
 // ============================================================================
 
 export const interopReadOmxTasksTool: ToolDefinition<{
@@ -616,7 +616,7 @@ export const interopReadOmxTasksTool: ToolDefinition<{
 };
 
 /**
- * Get all interop MCP tools for registration
+ * 获取所有 interop MCP 工具以供注册
  */
 export function getInteropTools(): ToolDefinition<any>[] {
   return [

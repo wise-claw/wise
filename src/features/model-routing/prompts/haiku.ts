@@ -1,39 +1,39 @@
 /**
- * Haiku-Optimized Prompt Adaptations
+ * Haiku 专用 prompt 适配
  *
- * Haiku (LOW tier) prompts are designed for:
- * - Maximum speed and efficiency
- * - Concise, direct instructions
- * - Simple, focused tasks
- * - Minimal cognitive overhead
+ * Haiku（LOW tier）的 prompt 设计目标：
+ * - 最大化速度与效率
+ * - 简洁、直接的指令
+ * - 简单、聚焦的任务
+ * - 最小的认知负担
  */
 
 /**
- * Haiku prompt prefix - minimal overhead
+ * Haiku prompt 前缀 - 最小开销
  */
 export const HAIKU_PROMPT_PREFIX = `TASK: `;
 
 /**
- * Haiku prompt suffix - direct action
+ * Haiku prompt 后缀 - 直接执行
  */
 export const HAIKU_PROMPT_SUFFIX = `
 
 Return results directly. No preamble.`;
 
 /**
- * Adapt a base prompt for Haiku execution
+ * 将基础 prompt 适配为 Haiku 执行版本
  */
 export function adaptPromptForHaiku(basePrompt: string): string {
-  // For Haiku, we want to strip unnecessary verbosity
+  // 对 Haiku，需要去除不必要的冗余措辞
   const condensed = condensePrompt(basePrompt);
   return HAIKU_PROMPT_PREFIX + condensed + HAIKU_PROMPT_SUFFIX;
 }
 
 /**
- * Condense a prompt for Haiku - remove unnecessary words
+ * 为 Haiku 精简 prompt - 去除不必要的词汇
  */
 function condensePrompt(prompt: string): string {
-  // Remove common filler phrases
+  // 移除常见的填充短语
   const condensed = prompt
     .replace(/please\s+/gi, '')
     .replace(/could you\s+/gi, '')
@@ -51,7 +51,7 @@ function condensePrompt(prompt: string): string {
 }
 
 /**
- * Haiku search template
+ * Haiku 搜索模板
  */
 export const HAIKU_SEARCH_TEMPLATE = `SEARCH: {QUERY}
 
@@ -65,7 +65,7 @@ FORMAT:
 `;
 
 /**
- * Haiku file listing template
+ * Haiku 文件列表模板
  */
 export const HAIKU_LIST_TEMPLATE = `LIST: {TARGET}
 
@@ -73,7 +73,7 @@ RETURN: File paths matching criteria.
 `;
 
 /**
- * Haiku documentation template
+ * Haiku 文档模板
  */
 export const HAIKU_DOC_TEMPLATE = `DOCUMENT: {TARGET}
 
@@ -84,7 +84,7 @@ OUTPUT: Markdown documentation.
 `;
 
 /**
- * Haiku simple task template
+ * Haiku 简单任务模板
  */
 export const HAIKU_SIMPLE_TEMPLATE = `DO: {TASK}
 
@@ -94,7 +94,7 @@ RETURN: {EXPECTED_OUTPUT}
 `;
 
 /**
- * Haiku delegation template - ultra-concise
+ * Haiku 委派模板 - 极简
  */
 export const HAIKU_DELEGATION_TEMPLATE = `TASK: {TASK}
 TARGET: {TARGET}
@@ -102,10 +102,10 @@ OUTPUT: {OUTPUT_FORMAT}
 `;
 
 /**
- * Extract key action from verbose prompt
+ * 从冗长的 prompt 中提取关键动作
  */
 export function extractKeyAction(prompt: string): string {
-  // Try to extract the main verb phrase
+  // 尝试提取主要的动词短语
   const actionPatterns = [
     /(?:find|search|list|show|get|locate)\s+(.+?)(?:\.|$)/i,
     /(?:where|what)\s+(?:is|are)\s+(.+?)(?:\?|$)/i,
@@ -118,13 +118,13 @@ export function extractKeyAction(prompt: string): string {
     }
   }
 
-  // If no pattern matches, return first sentence
+  // 若无模式匹配，返回第一句
   const firstSentence = prompt.split(/[.!?]/)[0];
   return firstSentence.trim();
 }
 
 /**
- * Create minimal exploration prompt
+ * 创建极简探索 prompt
  */
 export function createExplorePrompt(query: string): string {
   return `FIND: ${query}
@@ -142,7 +142,7 @@ OUTPUT:
 }
 
 /**
- * Create minimal documentation prompt
+ * 创建极简文档 prompt
  */
 export function createDocPrompt(target: string, requirements: string[]): string {
   return `DOCUMENT: ${target}

@@ -1,17 +1,17 @@
 /**
- * Hooks Module for Wise
+ * Wise 钩子模块
  *
- * This module provides the TypeScript bridge for Claude Code's native shell hook system.
- * Shell scripts call these TypeScript functions for complex logic processing.
+ * 本模块为 Claude Code 原生 shell 钩子系统提供 TypeScript 桥接。
+ * shell 脚本调用这些 TypeScript 函数以处理复杂逻辑。
  *
- * Architecture:
- * - Claude Code runs shell scripts on hook events (UserPromptSubmit, Stop, etc.)
- * - Shell scripts invoke Node.js bridge for complex processing
- * - Bridge returns JSON response that shell passes back to Claude Code
+ * 架构：
+ * - Claude Code 在钩子事件（UserPromptSubmit、Stop 等）触发时运行 shell 脚本
+ * - shell 脚本调用 Node.js 桥接进行复杂处理
+ * - 桥接返回 JSON 响应，由 shell 传回 Claude Code
  */
 
 export {
-  // Keyword detection
+  // 关键词检测
   detectKeywordsWithType,
   extractPromptText,
   removeCodeBlocks,
@@ -20,8 +20,8 @@ export {
 } from './keyword-detector/index.js';
 
 export {
-  // Ralph Hook (consolidated: loop, PRD, progress, verifier)
-  // Loop
+  // Ralph 钩子（整合：loop、PRD、progress、verifier）
+  // 循环
   createRalphLoopHook,
   readRalphState,
   writeRalphState,
@@ -29,7 +29,7 @@ export {
   clearLinkedUltraworkState,
   incrementRalphIteration,
   isUltraQAActive,
-  // PRD Integration
+  // PRD 集成
   hasPrd,
   getPrdCompletionStatus,
   getRalphContext,
@@ -38,7 +38,7 @@ export {
   recordStoryProgress,
   recordPattern,
   shouldCompleteByPrd,
-  // PRD (Structured Task Tracking)
+  // PRD（结构化任务跟踪）
   readPrd,
   writePrd,
   findPrdPath,
@@ -58,7 +58,7 @@ export {
   formatNextStoryPrompt,
   PRD_FILENAME,
   PRD_EXAMPLE_FILENAME,
-  // Progress (Memory Persistence)
+  // Progress（记忆持久化）
   readProgress,
   readProgressRaw,
   parseProgress,
@@ -77,7 +77,7 @@ export {
   PROGRESS_FILENAME,
   PATTERNS_HEADER,
   ENTRY_SEPARATOR,
-  // Verifier (Architect Verification)
+  // Verifier（架构师校验）
   readVerificationState,
   writeVerificationState,
   clearVerificationState,
@@ -87,7 +87,7 @@ export {
   getArchitectRejectionContinuationPrompt,
   detectArchitectApproval,
   detectArchitectRejection,
-  // Types
+  // 类型
   type RalphLoopState,
   type RalphLoopOptions,
   type RalphLoopHook,
@@ -102,21 +102,21 @@ export {
 } from './ralph/index.js';
 
 export {
-  // Todo Continuation
+  // 待办延续
   createTodoContinuationHook,
   checkIncompleteTodos,
   type TodoContinuationHook
 } from './todo-continuation/index.js';
 
 export {
-  // Hook Bridge (main entry point for shell scripts)
+  // 钩子桥接（shell 脚本主入口）
   processHook,
   type HookInput,
   type HookOutput
 } from './bridge.js';
 
 export {
-  // Think Mode
+  // Think 模式
   createThinkModeHook,
   detectThinkKeyword,
   detectUltrathinkKeyword,
@@ -142,7 +142,7 @@ export {
 } from './think-mode/index.js';
 
 export {
-  // Rules Injector
+  // 规则注入器
   createRulesInjectorHook,
   getRulesForPath,
   findProjectRoot,
@@ -171,7 +171,7 @@ export {
 } from './rules-injector/index.js';
 
 export {
-  // WISE Orchestrator
+  // WISE 编排器
   createWiseOrchestratorHook,
   isAllowedPath,
   isWriteEditTool,
@@ -196,7 +196,7 @@ export {
 } from './wise-orchestrator/index.js';
 
 export {
-  // Auto Slash Command
+  // 自动斜杠命令
   createAutoSlashCommandHook,
   processSlashCommand,
   detectSlashCommand,
@@ -224,7 +224,7 @@ export {
 } from './auto-slash-command/index.js';
 
 export {
-  // Comment Checker
+  // 注释检查器
   createCommentCheckerHook,
   checkForComments,
   applyFilters as applyCommentFilters,
@@ -240,29 +240,29 @@ export {
 } from './comment-checker/index.js';
 
 export {
-  // Unified Recovery Module
+  // 统一恢复模块
   createRecoveryHook,
   handleRecovery,
   detectRecoverableError,
-  // Context Window Limit Recovery
+  // 上下文窗口上限恢复
   handleContextWindowRecovery,
   detectContextLimitError,
   detectContextLimitErrorInText,
   parseContextLimitError,
   parseTokenLimitError,
   containsTokenLimitError,
-  // Edit Error Recovery
+  // 编辑错误恢复
   handleEditErrorRecovery,
   detectEditError,
   detectEditErrorInOutput,
   detectEditErrorInText,
   processEditOutput,
-  // Session Recovery
+  // 会话恢复
   handleSessionRecovery,
   detectSessionErrorType,
   isRecoverableError,
   isSessionRecoverable,
-  // Storage utilities
+  // 存储工具
   readMessages as readRecoveryMessages,
   readParts as readRecoveryParts,
   findEmptyMessages as findRecoveryEmptyMessages,
@@ -272,7 +272,7 @@ export {
   prependThinkingPart as prependRecoveryThinkingPart,
   stripThinkingParts as stripRecoveryThinkingParts,
   replaceEmptyTextParts as replaceRecoveryEmptyTextParts,
-  // Constants
+  // 常量
   TOKEN_LIMIT_PATTERNS,
   TOKEN_LIMIT_KEYWORDS,
   CONTEXT_LIMIT_RECOVERY_MESSAGE,
@@ -286,7 +286,7 @@ export {
   TRUNCATE_CONFIG,
   RECOVERY_MESSAGES,
   PLACEHOLDER_TEXT as RECOVERY_PLACEHOLDER_TEXT,
-  // Types
+  // 类型
   type ParsedTokenLimitError,
   type RetryState,
   type TruncateState,
@@ -302,7 +302,7 @@ export {
 } from './recovery/index.js';
 
 export {
-  // Preemptive Compaction
+  // 预防性压缩
   createPreemptiveCompactionHook,
   estimateTokens,
   analyzeContextUsage,
@@ -323,7 +323,7 @@ export {
 } from './preemptive-compaction/index.js';
 
 export {
-  // Background Notification
+  // 后台通知
   createBackgroundNotificationHook,
   processBackgroundNotification,
   processBackgroundNotificationHook,
@@ -337,7 +337,7 @@ export {
 } from './background-notification/index.js';
 
 export {
-  // Directory README / AGENTS.md Injector
+  // 目录 README / AGENTS.md 注入器
   createDirectoryReadmeInjectorHook,
   getReadmesForPath,
   loadInjectedPaths,
@@ -352,7 +352,7 @@ export {
 } from './directory-readme-injector/index.js';
 
 export {
-  // Empty Message Sanitizer
+  // 空消息清理器
   createEmptyMessageSanitizerHook,
   sanitizeMessages,
   sanitizeMessage,
@@ -373,7 +373,7 @@ export {
 } from './empty-message-sanitizer/index.js';
 
 export {
-  // Thinking Block Validator
+  // Thinking Block 校验器
   createThinkingBlockValidatorHook,
   isExtendedThinkingModel,
   hasContentParts,
@@ -400,7 +400,7 @@ export {
 } from './thinking-block-validator/index.js';
 
 export {
-  // Non-Interactive Environment
+  // 非交互环境
   nonInteractiveEnvHook,
   isNonInteractive,
   HOOK_NAME as NON_INTERACTIVE_ENV_HOOK_NAME,
@@ -411,7 +411,7 @@ export {
 } from './non-interactive-env/index.js';
 
 export {
-  // Agent Usage Reminder
+  // 代理使用提醒
   createAgentUsageReminderHook,
   loadAgentUsageState,
   saveAgentUsageState,
@@ -423,7 +423,7 @@ export {
 } from './agent-usage-reminder/index.js';
 
 export {
-  // Ultrawork State (Persistent Mode)
+  // Ultrawork 状态（持久模式）
   activateUltrawork,
   deactivateUltrawork,
   readUltraworkState,
@@ -436,14 +436,14 @@ export {
 } from './ultrawork/index.js';
 
 export {
-  // Persistent Mode (Unified Stop Handler)
+  // 持久模式（统一 Stop 处理器）
   checkPersistentModes,
   createHookOutput,
   type PersistentModeResult
 } from './persistent-mode/index.js';
 
 export {
-  // Plugin Patterns (Popular Community Patterns)
+  // 插件模式（常用社区模式）
   getFormatter,
   isFormatterAvailable,
   formatFile,
@@ -463,7 +463,7 @@ export {
 } from './plugin-patterns/index.js';
 
 export {
-  // UltraQA Loop (QA cycling workflow)
+  // UltraQA 循环（QA 循环工作流）
   readUltraQAState,
   writeUltraQAState,
   clearUltraQAState,
@@ -481,7 +481,7 @@ export {
 } from './ultraqa/index.js';
 
 export {
-  // Notepad (Compaction-Resilient Memory)
+  // Notepad（抗压缩记忆）
   initNotepad,
   readNotepad,
   getPriorityContext,
@@ -507,7 +507,7 @@ export {
 } from './notepad/index.js';
 
 export {
-  // Learned Skills (Learner)
+  // 已学技能（Learner）
   createLearnedSkillsHook,
   processMessageForSkills,
   isLearnerEnabled,
@@ -539,7 +539,7 @@ export {
   saveConfig as saveLearnerConfig,
   getConfigValue as getLearnerConfigValue,
   setConfigValue as setLearnerConfigValue,
-  // Constants
+  // 常量
   USER_SKILLS_DIR,
   PROJECT_SKILLS_SUBDIR,
   SKILL_EXTENSION,
@@ -547,7 +547,7 @@ export {
   MAX_SKILL_CONTENT_LENGTH,
   MIN_QUALITY_SCORE,
   MAX_SKILLS_PER_SESSION,
-  // Types
+  // 类型
   type SkillMetadata,
   type LearnedSkill,
   type SkillFileCandidate,
@@ -563,7 +563,7 @@ export {
   type SkillParseResult
 } from './learner/index.js';
 
-// Autopilot
+// Autopilot 模式
 export {
   readAutopilotState,
   writeAutopilotState,
@@ -631,7 +631,7 @@ export {
   type CancelResult
 } from './autopilot/index.js';
 
-// Mode Registry (Centralized State Management)
+// 模式注册表（集中状态管理）
 export {
   MODE_CONFIGS,
   getStateDir,
@@ -643,7 +643,7 @@ export {
   hasModeState,
   getActiveModes,
   clearAllModeStates,
-  // Additional functions from PR #111
+  // 来自 PR #111 的额外函数
   isModeActive,
   getActiveExclusiveMode,
   canStartMode,
@@ -658,7 +658,7 @@ export {
 } from './mode-registry/index.js';
 
 export {
-  // Setup Hook
+  // Setup 钩子
   ensureDirectoryStructure,
   validateConfigFiles,
   setEnvironmentVariables,
@@ -673,7 +673,7 @@ export {
 } from './setup/index.js';
 
 export {
-  // Beads Context
+  // Beads 上下文
   getBeadsInstructions,
   getBeadsContextConfig,
   registerBeadsContext,
@@ -685,7 +685,7 @@ export {
 } from './beads-context/index.js';
 
 export {
-  // Subagent Tracker Hook
+  // 子代理跟踪钩子
   processSubagentStart,
   processSubagentStop,
   handleSubagentStart,
@@ -708,7 +708,7 @@ export {
 } from './subagent-tracker/index.js';
 
 export {
-  // PreCompact Hook
+  // PreCompact 钩子
   processPreCompact,
   getCheckpointPath,
   exportWisdomToNotepad,
@@ -723,7 +723,7 @@ export {
 } from './pre-compact/index.js';
 
 export {
-  // Permission Handler Hook
+  // 权限处理器钩子
   processPermissionRequest,
   handlePermissionRequest,
   isSafeCommand,
@@ -733,7 +733,7 @@ export {
 } from './permission-handler/index.js';
 
 export {
-  // Session End Hook
+  // 会话结束钩子
   processSessionEnd,
   handleSessionEnd,
   recordSessionMetrics,
@@ -745,7 +745,7 @@ export {
 } from './session-end/index.js';
 
 export {
-  // Project Memory Hook
+  // 项目记忆钩子
   registerProjectMemoryContext,
   clearProjectMemorySession,
   rescanProjectEnvironment,
@@ -780,7 +780,7 @@ export {
 } from './project-memory/index.js';
 
 export {
-  // Flow Tracer (Agent Flow Trace Recording)
+  // Flow Tracer（代理流跟踪记录）
   recordHookFire,
   recordHookResult,
   recordKeywordDetected,
@@ -790,7 +790,7 @@ export {
 } from './subagent-tracker/flow-tracer.js';
 
 export {
-  // Codebase Map Generator (issue #804)
+  // 代码库地图生成器（issue #804）
   generateCodebaseMap,
   buildTree,
   renderTree,
@@ -801,13 +801,13 @@ export {
 } from './codebase-map.js';
 
 export {
-  // Agents Overlay - startup context injection (issue #804)
+  // Agents Overlay - 启动上下文注入（issue #804）
   buildAgentsOverlay,
   type AgentsOverlayResult,
 } from './agents-overlay.js';
 
 export {
-  // Code Simplifier Stop Hook
+  // 代码简化器 Stop 钩子
   processCodeSimplifier,
   isCodeSimplifierEnabled,
   getModifiedFiles,

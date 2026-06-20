@@ -1,5 +1,5 @@
 /**
- * Learned Skills Constants
+ * 已学习技能常量
  */
 
 import { join } from 'path';
@@ -7,41 +7,41 @@ import { homedir } from 'os';
 import { getClaudeConfigDir } from '../../utils/config-dir.js';
 import { WisePaths } from '../../lib/worktree-paths.js';
 
-/** User-level skills directory (read by skill-injector.mjs hook) */
+/** 用户级技能目录（由 skill-injector.mjs 钩子读取） */
 export const USER_SKILLS_DIR = join(getClaudeConfigDir(), 'skills', 'wise-learned');
 
-/** Global skills directory (new preferred location: ~/.wise/skills) */
+/** 全局技能目录（新的首选位置：~/.wise/skills） */
 export const GLOBAL_SKILLS_DIR = join(homedir(), '.wise', 'skills');
 
-/** Project-level skills subdirectory */
+/** 项目级技能子目录 */
 export const PROJECT_SKILLS_SUBDIR = WisePaths.SKILLS;
 
-/** Project-level compatibility skills subdirectory (read-only compatibility source) */
+/** 项目级兼容技能子目录（只读兼容来源） */
 export const PROJECT_AGENT_SKILLS_SUBDIR = join('.agents', 'skills');
 
-/** Maximum recursion depth for skill file discovery */
+/** 技能文件发现的最大递归深度 */
 export const MAX_RECURSION_DEPTH = 10;
 
-/** Valid skill file extension */
+/** 有效的技能文件扩展名 */
 export const SKILL_EXTENSION = '.md';
 
-/** Feature flag key for enabling/disabling */
+/** 启用/禁用的功能开关键名 */
 export const FEATURE_FLAG_KEY = 'learner.enabled';
 
-/** Default feature flag value */
+/** 功能开关默认值 */
 export const FEATURE_FLAG_DEFAULT = true;
 
-/** Maximum skill content length (characters) */
+/** 技能内容的最大长度（字符数） */
 export const MAX_SKILL_CONTENT_LENGTH = 4000;
 
-/** Minimum quality score for auto-injection */
+/** 自动注入的最低质量分数 */
 export const MIN_QUALITY_SCORE = 50;
 
-/** Required metadata fields */
+/** 必需的元数据字段 */
 export const REQUIRED_METADATA_FIELDS = ['id', 'name', 'description', 'triggers', 'source'];
 
-/** Maximum skills to inject per session */
+/** 每个会话最多注入的技能数 */
 export const MAX_SKILLS_PER_SESSION = 10;
 
-/** Debug mode enabled */
+/** 是否启用调试模式 */
 export const DEBUG_ENABLED = process.env.WISE_DEBUG === '1';

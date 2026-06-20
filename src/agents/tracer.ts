@@ -1,9 +1,8 @@
 /**
- * Tracer Agent - Evidence-Driven Causal Tracing
+ * Tracer Agent - 证据驱动的因果追踪
  *
- * Specialized agent for explaining observed outcomes through competing
- * hypotheses, evidence collection, uncertainty tracking, and next-probe
- * recommendations.
+ * 专用 agent，通过竞争假设、证据收集、不确定性追踪和下一步探测建议，
+ * 解释已观察到的结果。
  */
 
 import type { AgentConfig, AgentPromptMetadata } from './types.js';

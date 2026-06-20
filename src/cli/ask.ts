@@ -81,7 +81,7 @@ function resolveAskPromptsDir(
       }
     }
   } catch {
-    // Ignore malformed persisted scope and fall back to package agents.
+    // 忽略格式错误的持久化 scope，兜底使用包内 agents。
   }
 
   return join(packageRoot, 'agents');

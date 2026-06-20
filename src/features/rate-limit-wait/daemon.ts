@@ -1,15 +1,15 @@
 /**
- * Rate Limit Wait Daemon
+ * Rate Limit Wait 守护进程
  *
- * Background daemon that monitors rate limits and auto-resumes
- * Claude Code sessions when rate limits reset.
+ * 后台守护进程，监控速率限制并在速率限制重置时自动恢复
+ * Claude Code 会话。
  *
- * Security considerations:
- * - State/PID/log files use restrictive permissions (0600)
- * - No sensitive data (tokens, credentials) is logged or stored
- * - Input validation for tmux pane IDs
+ * 安全考虑：
+ * - 状态/PID/log 文件使用严格权限 (0600)
+ * - 不记录或存储敏感数据（token、凭证）
+ * - 对 tmux pane ID 进行输入校验
  *
- * Reference: https://github.com/EvanOman/cc-wait
+ * 参考：https://github.com/EvanOman/cc-wait
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync, chmodSync, statSync, appendFileSync, renameSync } from 'fs';
@@ -38,12 +38,12 @@ import type {
 } from './types.js';
 import { isProcessAlive } from '../../platform/index.js';
 
-// ESM compatibility: __filename is not available in ES modules
+// ESM 兼容：ES 模块中没有 __filename
 const __filename = fileURLToPath(import.meta.url);
 
-/** Default configuration */
+/** 默认配置 */
 const DEFAULT_CONFIG: Required<DaemonConfig> = {
-  pollIntervalMs: 60 * 1000, // 1 minute
+  pollIntervalMs: 60 * 1000, // 1 分钟
   paneLinesToCapture: 15,
   verbose: false,
   stateFilePath: getGlobalWiseStatePath('rate-limit-daemon.json'),
@@ -51,42 +51,42 @@ const DEFAULT_CONFIG: Required<DaemonConfig> = {
   logFilePath: getGlobalWiseStatePath('rate-limit-daemon.log'),
 };
 
-/** Maximum log file size before rotation (1MB) */
+/** 日志文件滚动前的最大大小 (1MB) */
 const MAX_LOG_SIZE_BYTES = 1 * 1024 * 1024;
 
-/** Restrictive file permissions (owner read/write only) */
+/** 严格的文件权限（仅所有者可读写） */
 const SECURE_FILE_MODE = 0o600;
 
 /**
- * Allowlist of environment variables safe to pass to daemon child process.
- * This prevents leaking sensitive variables like ANTHROPIC_API_KEY, GITHUB_TOKEN, etc.
+ * 可安全传递给守护进程子进程的环境变量白名单。
+ * 用于防止泄露 ANTHROPIC_API_KEY、GITHUB_TOKEN 等敏感变量。
  */
 const DAEMON_ENV_ALLOWLIST = [
-  // Core system paths
+  // 核心系统路径
   'PATH', 'HOME', 'USERPROFILE',
-  // User identification
+  // 用户标识
   'USER', 'USERNAME', 'LOGNAME',
-  // Locale settings
+  // 区域设置
   'LANG', 'LC_ALL', 'LC_CTYPE',
-  // Terminal/tmux (required for tmux integration)
+  // Terminal/tmux（tmux 集成所需）
   'TERM', 'TMUX', 'TMUX_PANE',
-  // Temp directories
+  // 临时目录
   'TMPDIR', 'TMP', 'TEMP',
-  // XDG directories (Linux)
+  // XDG 目录 (Linux)
   'XDG_RUNTIME_DIR', 'XDG_DATA_HOME', 'XDG_CONFIG_HOME',
   // Shell
   'SHELL',
   // Node.js
   'NODE_ENV', 'NODE_EXTRA_CA_CERTS',
-  // Proxy settings
+  // 代理设置
   'HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy', 'NO_PROXY', 'no_proxy',
-  // Windows system
+  // Windows 系统
   'SystemRoot', 'SYSTEMROOT', 'windir', 'COMSPEC',
 ] as const;
 
 /**
- * Create a minimal environment for daemon child processes.
- * Only includes allowlisted variables to prevent credential leakage.
+ * 为守护进程子进程创建最小化环境。
+ * 仅包含白名单变量以防止凭证泄露。
  */
 function createMinimalDaemonEnv(): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {};
@@ -99,14 +99,14 @@ function createMinimalDaemonEnv(): NodeJS.ProcessEnv {
 }
 
 /**
- * Get effective configuration by merging with defaults
+ * 与默认值合并，获取生效配置
  */
 function getConfig(config?: DaemonConfig): Required<DaemonConfig> {
   return { ...DEFAULT_CONFIG, ...config };
 }
 
 /**
- * Ensure state directory exists with secure permissions
+ * 确保状态目录存在且具有安全权限
  */
 function ensureStateDir(config: Required<DaemonConfig>): void {
   const stateDir = dirname(config.stateFilePath);
@@ -116,15 +116,15 @@ function ensureStateDir(config: Required<DaemonConfig>): void {
 }
 
 /**
- * Write file with secure permissions (0600 - owner read/write only)
+ * 以安全权限写入文件 (0600 - 仅所有者可读写)
  */
 function writeSecureFile(filePath: string, content: string): void {
   writeFileSync(filePath, content, { mode: SECURE_FILE_MODE });
-  // Ensure permissions are set even if file existed
+  // 即使文件已存在也确保权限被设置
   try {
     chmodSync(filePath, SECURE_FILE_MODE);
   } catch (err) {
-    // chmod is not supported on Windows; warn on other platforms
+    // chmod 在 Windows 上不受支持；在其他平台上发出警告
     if (process.platform !== 'win32') {
       console.warn(`[RateLimitDaemon] Failed to set permissions on ${filePath}:`, err);
     }
@@ -132,7 +132,7 @@ function writeSecureFile(filePath: string, content: string): void {
 }
 
 /**
- * Rotate log file if it exceeds maximum size
+ * 日志文件超过最大大小时滚动
  */
 function rotateLogIfNeeded(logPath: string): void {
   try {
@@ -141,20 +141,20 @@ function rotateLogIfNeeded(logPath: string): void {
     const stats = statSync(logPath);
     if (stats.size > MAX_LOG_SIZE_BYTES) {
       const backupPath = `${logPath}.old`;
-      // Remove old backup if exists
+      // 如存在旧备份则移除
       if (existsSync(backupPath)) {
         unlinkSync(backupPath);
       }
-      // Rename current to backup
+      // 将当前日志重命名为备份
       renameSync(logPath, backupPath);
     }
   } catch {
-    // Ignore rotation errors
+    // 忽略滚动错误
   }
 }
 
 /**
- * Read daemon state from disk
+ * 从磁盘读取守护进程状态
  */
 export function readDaemonState(config?: DaemonConfig): DaemonState | null {
   const cfg = getConfig(config);
@@ -167,7 +167,7 @@ export function readDaemonState(config?: DaemonConfig): DaemonState | null {
     const content = readFileSync(cfg.stateFilePath, 'utf-8');
     const state = JSON.parse(content) as DaemonState;
 
-    // Restore Date objects
+    // 恢复 Date 对象
     if (state.startedAt) state.startedAt = new Date(state.startedAt);
     if (state.lastPollAt) state.lastPollAt = new Date(state.lastPollAt);
     if (state.rateLimitStatus?.lastCheckedAt) {
@@ -194,8 +194,8 @@ export function readDaemonState(config?: DaemonConfig): DaemonState | null {
 }
 
 /**
- * Write daemon state to disk with secure permissions
- * Note: State file contains only non-sensitive operational data
+ * 以安全权限将守护进程状态写入磁盘
+ * 注意：状态文件仅包含非敏感的运行数据
  */
 function writeDaemonState(state: DaemonState, config: Required<DaemonConfig>): void {
   ensureStateDir(config);
@@ -203,7 +203,7 @@ function writeDaemonState(state: DaemonState, config: Required<DaemonConfig>): v
 }
 
 /**
- * Read PID file
+ * 读取 PID 文件
  */
 function readPidFile(config: Required<DaemonConfig>): number | null {
   try {
@@ -218,7 +218,7 @@ function readPidFile(config: Required<DaemonConfig>): number | null {
 }
 
 /**
- * Write PID file with secure permissions
+ * 以安全权限写入 PID 文件
  */
 function writePidFile(pid: number, config: Required<DaemonConfig>): void {
   ensureStateDir(config);
@@ -226,7 +226,7 @@ function writePidFile(pid: number, config: Required<DaemonConfig>): void {
 }
 
 /**
- * Remove PID file
+ * 移除 PID 文件
  */
 function removePidFile(config: Required<DaemonConfig>): void {
   if (existsSync(config.pidFilePath)) {
@@ -235,7 +235,7 @@ function removePidFile(config: Required<DaemonConfig>): void {
 }
 
 /**
- * Check if daemon is currently running
+ * 检查守护进程当前是否在运行
  */
 export function isDaemonRunning(config?: DaemonConfig): boolean {
   const cfg = getConfig(config);
@@ -246,7 +246,7 @@ export function isDaemonRunning(config?: DaemonConfig): boolean {
   }
 
   if (!isProcessAlive(pid)) {
-    // Stale PID file, clean up
+    // 过期的 PID 文件，清理
     removePidFile(cfg);
     return false;
   }
@@ -255,8 +255,8 @@ export function isDaemonRunning(config?: DaemonConfig): boolean {
 }
 
 /**
- * Log message to daemon log file with rotation
- * Note: Only operational messages are logged, never credentials or tokens
+ * 将日志消息写入守护进程日志文件（带滚动）
+ * 注意：仅记录运行消息，绝不记录凭证或 token
  */
 function log(message: string, config: Required<DaemonConfig>): void {
   if (config.verbose) {
@@ -266,21 +266,21 @@ function log(message: string, config: Required<DaemonConfig>): void {
   try {
     ensureStateDir(config);
 
-    // Rotate log if needed (prevents unbounded growth)
+    // 如需要则滚动日志（防止无限增长）
     rotateLogIfNeeded(config.logFilePath);
 
     const timestamp = new Date().toISOString();
     const logLine = `[${timestamp}] ${message}\n`;
 
-    // Append to log file with secure permissions
+    // 以安全权限追加到日志文件
     appendFileSync(config.logFilePath, logLine, { mode: SECURE_FILE_MODE });
   } catch {
-    // Ignore log write errors
+    // 忽略日志写入错误
   }
 }
 
 /**
- * Create initial daemon state
+ * 创建初始守护进程状态
  */
 function createInitialState(): DaemonState {
   return {
@@ -298,9 +298,9 @@ function createInitialState(): DaemonState {
 }
 
 /**
- * Only a confirmed transition out of quota exhaustion should trigger pane resume.
- * Degraded/stale usage-api 429 responses are visible to users but must not act
- * like a real all-clear signal for blocked panes.
+ * 只有确认脱离配额耗尽状态时才应触发 pane 恢复。
+ * 降级/过期的 usage-api 429 响应对用户可见，但不得
+ * 当作被阻塞 pane 的真正解除信号。
  */
 export function shouldResumeBlockedPanesOnStatusChange(
   previousStatus: RateLimitStatus | null,
@@ -312,15 +312,15 @@ export function shouldResumeBlockedPanesOnStatusChange(
 }
 
 /**
- * Register cleanup handlers for the daemon process.
- * Ensures PID file and state are cleaned up on exit signals.
+ * 为守护进程注册清理处理器。
+ * 确保在退出信号时清理 PID 文件与状态。
  */
 function registerDaemonCleanup(config: Required<DaemonConfig>): void {
   const cleanup = () => {
     try {
       removePidFile(config);
     } catch {
-      // Ignore cleanup errors
+      // 忽略清理错误
     }
     try {
       const state = readDaemonState(config);
@@ -330,7 +330,7 @@ function registerDaemonCleanup(config: Required<DaemonConfig>): void {
         writeDaemonState(state, config);
       }
     } catch {
-      // Ignore cleanup errors
+      // 忽略清理错误
     }
   };
 
@@ -340,14 +340,14 @@ function registerDaemonCleanup(config: Required<DaemonConfig>): void {
 }
 
 /**
- * Main daemon polling loop
+ * 守护进程主轮询循环
  */
 async function pollLoop(config: Required<DaemonConfig>): Promise<void> {
   const state = readDaemonState(config) || createInitialState();
   state.isRunning = true;
   state.pid = process.pid;
 
-  // Register cleanup handlers so PID/state files are cleaned up on exit
+  // 注册清理处理器，以便退出时清理 PID/状态文件
   registerDaemonCleanup(config);
 
   log('Starting poll loop', config);
@@ -356,7 +356,7 @@ async function pollLoop(config: Required<DaemonConfig>): Promise<void> {
     try {
       state.lastPollAt = new Date();
 
-      // Check rate limit status with a 30s timeout to prevent poll loop stalls
+      // 以 30s 超时检查速率限制状态，防止轮询循环卡住
       const rateLimitStatus = await Promise.race([
         checkRateLimitStatus(),
         new Promise<never>((_, reject) =>
@@ -377,13 +377,13 @@ async function pollLoop(config: Required<DaemonConfig>): Promise<void> {
         log('Rate limit status unavailable (no OAuth credentials?)', config);
       }
 
-      // If currently rate limited, scan for blocked panes
+      // 若当前被速率限制，扫描被阻塞的 pane
       if (isNowLimited && isTmuxAvailable()) {
         log('Rate limited - scanning for blocked panes', config);
 
         const blockedPanes = scanForBlockedPanes(config.paneLinesToCapture, dirname(config.stateFilePath));
 
-        // Add newly detected blocked panes
+        // 添加新检测到的被阻塞 pane
         for (const pane of blockedPanes) {
           const existing = state.blockedPanes.find((p) => p.id === pane.id);
           if (!existing) {
@@ -392,13 +392,13 @@ async function pollLoop(config: Required<DaemonConfig>): Promise<void> {
           }
         }
 
-        // Remove panes that are no longer blocked
+        // 移除不再被阻塞的 pane
         state.blockedPanes = state.blockedPanes.filter((tracked) =>
           blockedPanes.some((current) => current.id === tracked.id)
         );
       }
 
-      // If rate limit just cleared (was limited, now not), attempt resume
+      // 若速率限制刚解除（之前受限，现在不受限），尝试恢复
       if (shouldResumeBlockedPanes && state.blockedPanes.length > 0) {
         log('Rate limit cleared! Attempting to resume blocked panes', config);
 
@@ -425,11 +425,11 @@ async function pollLoop(config: Required<DaemonConfig>): Promise<void> {
           }
         }
 
-        // Clear blocked panes after resume attempt
+        // 恢复尝试后清空被阻塞 pane
         state.blockedPanes = [];
       }
 
-      // If rate limit cleared and no blocked panes, clear resumed list
+      // 若速率限制已解除且无被阻塞 pane，清空已恢复列表
       if (!isNowLimited && state.blockedPanes.length === 0) {
         state.resumedPaneIds = [];
       }
@@ -442,18 +442,18 @@ async function pollLoop(config: Required<DaemonConfig>): Promise<void> {
       writeDaemonState(state, config);
     }
 
-    // Wait for next poll
+    // 等待下一次轮询
     await new Promise((resolve) => setTimeout(resolve, config.pollIntervalMs));
   }
 }
 
 /**
- * Start the daemon
+ * 启动守护进程
  */
 export function startDaemon(config?: DaemonConfig): DaemonResponse {
   const cfg = getConfig(config);
 
-  // Check if already running
+  // 检查是否已在运行
   if (isDaemonRunning(cfg)) {
     const state = readDaemonState(cfg);
     return {
@@ -463,19 +463,19 @@ export function startDaemon(config?: DaemonConfig): DaemonResponse {
     };
   }
 
-  // Check for tmux
+  // 检查 tmux 是否可用
   if (!isTmuxAvailable()) {
     console.warn('[RateLimitDaemon] tmux not available - resume functionality will be limited');
   }
 
   ensureStateDir(cfg);
 
-  // Fork a new process for the daemon using dynamic import() for ESM compatibility.
-  // The project uses "type": "module", so require() would fail with ERR_REQUIRE_ESM.
+  // 使用 dynamic import() 为守护进程 fork 一个新进程，以兼容 ESM。
+  // 项目使用 "type": "module"，因此 require() 会以 ERR_REQUIRE_ESM 失败。
   const modulePath = resolveDaemonModulePath(__filename, ['features', 'rate-limit-wait', 'daemon.js']);
   const moduleUrl = pathToFileURL(modulePath).href;
-  // Write config to a temp file to avoid config injection via template string.
-  // This prevents malicious config values from being interpreted as code.
+  // 将配置写入临时文件，以避免通过模板字符串进行配置注入。
+  // 这可防止恶意配置值被当作代码执行。
   const configId = Date.now().toString(36) + Math.random().toString(36).slice(2);
   const configPath = join(dirname(cfg.stateFilePath), `.daemon-config-${configId}.json`);
   try {
@@ -491,8 +491,8 @@ export function startDaemon(config?: DaemonConfig): DaemonResponse {
   `;
 
   try {
-    // Use node to run the daemon in background
-    // Note: Using minimal env to prevent leaking sensitive credentials
+    // 使用 node 在后台运行守护进程
+    // 注意：使用最小化环境以防止泄露敏感凭证
     const daemonEnv = {
       ...createMinimalDaemonEnv(),
       WISE_DAEMON_CONFIG_FILE: configPath,
@@ -523,8 +523,8 @@ export function startDaemon(config?: DaemonConfig): DaemonResponse {
 
     return { success: false, message: 'Failed to start daemon process' };
   } catch (error) {
-    // Clean up config file on failure
-    try { unlinkSync(configPath); } catch { /* ignore cleanup errors */ }
+    // 失败时清理配置文件
+    try { unlinkSync(configPath); } catch { /* 忽略清理错误 */ }
     return {
       success: false,
       message: 'Failed to start daemon',
@@ -534,21 +534,21 @@ export function startDaemon(config?: DaemonConfig): DaemonResponse {
 }
 
 /**
- * Run daemon in foreground (for direct execution)
+ * 在前台运行守护进程（用于直接执行）
  */
 export async function runDaemonForeground(config?: DaemonConfig): Promise<void> {
   const cfg = getConfig(config);
 
-  // Check if already running
+  // 检查是否已在运行
   if (isDaemonRunning(cfg)) {
     console.error('Daemon is already running. Use "wise wait daemon stop" first.');
     process.exit(1);
   }
 
-  // Write PID file
+  // 写入 PID 文件
   writePidFile(process.pid, cfg);
 
-  // Handle shutdown
+  // 处理关闭
   const shutdown = () => {
     console.log('\nShutting down daemon...');
     removePidFile(cfg);
@@ -566,12 +566,12 @@ export async function runDaemonForeground(config?: DaemonConfig): Promise<void> 
   console.log('Rate Limit Wait daemon starting in foreground mode...');
   console.log('Press Ctrl+C to stop.\n');
 
-  // Run poll loop
+  // 运行轮询循环
   await pollLoop(cfg);
 }
 
 /**
- * Stop the daemon
+ * 停止守护进程
  */
 export function stopDaemon(config?: DaemonConfig): DaemonResponse {
   const cfg = getConfig(config);
@@ -596,7 +596,7 @@ export function stopDaemon(config?: DaemonConfig): DaemonResponse {
     process.kill(pid, 'SIGTERM');
     removePidFile(cfg);
 
-    // Update state
+    // 更新状态
     const state = readDaemonState(cfg);
     if (state) {
       state.isRunning = false;
@@ -619,7 +619,7 @@ export function stopDaemon(config?: DaemonConfig): DaemonResponse {
 }
 
 /**
- * Get daemon status
+ * 获取守护进程状态
  */
 export function getDaemonStatus(config?: DaemonConfig): DaemonResponse {
   const cfg = getConfig(config);
@@ -649,7 +649,7 @@ export function getDaemonStatus(config?: DaemonConfig): DaemonResponse {
 }
 
 /**
- * Detect blocked panes (one-time scan)
+ * 检测被阻塞的 pane（一次性扫描）
  */
 export async function detectBlockedPanes(config?: DaemonConfig): Promise<DaemonResponse> {
   const cfg = getConfig(config);
@@ -683,19 +683,19 @@ export async function detectBlockedPanes(config?: DaemonConfig): Promise<DaemonR
 }
 
 /**
- * Format daemon state for CLI display
+ * 格式化守护进程状态以供 CLI 展示
  */
 export function formatDaemonState(state: DaemonState): string {
   const lines: string[] = [];
 
-  // Status header
+  // 状态标题
   if (state.isRunning) {
     lines.push(`✓ Daemon running (PID: ${state.pid})`);
   } else {
     lines.push('✗ Daemon not running');
   }
 
-  // Timing info
+  // 时间信息
   if (state.startedAt) {
     lines.push(`  Started: ${state.startedAt.toLocaleString()}`);
   }
@@ -703,7 +703,7 @@ export function formatDaemonState(state: DaemonState): string {
     lines.push(`  Last poll: ${state.lastPollAt.toLocaleString()}`);
   }
 
-  // Rate limit status
+  // 速率限制状态
   lines.push('');
   if (state.rateLimitStatus) {
     if (state.rateLimitStatus.isLimited || isRateLimitStatusDegraded(state.rateLimitStatus)) {
@@ -715,13 +715,13 @@ export function formatDaemonState(state: DaemonState): string {
     lines.push('? Rate limit status unavailable');
   }
 
-  // Blocked panes
+  // 被阻塞的 pane
   if (state.blockedPanes.length > 0) {
     lines.push('');
     lines.push(formatBlockedPanesSummary(state.blockedPanes));
   }
 
-  // Statistics
+  // 统计信息
   lines.push('');
   lines.push('Statistics:');
   lines.push(`  Resume attempts: ${state.totalResumeAttempts}`);
@@ -735,19 +735,19 @@ export function formatDaemonState(state: DaemonState): string {
   return lines.join('\n');
 }
 
-// Export pollLoop for use by the daemon subprocess
+// 导出 pollLoop 供守护进程子进程使用
 export { pollLoop };
 
 /**
- * Poll loop entry point for daemon subprocess.
- * Reads config from file to avoid config injection via command line.
+ * 守护进程子进程的轮询循环入口。
+ * 从文件读取配置，以避免通过命令行进行配置注入。
  */
 export async function pollLoopWithConfigFile(configPath: string): Promise<void> {
   const configContent = readFileSync(configPath, 'utf-8');
   const config = JSON.parse(configContent) as Required<DaemonConfig>;
 
-  // Clean up the temp config file now that we've read it
-  try { unlinkSync(configPath); } catch { /* ignore cleanup errors */ }
+  // 既然已读取，清理临时配置文件
+  try { unlinkSync(configPath); } catch { /* 忽略清理错误 */ }
 
   await pollLoop(config);
 }

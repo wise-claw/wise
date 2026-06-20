@@ -1,16 +1,16 @@
 /**
- * Delegation Enforcer
+ * 委派强制器
  *
- * Middleware that ensures model parameter is always present in Task/Agent calls.
- * Automatically injects the default model from agent definitions when not specified.
+ * 确保在 Task/Agent 调用中始终存在 model 参数的中间件。
+ * 未指定时自动从代理定义中注入默认 model。
  *
- * This solves the problem where Claude Code doesn't automatically apply models
- * from agent definitions - every Task call must explicitly pass the model parameter.
+ * 这解决了 Claude Code 不会自动应用代理定义中 model 的问题——
+ * 每次 Task 调用都必须显式传入 model 参数。
  *
- * For non-Claude providers (CC Switch, LiteLLM, etc.), forceInherit is auto-enabled
- * by the config loader (issue #1201), which causes this enforcer to strip model
- * parameters so agents inherit the user's configured model instead of receiving
- * Claude-specific tier names (sonnet/opus/haiku) that the provider won't recognize.
+ * 对于非 Claude 提供方（CC Switch、LiteLLM 等），forceInherit 会被
+ * 配置加载器自动开启（issue #1201），从而使本强制器剥离 model 参数，
+ * 让代理继承用户配置的 model，而不是接收提供方无法识别的
+ * Claude 专属 tier 名称（sonnet/opus/haiku）。
  */
 
 import { getAgentDefinitions } from '../agents/definitions.js';
@@ -20,33 +20,33 @@ import { isProviderSpecificModelId, resolveClaudeFamily } from '../config/models
 import type { PluginConfig } from '../shared/types.js';
 
 // ---------------------------------------------------------------------------
-// Config cache — avoids repeated disk reads on every enforceModel() call (F10)
+// 配置缓存——避免在每次 enforceModel() 调用时重复读取磁盘 (F10)
 //
-// The cache key is built from every env var that loadConfig() reads.
-// When any env var changes (as tests do between cases), the key changes and
-// loadConfig() is called fresh. The mock in routing-force-inherit.test.ts
-// replaces the loadConfig import binding, so vi.fn() return values flow
-// through here automatically — no extra wiring needed.
+// 缓存键由 loadConfig() 读取的每一个环境变量构建而成。
+// 当任一环境变量变化时（测试在不同用例间会这样做），键随之改变，
+// loadConfig() 会重新调用。routing-force-inherit.test.ts 中的 mock
+// 替换了 loadConfig 的导入绑定，因此 vi.fn() 的返回值会自动
+// 流经此处——无需额外接线。
 // ---------------------------------------------------------------------------
 
-/** All env var names that affect the output of loadConfig(). */
+/** 所有会影响 loadConfig() 输出的环境变量名。 */
 const CONFIG_ENV_KEYS = [
-  // forceInherit auto-detection (isNonClaudeProvider)
+  // forceInherit 自动检测 (isNonClaudeProvider)
   'ANTHROPIC_BASE_URL',
   'CLAUDE_MODEL',
   'ANTHROPIC_MODEL',
   'CLAUDE_CODE_USE_BEDROCK',
   'CLAUDE_CODE_USE_VERTEX',
-  // explicit routing overrides
+  // 显式路由覆盖
   'WISE_ROUTING_FORCE_INHERIT',
   'WISE_ROUTING_ENABLED',
   'WISE_ROUTING_DEFAULT_TIER',
   'WISE_ESCALATION_ENABLED',
-  // model alias overrides (issue #1211)
+  // model 别名覆盖 (issue #1211)
   'WISE_MODEL_ALIAS_HAIKU',
   'WISE_MODEL_ALIAS_SONNET',
   'WISE_MODEL_ALIAS_OPUS',
-  // tier model resolution (feeds buildDefaultConfig)
+  // tier model 解析（喂给 buildDefaultConfig）
   'WISE_MODEL_HIGH',
   'WISE_MODEL_MEDIUM',
   'WISE_MODEL_LOW',
@@ -66,8 +66,8 @@ let _cachedConfig: PluginConfig | null = null;
 let _cachedConfigKey = '';
 
 function getCachedConfig(): PluginConfig {
-  // In test environments, skip the cache so vi.mock/vi.fn() overrides of
-  // loadConfig are always respected without needing to invalidate the cache.
+  // 在测试环境中跳过缓存，使 vi.mock/vi.fn() 对 loadConfig 的覆盖
+  // 始终生效，而无需手动让缓存失效。
   if (process.env.VITEST) {
     return loadConfig();
   }
@@ -80,7 +80,7 @@ function getCachedConfig(): PluginConfig {
 }
 
 
-/** Map Claude model family to CC-supported alias */
+/** 将 Claude model family 映射到 CC 支持的别名 */
 const FAMILY_TO_ALIAS: Record<string, string> = {
   SONNET: 'sonnet',
   OPUS: 'opus',
@@ -88,7 +88,7 @@ const FAMILY_TO_ALIAS: Record<string, string> = {
   FABLE: 'fable',
 };
 
-/** Normalize a model ID to a CC-supported alias (sonnet/opus/haiku/fable) if possible */
+/** 尽可能将 model ID 归一化为 CC 支持的别名 (sonnet/opus/haiku/fable) */
 export function normalizeToCcAlias(model: string): string {
   if (isProviderSpecificModelId(model)) {
     return model;
@@ -99,7 +99,7 @@ export function normalizeToCcAlias(model: string): string {
 }
 
 /**
- * Agent input structure from Claude Agent SDK
+ * 来自 Claude Agent SDK 的代理输入结构
  */
 export interface AgentInput {
   description: string;
@@ -111,18 +111,18 @@ export interface AgentInput {
 }
 
 /**
- * Result of model enforcement
+ * model 强制的结果
  */
 export interface EnforcementResult {
-  /** Original input */
+  /** 原始输入 */
   originalInput: AgentInput;
-  /** Modified input with model enforced */
+  /** 强制 model 后的修改输入 */
   modifiedInput: AgentInput;
-  /** Whether model was auto-injected */
+  /** 是否自动注入了 model */
   injected: boolean;
-  /** The model that was used */
+  /** 使用的 model */
   model: string;
-  /** Warning message (only if WISE_DEBUG=true) */
+  /** 警告信息（仅当 WISE_DEBUG=true） */
   warning?: string;
 }
 
@@ -139,20 +139,20 @@ function canonicalizeSubagentType(subagentType: string): string {
 }
 
 /**
- * Enforce model parameter for an agent delegation call
+ * 为代理委派调用强制 model 参数
  *
- * If model is explicitly specified, it's preserved.
- * If not, the default model from agent definition is injected.
+ * 若显式指定了 model，则保留之。
+ * 若未指定，则注入代理定义中的默认 model。
  *
- * @param agentInput - The agent/task input parameters
- * @returns Enforcement result with modified input
- * @throws Error if agent type has no default model
+ * @param agentInput - agent/task 输入参数
+ * @returns 带修改后输入的强制结果
+ * @throws 若代理类型没有默认 model 则抛出 Error
  */
 export function enforceModel(agentInput: AgentInput): EnforcementResult {
   const canonicalSubagentType = canonicalizeSubagentType(agentInput.subagent_type);
 
-  // If forceInherit is enabled, skip model injection entirely so agents
-  // inherit the user's Claude Code model setting (issue #1135)
+  // 若 forceInherit 已开启，则完全跳过 model 注入，让代理
+  // 继承用户的 Claude Code model 设置 (issue #1135)
   const config = getCachedConfig();
   if (config.routing?.forceInherit) {
     const { model: _existing, ...rest } = agentInput;
@@ -165,9 +165,9 @@ export function enforceModel(agentInput: AgentInput): EnforcementResult {
     };
   }
 
-  // If model is already specified, normalize it to CC-supported aliases
-  // before passing through. Full IDs like 'claude-sonnet-4-6' cause 400
-  // errors on Bedrock/Vertex. (issue #1415)
+  // 若 model 已指定，先将其归一化为 CC 支持的别名再放行。
+  // 完整 ID 如 'claude-sonnet-4-6' 会在 Bedrock/Vertex 上引发 400
+  // 错误。(issue #1415)
   if (agentInput.model) {
     const normalizedModel = normalizeToCcAlias(agentInput.model);
     return {
@@ -190,9 +190,9 @@ export function enforceModel(agentInput: AgentInput): EnforcementResult {
     throw new Error(`No default model defined for agent: ${agentType}`);
   }
 
-  // Apply modelAliases from config (issue #1211).
-  // Priority: explicit param (already handled above) > modelAliases > agent default.
-  // This lets users remap tier names without the nuclear forceInherit option.
+  // 应用配置中的 modelAliases (issue #1211)。
+  // 优先级：显式参数（上文已处理）> modelAliases > 代理默认值。
+  // 这样用户无需动用釜底抽薪的 forceInherit 选项即可重映射 tier 名称。
   let resolvedModel = agentDef.model;
   const aliases = config.routing?.modelAliases;
   const aliasSourceModel = agentDef.defaultModel ?? agentDef.model;
@@ -203,7 +203,7 @@ export function enforceModel(agentInput: AgentInput): EnforcementResult {
     }
   }
 
-  // If the resolved model is 'inherit', don't inject any model parameter.
+  // 若解析后的 model 为 'inherit'，则不注入任何 model 参数。
   if (resolvedModel === 'inherit') {
     const { model: _existing, ...rest } = agentInput;
     const cleanedInput: AgentInput = { ...(rest as AgentInput), subagent_type: canonicalSubagentType };
@@ -215,8 +215,8 @@ export function enforceModel(agentInput: AgentInput): EnforcementResult {
     };
   }
 
-  // Normalize model to Claude Code's supported aliases (sonnet/opus/haiku).
-  // Full IDs cause 400 errors on Bedrock/Vertex. (issue #1201, #1415)
+  // 将 model 归一化为 Claude Code 支持的别名 (sonnet/opus/haiku)。
+  // 完整 ID 会在 Bedrock/Vertex 上引发 400 错误。(issue #1201, #1415)
   const normalizedModel = normalizeToCcAlias(resolvedModel);
 
   const modifiedInput: AgentInput = {
@@ -246,7 +246,7 @@ export function enforceModel(agentInput: AgentInput): EnforcementResult {
 }
 
 /**
- * Check if tool input is an agent delegation call
+ * 检查工具输入是否为代理委派调用
  */
 export function isAgentCall(toolName: string, toolInput: unknown): toolInput is AgentInput {
   if (!isDelegationToolName(toolName)) {
@@ -266,7 +266,7 @@ export function isAgentCall(toolName: string, toolInput: unknown): toolInput is 
 }
 
 /**
- * Process a pre-tool-use hook for model enforcement
+ * 处理用于 model 强制的 pre-tool-use 钩子
  */
 export function processPreToolUse(
   toolName: string,
@@ -289,7 +289,7 @@ export function processPreToolUse(
 }
 
 /**
- * Get model for an agent type (for testing/debugging)
+ * 获取某个代理类型的 model（用于测试/调试）
  */
 export function getModelForAgent(agentType: string): string {
   const normalizedType = normalizeDelegationRole(agentType.replace(/^wise:/, ''));
@@ -304,7 +304,7 @@ export function getModelForAgent(agentType: string): string {
     throw new Error(`No default model defined for agent: ${normalizedType}`);
   }
 
-  // Normalize standard Anthropic IDs to CC-supported aliases (sonnet/opus/haiku),
-  // while preserving provider-specific IDs such as Bedrock/Vertex paths.
+  // 将标准 Anthropic ID 归一化为 CC 支持的别名 (sonnet/opus/haiku)，
+  // 同时保留 Bedrock/Vertex 路径等提供方专属 ID。
   return normalizeToCcAlias(agentDef.model);
 }

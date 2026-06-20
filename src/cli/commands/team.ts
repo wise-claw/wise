@@ -1,10 +1,10 @@
 /**
- * wise team CLI subcommand
+ * wise team CLI 子命令
  *
- * Full team lifecycle for `wise team`:
- *   wise team [N:agent-type] "task"          Start team (spawns tmux worker panes)
- *   wise team status <team-name>             Monitor team status
- *   wise team shutdown <team-name> [--force] Shutdown team
+ * `wise team` 的完整团队生命周期：
+ *   wise team [N:agent-type] "task"          启动团队（生成 tmux worker 面板）
+ *   wise team status <team-name>             监控团队状态
+ *   wise team shutdown <team-name> [--force] 关闭团队
  *   wise team api <operation> --input '...'  Worker CLI API
  */
 
@@ -125,7 +125,7 @@ const TEAM_API_OPERATION_NOTES: Partial<Record<TeamApiOperation, string>> = {
 };
 
 // ---------------------------------------------------------------------------
-// Task decomposition helpers
+// 任务分解辅助函数
 // ---------------------------------------------------------------------------
 
 export type DecompositionStrategy = 'numbered' | 'bulleted' | 'conjunction' | 'atomic';
@@ -137,30 +137,30 @@ export interface DecompositionPlan {
 
 const NUMBERED_LINE_RE = /^\s*\d+[.)]\s+(.+)$/;
 const BULLETED_LINE_RE = /^\s*[-*•]\s+(.+)$/;
-// Conjunction split: "fix auth AND fix login AND fix logout" or "fix auth, fix login, and fix logout"
+// 连词拆分："fix auth AND fix login AND fix logout" 或 "fix auth, fix login, and fix logout"
 const CONJUNCTION_SPLIT_RE = /\s+(?:and|,\s*and|,)\s+/i;
 
-/** Signals that a task is atomic (contains file refs, code symbols, or parallel keywords) */
+/** 标记任务为原子任务（包含文件引用、代码符号或并行关键字） */
 const PARALLELIZATION_KEYWORDS_RE =
   /\b(?:parallel|concurrently|simultaneously|at the same time|independently)\b/i;
 const FILE_REF_RE = /\b\S+\.\w{1,6}\b/g;
 const CODE_SYMBOL_RE = /`[^`]+`/g;
 
 /**
- * Count atomic parallelization signals in a task string.
- * Returns true when the task should NOT be decomposed (it's already atomic or tightly coupled).
+ * 统计任务字符串中的原子并行信号。
+ * 当任务不应被分解时（已是原子或紧耦合）返回 true。
  */
 export function hasAtomicParallelizationSignals(task: string, _size: string): boolean {
   const fileRefs = (task.match(FILE_REF_RE) || []).length;
   const codeSymbols = (task.match(CODE_SYMBOL_RE) || []).length;
   const parallelKw = PARALLELIZATION_KEYWORDS_RE.test(task);
-  // Treat as atomic when many specific file/symbol refs present (tightly coupled)
+  // 当存在大量具体文件/符号引用时视为原子（紧耦合）
   return fileRefs >= 3 || codeSymbols >= 3 || parallelKw;
 }
 
 /**
- * Resolve the effective worker count fanout limit for decomposed tasks.
- * Caps worker count to the number of discovered subtasks when decomposition produces fewer items.
+ * 解析分解后任务的有效 worker 数量扇出上限。
+ * 当分解产生的子任务更少时，将 worker 数量限制为发现的子任务数。
  */
 export function resolveTeamFanoutLimit(
   requestedWorkerCount: number,
@@ -179,18 +179,18 @@ export function resolveTeamFanoutLimit(
 }
 
 /**
- * Decompose a task string into a structured plan.
+ * 将任务字符串分解为结构化计划。
  *
- * Detects:
- * - Numbered list: "1. fix auth\n2. fix login"
- * - Bulleted list: "- fix auth\n- fix login"
- * - Conjunction: "fix auth and fix login and fix logout"
- * - Atomic: single task, no decomposition
+ * 检测：
+ * - 编号列表："1. fix auth\n2. fix login"
+ * - 项目符号列表："- fix auth\n- fix login"
+ * - 连词："fix auth and fix login and fix logout"
+ * - 原子：单个任务，不分解
  */
 export function splitTaskString(task: string): DecompositionPlan {
   const lines = task.split('\n').map(l => l.trim()).filter(Boolean);
 
-  // Check numbered list
+  // 检查编号列表
   if (lines.length >= 2 && lines.every(l => NUMBERED_LINE_RE.test(l))) {
     return {
       strategy: 'numbered',
@@ -202,7 +202,7 @@ export function splitTaskString(task: string): DecompositionPlan {
     };
   }
 
-  // Check bulleted list
+  // 检查项目符号列表
   if (lines.length >= 2 && lines.every(l => BULLETED_LINE_RE.test(l))) {
     return {
       strategy: 'bulleted',
@@ -214,7 +214,7 @@ export function splitTaskString(task: string): DecompositionPlan {
     };
   }
 
-  // Check conjunction split (single line with "and" or commas)
+  // 检查连词拆分（含 "and" 或逗号的单行）
   if (lines.length === 1) {
     const parts = lines[0].split(CONJUNCTION_SPLIT_RE).map(s => s.trim()).filter(Boolean);
     if (parts.length >= 2) {
@@ -225,7 +225,7 @@ export function splitTaskString(task: string): DecompositionPlan {
     }
   }
 
-  // Atomic: no decomposition
+  // 原子：不分解
   return {
     strategy: 'atomic',
     subtasks: [{ subject: task.slice(0, 80), description: task }],
@@ -233,7 +233,7 @@ export function splitTaskString(task: string): DecompositionPlan {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
+// 辅助函数
 // ---------------------------------------------------------------------------
 
 function slugifyTask(task: string): string {
@@ -340,7 +340,7 @@ export async function assertTeamSpawnAllowed(cwd: string, env: NodeJS.ProcessEnv
   }
 }
 
-/** Regex for a single worker spec segment: N[:type[:role]] */
+/** 单个 worker 规格段的正则：N[:type[:role]] */
 const SINGLE_SPEC_RE = /^(\d+)(?::([a-z][a-z0-9-]*)(?::([a-z][a-z0-9-]*))?)?$/i;
 
 function normalizeWorkerSpecSegment(match: RegExpMatchArray): NormalizedWorkerSpecSegment {
@@ -373,7 +373,7 @@ function normalizeWorkerSpecSegment(match: RegExpMatchArray): NormalizedWorkerSp
   return { count, agentType: 'claude', role: token };
 }
 
-/** @internal Exported for testing */
+/** @internal 导出用于测试 */
 export function parseTeamArgs(tokens: string[], defaultAgentType: string = 'claude'): ParsedTeamArgs {
   const args = [...tokens];
   let workerCount = 3;
@@ -387,7 +387,7 @@ export function parseTeamArgs(tokens: string[], defaultAgentType: string = 'clau
     ? defaultAgentType
     : DEFAULT_TEAM_CLI_AGENT_TYPE;
 
-  // Extract supported flags before parsing positional args
+  // 在解析位置参数前先提取受支持的标志
   const filteredArgs: string[] = [];
   for (const arg of args) {
     if (arg === '--json') {
@@ -405,7 +405,7 @@ export function parseTeamArgs(tokens: string[], defaultAgentType: string = 'clau
 
   const first = filteredArgs[0] || '';
 
-  // Try comma-separated multi-type spec first (e.g. "1:codex,1:gemini" or "2:claude,1:codex:architect")
+  // 先尝试逗号分隔的多类型规格（如 "1:codex,1:gemini" 或 "2:claude,1:codex:architect"）
   let role: string | undefined;
   let specMatched = false;
   let explicitWorkerSpec = false;
@@ -433,7 +433,7 @@ export function parseTeamArgs(tokens: string[], defaultAgentType: string = 'clau
       if (workerCount > MAX_WORKER_COUNT) {
         throw new Error(`Total worker count ${workerCount} exceeds maximum ${MAX_WORKER_COUNT}.`);
       }
-      // If every segment specifies the same role, use it; otherwise leave undefined
+      // 若每段都指定了相同角色则采用；否则留 undefined
       const roles = parsedSegments.map(s => s.role);
       const uniqueRoles = [...new Set(roles)];
       if (uniqueRoles.length === 1 && uniqueRoles[0]) role = uniqueRoles[0];
@@ -443,7 +443,7 @@ export function parseTeamArgs(tokens: string[], defaultAgentType: string = 'clau
     }
   }
 
-  // Fall back to single spec (e.g. "3:codex" or "2:codex:architect")
+  // 兜底为单个规格（如 "3:codex" 或 "2:codex:architect"）
   if (!specMatched) {
     const match = first.match(SINGLE_SPEC_RE);
     if (match) {
@@ -460,9 +460,8 @@ export function parseTeamArgs(tokens: string[], defaultAgentType: string = 'clau
     }
   }
 
-  // A token that clearly looks like a worker spec ("N:<word>...") but failed to
-  // fully parse must fail loudly rather than being silently swallowed into the
-  // task text, which would default the team to claude workers (see #3224).
+  // 明显形如 worker 规格（"N:<word>..."）却未能完整解析的 token，必须显式报错，
+  // 而不是被静默吞入任务文本，否则会使团队默认使用 claude worker（见 #3224）。
   if (!explicitWorkerSpec && /^\d+:[a-z]/i.test(first)) {
     throw new Error(
       `Invalid worker spec "${first}". Expected "N:agent-type[:role]" ` +
@@ -471,7 +470,7 @@ export function parseTeamArgs(tokens: string[], defaultAgentType: string = 'clau
     );
   }
 
-  // Default: 3 workers with configured default agent type (falls back to claude)
+  // 默认：3 个 worker，使用配置的默认 agent 类型（兜底为 claude）
   if (agentTypes.length === 0) {
     agentTypes = Array.from({ length: workerCount }, () => normalizedDefaultAgentType);
     workerSpecs = Array.from({ length: workerCount }, () => ({ agentType: normalizedDefaultAgentType }));
@@ -517,11 +516,10 @@ export function buildTeamLaunchTasks(
 ): TeamLaunchTask[] {
   const tasks: TeamLaunchTask[] = [];
 
-  // Numbered/bulleted lists are explicit pre-authored scopes the user typed out,
-  // so they must line up with an explicit worker count. A `conjunction` split is
-  // only a heuristic guess at parallelism inside free-form prose (e.g.
-  // "Read X and execute it then commit"), so it must never reject or reshape an
-  // explicit worker spec — every worker just receives the full launch text. (#3267)
+  // 编号/项目符号列表是用户亲自键入的显式预编写作用域，
+  // 因此必须与显式 worker 数量对齐。`conjunction` 拆分仅是对自由文本中并行性的
+  // 启发式猜测（如 "Read X and execute it then commit"），因此绝不能拒绝或重塑
+  // 显式 worker 规格 — 每个 worker 都只接收完整的启动文本。(#3267)
   const isPreauthoredScopeList = decomposition.strategy === 'numbered'
     || decomposition.strategy === 'bulleted';
 
@@ -688,13 +686,13 @@ function parseTeamApiArgs(args: string[]): {
 }
 
 // ---------------------------------------------------------------------------
-// Team start (spawns tmux workers)
+// 团队启动（生成 tmux worker）
 // ---------------------------------------------------------------------------
 
 async function handleTeamStart(parsed: ParsedTeamArgs, cwd: string): Promise<void> {
   await assertTeamSpawnAllowed(cwd);
 
-  // Decompose the task string into subtasks when possible
+  // 尽可能将任务字符串分解为子任务
   const decomposition = splitTaskString(parsed.task);
   const effectiveWorkerCount = resolveTeamFanoutLimit(
     parsed.workerCount,
@@ -707,14 +705,14 @@ async function handleTeamStart(parsed: ParsedTeamArgs, cwd: string): Promise<voi
   const tasks = buildTeamLaunchTasks(parsed, decomposition, effectiveWorkerCount);
   const launchTeamName = resolveAvailableTeamName(parsed.teamName, cwd);
 
-  // Load role prompt if a role was specified (e.g., 3:codex:architect)
+  // 若指定了角色则加载角色 prompt（如 3:codex:architect）
   let rolePrompt: string | undefined;
   if (parsed.role) {
     const { loadAgentPrompt } = await import('../../agents/utils.js');
     rolePrompt = loadAgentPrompt(parsed.role);
   }
 
-  // Use v2 runtime by default (WISE_RUNTIME_V2 opt-out), otherwise fall back to v1
+  // 默认使用 v2 运行时（可通过 WISE_RUNTIME_V2 关闭），否则兜底到 v1
   const { isRuntimeV2Enabled } = await import('../../team/runtime-v2.js');
   if (isRuntimeV2Enabled()) {
     const { startTeamV2, monitorTeamV2 } = await import('../../team/runtime-v2.js');
@@ -756,7 +754,7 @@ async function handleTeamStart(parsed: ParsedTeamArgs, cwd: string): Promise<voi
     return;
   }
 
-  // v1 fallback
+  // v1 兜底
   const { startTeam, monitorTeam } = await import('../../team/runtime.js');
   const runtime = await startTeam({
     teamName: launchTeamName,
@@ -799,7 +797,7 @@ async function handleTeamStart(parsed: ParsedTeamArgs, cwd: string): Promise<voi
 }
 
 // ---------------------------------------------------------------------------
-// Team status
+// 团队状态
 // ---------------------------------------------------------------------------
 
 async function handleTeamStatus(teamName: string, cwd: string): Promise<void> {
@@ -848,7 +846,7 @@ async function handleTeamStatus(teamName: string, cwd: string): Promise<void> {
     return;
   }
 
-  // v1 fallback
+  // v1 兜底
   const { monitorTeam } = await import('../../team/runtime.js');
   const snapshot = await monitorTeam(teamName, cwd, []);
   if (!snapshot) {
@@ -860,7 +858,7 @@ async function handleTeamStatus(teamName: string, cwd: string): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Team shutdown
+// 团队关闭
 // ---------------------------------------------------------------------------
 
 async function handleTeamShutdown(teamName: string, cwd: string, force: boolean): Promise<void> {
@@ -872,14 +870,14 @@ async function handleTeamShutdown(teamName: string, cwd: string, force: boolean)
     return;
   }
 
-  // v1 fallback
+  // v1 兜底
   const { shutdownTeam } = await import('../../team/runtime.js');
   await shutdownTeam(teamName, `wise-team-${teamName}`, cwd);
   console.log(`Team shutdown complete: ${teamName}`);
 }
 
 // ---------------------------------------------------------------------------
-// API subcommand handler
+// API 子命令处理器
 // ---------------------------------------------------------------------------
 
 async function handleTeamApi(args: string[], cwd: string): Promise<void> {
@@ -953,15 +951,15 @@ async function handleTeamApi(args: string[], cwd: string): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Main entry point
+// 主入口
 // ---------------------------------------------------------------------------
 
 /**
- * Main team subcommand handler.
- * Routes:
- *   wise team [N:agent-type] "task"          -> Start team
- *   wise team status <team-name>             -> Monitor
- *   wise team shutdown <team-name> [--force] -> Shutdown
+ * 主 team 子命令处理器。
+ * 路由：
+ *   wise team [N:agent-type] "task"          -> 启动团队
+ *   wise team status <team-name>             -> 监控
+ *   wise team shutdown <team-name> [--force] -> 关闭
  *   wise team api <operation> [--input] ...  -> Worker CLI API
  */
 export async function teamCommand(args: string[]): Promise<void> {
@@ -991,16 +989,16 @@ export async function teamCommand(args: string[]): Promise<void> {
   // wise team shutdown <team-name> [--force]
   if (subcommand === 'shutdown') {
     const nameOrFlag = args.filter(a => !a.startsWith('--'));
-    const name = nameOrFlag[1]; // skip 'shutdown' itself
+    const name = nameOrFlag[1]; // 跳过 'shutdown' 本身
     if (!name) throw new Error('Usage: wise team shutdown <team-name> [--force]');
     const force = args.includes('--force');
     await handleTeamShutdown(name, cwd, force);
     return;
   }
 
-  // Default: wise team [N:agent-type] "task" -> Start team
+  // 默认：wise team [N:agent-type] "task" -> 启动团队
   try {
-    // Honor team.ops.defaultAgentType when user hasn't supplied N:agent-type.
+    // 当用户未提供 N:agent-type 时，遵循 team.ops.defaultAgentType。
     const cfg = loadConfig();
     const defaultAgentType = cfg.team?.ops?.defaultAgentType ?? DEFAULT_TEAM_CLI_AGENT_TYPE;
     const parsed = parseTeamArgs(args, defaultAgentType);

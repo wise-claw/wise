@@ -1,14 +1,14 @@
 /**
- * Agent Usage Reminder Hook
+ * Agent Usage Reminder 钩子
  *
- * Reminds users to use specialized agents when they make direct tool calls
- * for searching or fetching content instead of delegating to agents.
+ * 当用户直接调用工具进行搜索或获取内容而非委派给代理时，
+ * 提醒用户使用专用代理。
  *
- * This hook tracks tool usage and appends reminder messages to tool outputs
- * when users haven't been using agents effectively.
+ * 此钩子跟踪工具使用情况，并在用户未有效使用代理时，
+ * 将提醒消息追加到工具输出中。
  *
- * Ported from oh-my-opencode's agent-usage-reminder hook.
- * Adapted for Claude Code's shell-based hook system.
+ * 移植自 oh-my-opencode 的 agent-usage-reminder 钩子。
+ * 适配 Claude Code 基于 shell 的钩子系统。
  */
 
 import {
@@ -19,7 +19,7 @@ import {
 import { TARGET_TOOLS, AGENT_TOOLS, REMINDER_MESSAGE } from './constants.js';
 import type { AgentUsageState } from './types.js';
 
-// Re-export types and utilities
+// 重新导出类型与工具函数
 export { loadAgentUsageState, saveAgentUsageState, clearAgentUsageState } from './storage.js';
 export { TARGET_TOOLS, AGENT_TOOLS, REMINDER_MESSAGE } from './constants.js';
 export type { AgentUsageState } from './types.js';
@@ -79,25 +79,25 @@ export function createAgentUsageReminderHook() {
     const { tool, sessionID } = input;
     const toolLower = tool.toLowerCase();
 
-    // Mark agent as used if agent tool was called
+    // 若调用了代理工具，则标记代理已使用
     if (AGENT_TOOLS.has(toolLower)) {
       markAgentUsed(sessionID);
       return;
     }
 
-    // Only track target tools (search/fetch tools)
+    // 仅跟踪目标工具（搜索/获取类工具）
     if (!TARGET_TOOLS.has(toolLower)) {
       return;
     }
 
     const state = getOrCreateState(sessionID);
 
-    // Don't remind if agent has been used
+    // 若已使用代理，则不再提醒
     if (state.agentUsed) {
       return;
     }
 
-    // Append reminder message to output
+    // 将提醒消息追加到输出
     output.output += REMINDER_MESSAGE;
     state.reminderCount++;
     state.updatedAt = Date.now();
@@ -107,7 +107,7 @@ export function createAgentUsageReminderHook() {
   const eventHandler = async ({ event }: EventInput) => {
     const props = event.properties as Record<string, unknown> | undefined;
 
-    // Clean up state when session is deleted
+    // 会话被删除时清理状态
     if (event.type === 'session.deleted') {
       const sessionInfo = props?.info as { id?: string } | undefined;
       if (sessionInfo?.id) {
@@ -115,7 +115,7 @@ export function createAgentUsageReminderHook() {
       }
     }
 
-    // Clean up state when session is compacted
+    // 会话被压缩时清理状态
     if (event.type === 'session.compacted') {
       const sessionID = (props?.sessionID ??
         (props?.info as { id?: string } | undefined)?.id) as string | undefined;

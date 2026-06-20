@@ -1,20 +1,20 @@
 /**
- * Boulder State Module
+ * Boulder State 模块
  *
- * Manages the active work plan state for WISE orchestrator.
- * Named after WISE's boulder - the eternal task that must be rolled.
+ * 管理 WISE 编排器的活跃工作计划状态。
+ * 以 WISE 的 boulder 命名——那必须不断推滚的永恒任务。
  *
- * Ported from oh-my-opencode's boulder-state.
+ * 移植自 oh-my-opencode 的 boulder-state。
  */
 
-// Types
+// 类型
 export type {
   BoulderState,
   PlanProgress,
   PlanSummary
 } from './types.js';
 
-// Constants
+// 常量
 export {
   BOULDER_DIR,
   BOULDER_FILE,
@@ -25,7 +25,7 @@ export {
   PLAN_EXTENSION
 } from './constants.js';
 
-// Storage operations
+// 存储操作
 export {
   getBoulderFilePath,
   readBoulderState,

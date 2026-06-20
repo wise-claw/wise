@@ -1,8 +1,8 @@
 /**
- * Complexity Scorer
+ * 复杂度评分器
  *
- * Calculates complexity tier based on extracted signals.
- * Uses weighted scoring to determine LOW/MEDIUM/HIGH tier.
+ * 根据提取的信号计算复杂度档位。
+ * 使用加权评分来决定 LOW/MEDIUM/HIGH 档位。
  */
 
 import type {
@@ -14,60 +14,60 @@ import type {
 } from './types.js';
 
 /**
- * Score thresholds for tier classification
+ * 档位划分的分数阈值
  */
 const TIER_THRESHOLDS = {
-  HIGH: 8,    // Score >= 8 -> HIGH (Opus)
-  MEDIUM: 4,  // Score >= 4 -> MEDIUM (Sonnet)
-  // Score < 4 -> LOW (Haiku)
+  HIGH: 8,    // 分数 >= 8 -> HIGH (Opus)
+  MEDIUM: 4,  // 分数 >= 4 -> MEDIUM (Sonnet)
+  // 分数 < 4 -> LOW (Haiku)
 };
 
 /**
- * Weight configuration for different signal categories
- * Total should roughly sum to enable score range 0-15+
+ * 不同信号类别的权重配置
+ * 各项之和应大致使分数范围落在 0-15+
  */
 const WEIGHTS = {
   lexical: {
-    wordCountHigh: 2,         // Long prompts (+2)
-    wordCountVeryHigh: 1,     // Very long prompts (+1 additional)
-    filePathsMultiple: 1,     // Multiple file paths (+1)
-    codeBlocksPresent: 1,     // Code blocks (+1)
-    architectureKeywords: 3,  // Architecture keywords (+3)
-    debuggingKeywords: 2,     // Debugging keywords (+2)
-    simpleKeywords: -2,       // Simple keywords (-2)
-    riskKeywords: 2,          // Risk keywords (+2)
-    questionDepthWhy: 2,      // 'Why' questions (+2)
-    questionDepthHow: 1,      // 'How' questions (+1)
-    implicitRequirements: 1,  // Vague requirements (+1)
+    wordCountHigh: 2,         // 长提示 (+2)
+    wordCountVeryHigh: 1,     // 超长提示 (额外 +1)
+    filePathsMultiple: 1,     // 多个文件路径 (+1)
+    codeBlocksPresent: 1,     // 代码块 (+1)
+    architectureKeywords: 3,  // 架构关键词 (+3)
+    debuggingKeywords: 2,     // 调试关键词 (+2)
+    simpleKeywords: -2,       // 简单关键词 (-2)
+    riskKeywords: 2,          // 风险关键词 (+2)
+    questionDepthWhy: 2,      // 'why' 类问题 (+2)
+    questionDepthHow: 1,      // 'how' 类问题 (+1)
+    implicitRequirements: 1,  // 模糊需求 (+1)
   },
   structural: {
-    subtasksMany: 3,          // Many subtasks (+3)
-    subtasksSome: 1,          // Some subtasks (+1)
-    crossFile: 2,             // Cross-file changes (+2)
-    testRequired: 1,          // Tests required (+1)
-    securityDomain: 2,        // Security domain (+2)
-    infrastructureDomain: 1,  // Infrastructure domain (+1)
-    externalKnowledge: 1,     // External knowledge needed (+1)
-    reversibilityDifficult: 2, // Difficult to reverse (+2)
-    reversibilityModerate: 1,  // Moderate reversibility (+1)
-    impactSystemWide: 3,      // System-wide impact (+3)
-    impactModule: 1,          // Module-level impact (+1)
+    subtasksMany: 3,          // 多个子任务 (+3)
+    subtasksSome: 1,          // 少量子任务 (+1)
+    crossFile: 2,             // 跨文件改动 (+2)
+    testRequired: 1,          // 需要测试 (+1)
+    securityDomain: 2,        // 安全领域 (+2)
+    infrastructureDomain: 1,  // 基础设施领域 (+1)
+    externalKnowledge: 1,     // 需要外部知识 (+1)
+    reversibilityDifficult: 2, // 难以回滚 (+2)
+    reversibilityModerate: 1,  // 中等可回滚性 (+1)
+    impactSystemWide: 3,      // 系统级影响 (+3)
+    impactModule: 1,          // 模块级影响 (+1)
   },
   context: {
-    previousFailure: 2,       // Per previous failure (+2 each)
-    previousFailureMax: 4,    // Max from failures
-    deepChain: 2,             // Deep agent chain (+2)
-    complexPlan: 1,           // Complex plan (+1)
+    previousFailure: 2,       // 每次前序失败 (+2)
+    previousFailureMax: 4,    // 失败项的最大分值
+    deepChain: 2,             // 深层代理链 (+2)
+    complexPlan: 1,           // 复杂计划 (+1)
   },
 };
 
 /**
- * Calculate complexity score from lexical signals
+ * 根据词法信号计算复杂度分数
  */
 function scoreLexicalSignals(signals: LexicalSignals): number {
   let score = 0;
 
-  // Word count scoring
+  // 词数评分
   if (signals.wordCount > 200) {
     score += WEIGHTS.lexical.wordCountHigh;
     if (signals.wordCount > 500) {
@@ -75,17 +75,17 @@ function scoreLexicalSignals(signals: LexicalSignals): number {
     }
   }
 
-  // File paths
+  // 文件路径
   if (signals.filePathCount >= 2) {
     score += WEIGHTS.lexical.filePathsMultiple;
   }
 
-  // Code blocks
+  // 代码块
   if (signals.codeBlockCount > 0) {
     score += WEIGHTS.lexical.codeBlocksPresent;
   }
 
-  // Keyword scoring
+  // 关键词评分
   if (signals.hasArchitectureKeywords) {
     score += WEIGHTS.lexical.architectureKeywords;
   }
@@ -93,13 +93,13 @@ function scoreLexicalSignals(signals: LexicalSignals): number {
     score += WEIGHTS.lexical.debuggingKeywords;
   }
   if (signals.hasSimpleKeywords) {
-    score += WEIGHTS.lexical.simpleKeywords; // Negative weight
+    score += WEIGHTS.lexical.simpleKeywords; // 负权重
   }
   if (signals.hasRiskKeywords) {
     score += WEIGHTS.lexical.riskKeywords;
   }
 
-  // Question depth
+  // 问题深度
   switch (signals.questionDepth) {
     case 'why':
       score += WEIGHTS.lexical.questionDepthWhy;
@@ -107,10 +107,10 @@ function scoreLexicalSignals(signals: LexicalSignals): number {
     case 'how':
       score += WEIGHTS.lexical.questionDepthHow;
       break;
-    // 'what', 'where', 'none' add nothing
+    // 'what'、'where'、'none' 不计分
   }
 
-  // Implicit requirements
+  // 隐式需求
   if (signals.hasImplicitRequirements) {
     score += WEIGHTS.lexical.implicitRequirements;
   }
@@ -119,29 +119,29 @@ function scoreLexicalSignals(signals: LexicalSignals): number {
 }
 
 /**
- * Calculate complexity score from structural signals
+ * 根据结构信号计算复杂度分数
  */
 function scoreStructuralSignals(signals: StructuralSignals): number {
   let score = 0;
 
-  // Subtask scoring
+  // 子任务评分
   if (signals.estimatedSubtasks > 3) {
     score += WEIGHTS.structural.subtasksMany;
   } else if (signals.estimatedSubtasks > 1) {
     score += WEIGHTS.structural.subtasksSome;
   }
 
-  // Cross-file dependencies
+  // 跨文件依赖
   if (signals.crossFileDependencies) {
     score += WEIGHTS.structural.crossFile;
   }
 
-  // Test requirements
+  // 测试要求
   if (signals.hasTestRequirements) {
     score += WEIGHTS.structural.testRequired;
   }
 
-  // Domain specificity
+  // 领域专属性
   switch (signals.domainSpecificity) {
     case 'security':
       score += WEIGHTS.structural.securityDomain;
@@ -149,15 +149,15 @@ function scoreStructuralSignals(signals: StructuralSignals): number {
     case 'infrastructure':
       score += WEIGHTS.structural.infrastructureDomain;
       break;
-    // Other domains add nothing
+    // 其他领域不计分
   }
 
-  // External knowledge
+  // 外部知识
   if (signals.requiresExternalKnowledge) {
     score += WEIGHTS.structural.externalKnowledge;
   }
 
-  // Reversibility
+  // 可回滚性
   switch (signals.reversibility) {
     case 'difficult':
       score += WEIGHTS.structural.reversibilityDifficult;
@@ -167,7 +167,7 @@ function scoreStructuralSignals(signals: StructuralSignals): number {
       break;
   }
 
-  // Impact scope
+  // 影响范围
   switch (signals.impactScope) {
     case 'system-wide':
       score += WEIGHTS.structural.impactSystemWide;
@@ -181,24 +181,24 @@ function scoreStructuralSignals(signals: StructuralSignals): number {
 }
 
 /**
- * Calculate complexity score from context signals
+ * 根据上下文信号计算复杂度分数
  */
 function scoreContextSignals(signals: ContextSignals): number {
   let score = 0;
 
-  // Previous failures (capped)
+  // 前序失败次数（有上限）
   const failureScore = Math.min(
     signals.previousFailures * WEIGHTS.context.previousFailure,
     WEIGHTS.context.previousFailureMax
   );
   score += failureScore;
 
-  // Deep agent chain (3+ levels)
+  // 深层代理链（3 层及以上）
   if (signals.agentChainDepth >= 3) {
     score += WEIGHTS.context.deepChain;
   }
 
-  // Complex plan (5+ tasks)
+  // 复杂计划（5 个及以上任务）
   if (signals.planComplexity >= 5) {
     score += WEIGHTS.context.complexPlan;
   }
@@ -207,7 +207,7 @@ function scoreContextSignals(signals: ContextSignals): number {
 }
 
 /**
- * Calculate total complexity score
+ * 计算总复杂度分数
  */
 export function calculateComplexityScore(signals: ComplexitySignals): number {
   const lexicalScore = scoreLexicalSignals(signals.lexical);
@@ -218,7 +218,7 @@ export function calculateComplexityScore(signals: ComplexitySignals): number {
 }
 
 /**
- * Determine complexity tier from score
+ * 根据分数判定复杂度档位
  */
 export function scoreToTier(score: number): ComplexityTier {
   if (score >= TIER_THRESHOLDS.HIGH) return 'HIGH';
@@ -227,7 +227,7 @@ export function scoreToTier(score: number): ComplexityTier {
 }
 
 /**
- * Calculate complexity tier from signals
+ * 根据信号计算复杂度档位
  */
 export function calculateComplexityTier(signals: ComplexitySignals): ComplexityTier {
   const score = calculateComplexityScore(signals);
@@ -235,7 +235,7 @@ export function calculateComplexityTier(signals: ComplexitySignals): ComplexityT
 }
 
 /**
- * Get detailed score breakdown for debugging/logging
+ * 获取详细分数明细，用于调试/日志
  */
 export function getScoreBreakdown(signals: ComplexitySignals): {
   lexical: number;
@@ -259,14 +259,14 @@ export function getScoreBreakdown(signals: ComplexitySignals): {
 }
 
 /**
- * Calculate confidence in the tier assignment
- * Higher confidence when score is far from thresholds
+ * 计算档位判定的置信度
+ * 分数离阈值越远，置信度越高
  */
 export function calculateConfidence(score: number, tier: ComplexityTier): number {
   const distanceFromLow = Math.abs(score - TIER_THRESHOLDS.MEDIUM);
   const distanceFromHigh = Math.abs(score - TIER_THRESHOLDS.HIGH);
 
-  // Minimum distance from any threshold
+  // 距任意阈值的最小距离
   let minDistance: number;
   switch (tier) {
     case 'LOW':
@@ -280,8 +280,8 @@ export function calculateConfidence(score: number, tier: ComplexityTier): number
       break;
   }
 
-  // Convert distance to confidence (0-1)
-  // Distance of 0 = 0.5 confidence, distance of 4+ = 0.9+ confidence
+  // 将距离转换为置信度（0-1）
+  // 距离为 0 = 置信度 0.5，距离为 4+ = 置信度 0.9+
   const confidence = 0.5 + (Math.min(minDistance, 4) / 4) * 0.4;
   return Math.round(confidence * 100) / 100;
 }

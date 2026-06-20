@@ -1,9 +1,9 @@
 /**
- * Boulder State Storage
+ * Boulder State 存储
  *
- * Handles reading/writing boulder.json for active plan tracking.
+ * 负责读写 boulder.json 以追踪活跃计划。
  *
- * Ported from oh-my-opencode's boulder-state.
+ * 移植自 oh-my-opencode 的 boulder-state。
  */
 
 import { readFileSync, mkdirSync, readdirSync, statSync, unlinkSync } from "fs";
@@ -19,14 +19,14 @@ import { atomicWriteSync } from "../../lib/atomic-write.js";
 import { withFileLockSync } from "../../lib/file-lock.js";
 
 /**
- * Get the full path to the boulder state file
+ * 获取 boulder 状态文件的完整路径
  */
 export function getBoulderFilePath(directory: string): string {
   return join(directory, BOULDER_DIR, BOULDER_FILE);
 }
 
 /**
- * Read boulder state from disk
+ * 从磁盘读取 boulder 状态
  */
 export function readBoulderState(directory: string): BoulderState | null {
   const filePath = getBoulderFilePath(directory);
@@ -43,7 +43,7 @@ export function readBoulderState(directory: string): BoulderState | null {
 }
 
 /**
- * Write boulder state to disk
+ * 将 boulder 状态写入磁盘
  */
 export function writeBoulderState(
   directory: string,
@@ -63,7 +63,7 @@ export function writeBoulderState(
 }
 
 /**
- * Append a session ID to the boulder state
+ * 向 boulder 状态追加一个会话 ID
  */
 export function appendSessionId(
   directory: string,
@@ -87,7 +87,7 @@ export function appendSessionId(
 }
 
 /**
- * Clear boulder state (delete the file)
+ * 清除 boulder 状态（删除该文件）
  */
 export function clearBoulderState(directory: string): boolean {
   const filePath = getBoulderFilePath(directory);
@@ -97,15 +97,15 @@ export function clearBoulderState(directory: string): boolean {
     return true;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return true; // Already gone — success
+      return true; // 已不存在——视为成功
     }
     return false;
   }
 }
 
 /**
- * Find Planner plan files for this project.
- * Planner stores plans at: {project}/.wise/plans/{name}.md
+ * 查找本项目的 Planner 计划文件。
+ * Planner 将计划存储于：{project}/.wise/plans/{name}.md
  */
 export function findPlannerPlans(directory: string): string[] {
   const plansDir = join(directory, PLANNER_PLANS_DIR);
@@ -116,7 +116,7 @@ export function findPlannerPlans(directory: string): string[] {
       .filter((f) => f.endsWith(PLAN_EXTENSION))
       .map((f) => join(plansDir, f))
       .sort((a, b) => {
-        // Sort by modification time, newest first
+        // 按修改时间排序，最新的在前
         const aStat = statSync(a);
         const bStat = statSync(b);
         return bStat.mtimeMs - aStat.mtimeMs;
@@ -130,13 +130,13 @@ export function findPlannerPlans(directory: string): string[] {
 }
 
 /**
- * Parse a plan file and count checkbox progress.
+ * 解析计划文件并统计复选框进度。
  */
 export function getPlanProgress(planPath: string): PlanProgress {
   try {
     const content = readFileSync(planPath, "utf-8");
 
-    // Match markdown checkboxes: - [ ] or - [x] or - [X]
+    // 匹配 markdown 复选框：- [ ] 或 - [x] 或 - [X]
     const uncheckedMatches = content.match(/^[-*]\s*\[\s*\]/gm) || [];
     const checkedMatches = content.match(/^[-*]\s*\[[xX]\]/gm) || [];
 
@@ -157,14 +157,14 @@ export function getPlanProgress(planPath: string): PlanProgress {
 }
 
 /**
- * Extract plan name from file path.
+ * 从文件路径中提取计划名称。
  */
 export function getPlanName(planPath: string): string {
   return basename(planPath, PLAN_EXTENSION);
 }
 
 /**
- * Create a new boulder state for a plan.
+ * 为某个计划创建新的 boulder 状态。
  */
 export function createBoulderState(
   planPath: string,
@@ -182,7 +182,7 @@ export function createBoulderState(
 }
 
 /**
- * Get summaries of all available plans
+ * 获取所有可用计划的摘要
  */
 export function getPlanSummaries(directory: string): PlanSummary[] {
   const plans = findPlannerPlans(directory);
@@ -199,14 +199,14 @@ export function getPlanSummaries(directory: string): PlanSummary[] {
 }
 
 /**
- * Check if a boulder is currently active
+ * 检查是否当前有活跃的 boulder
  */
 export function hasBoulder(directory: string): boolean {
   return readBoulderState(directory) !== null;
 }
 
 /**
- * Get the active plan path from boulder state
+ * 从 boulder 状态获取活跃计划路径
  */
 export function getActivePlanPath(directory: string): string | null {
   const state = readBoulderState(directory);
