@@ -9,6 +9,8 @@
  * - run：启动交互式会话
  * - config：显示或编辑配置
  * - setup：同步所有 WISE 组件（hooks、agents、skills）
+ *
+ * 说明：命令描述及帮助文本已全部中文化。
  */
 
 import { Command } from 'commander';
@@ -116,7 +118,7 @@ async function defaultAction() {
 
 program
   .name('wise')
-  .description('Multi-agent orchestration system for Claude Agent SDK')
+  .description('Claude Code 自进化多智能体编排系统')
   .version(version)
   .allowUnknownOption()
   .action(defaultAction);
@@ -126,24 +128,24 @@ program
  */
 program
   .command('launch [args...]')
-  .description('Launch Claude Code with native tmux shell integration')
+  .description('启动 Claude Code 并集成原生 tmux shell')
   .allowUnknownOption()
   .addHelpText('after', `
-Examples:
-  $ wise                                Launch Claude Code
-  $ wise --madmax                       Launch with permissions bypass
-  $ wise --yolo                         Launch with permissions bypass (alias)
-  $ wise --notify false                 Launch without CCNotifier events
-  $ wise launch                         Explicit launch subcommand (same as bare wise)
-  $ wise launch --madmax                Explicit launch with flags
+示例：
+  $ wise                                启动 Claude Code
+  $ wise --madmax                       以权限绕过模式启动
+  $ wise --yolo                         以权限绕过模式启动（别名）
+  $ wise --notify false                 启动但不发送 CCNotifier 事件
+  $ wise launch                         显式启动子命令（与裸 wise 相同）
+  $ wise launch --madmax                带标志显式启动
 
-Options:
-  --notify <bool>   Enable/disable CCNotifier events. false sets WISE_NOTIFY=0
-                    and suppresses all stop/session-start/session-idle notifications.
-                    Default: true
+选项：
+  --notify <bool>   启用/禁用 CCNotifier 事件。false 设置 WISE_NOTIFY=0
+                    并抑制所有 stop/session-start/session-idle 通知。
+                    默认值：true
 
-Environment:
-  WISE_NOTIFY=0              Suppress all notifications (set by --notify false)
+环境变量：
+  WISE_NOTIFY=0              抑制所有通知（由 --notify false 设置）
 `)
   .action(async (args: string[]) => {
     await launchCommand(args);
@@ -154,12 +156,12 @@ Environment:
  */
 program
   .command('interop')
-  .description('Launch split-pane tmux session with Claude Code (WISE) and Codex (OMX)')
+  .description('启动 Claude Code (WISE) 与 Codex (OMX) 的 tmux 分屏会话')
   .addHelpText('after', `
-Requirements:
-  - Must be running inside a tmux session
-  - Claude CLI must be installed
-  - Codex CLI recommended (graceful fallback if missing)`)
+前置条件：
+  - 必须在 tmux 会话中运行
+  - 需要已安装 Claude CLI
+  - 推荐安装 Codex CLI（未安装时会优雅降级）`)
   .action(() => {
     interopCommand();
   });
@@ -169,7 +171,7 @@ Requirements:
  */
 program
   .command('ask [args...]')
-  .description('Run provider advisor prompt and write an ask artifact')
+  .description('运行 provider advisor prompt 并写入 ask 制品')
   .allowUnknownOption()
   .addHelpText('after', `\n${ASK_USAGE}`)
   .action(async (args: string[]) => {
@@ -182,64 +184,64 @@ program
  */
 program
   .command('config')
-  .description('Show current configuration')
-  .option('-v, --validate', 'Validate configuration')
-  .option('-p, --paths', 'Show configuration file paths')
+  .description('显示当前配置')
+  .option('-v, --validate', '校验配置')
+  .option('-p, --paths', '显示配置文件路径')
   .addHelpText('after', `
-Examples:
-  $ wise config                   Show current configuration
-  $ wise config --validate        Validate configuration files
-  $ wise config --paths           Show config file locations
+示例：
+  $ wise config                   显示当前配置
+  $ wise config --validate         校验配置文件
+  $ wise config --paths           显示配置文件路径
 
   }`)
   .action(async (options) => {
     if (options.paths) {
       const paths = getConfigPaths();
-      console.log(chalk.blue('Configuration file paths:'));
-      console.log(`  User:    ${paths.user}`);
-      console.log(`  Project: ${paths.project}`);
+      console.log(chalk.blue('配置文件路径：'));
+      console.log(`  用户：    ${paths.user}`);
+      console.log(`  项目：${paths.project}`);
 
-      console.log(chalk.blue('\nFile status:'));
-      console.log(`  User:    ${existsSync(paths.user) ? chalk.green('exists') : chalk.gray('not found')}`);
-      console.log(`  Project: ${existsSync(paths.project) ? chalk.green('exists') : chalk.gray('not found')}`);
+      console.log(chalk.blue('\n文件状态：'));
+      console.log(`  用户：    ${existsSync(paths.user) ? chalk.green('已存在') : chalk.gray('未找到')}`);
+      console.log(`  项目：${existsSync(paths.project) ? chalk.green('已存在') : chalk.gray('未找到')}`);
       return;
     }
 
     const config = loadConfig();
 
     if (options.validate) {
-      console.log(chalk.blue('Validating configuration...\n'));
+      console.log(chalk.blue('正在校验配置…\n'));
 
       // 检查必填字段
       const warnings: string[] = [];
       const errors: string[] = [];
 
       if (!process.env.ANTHROPIC_API_KEY) {
-        warnings.push('ANTHROPIC_API_KEY environment variable not set');
+        warnings.push('ANTHROPIC_API_KEY 环境变量未设置');
       }
 
       if (config.mcpServers?.exa?.enabled && !process.env.EXA_API_KEY && !config.mcpServers.exa.apiKey) {
-        warnings.push('Exa is enabled but EXA_API_KEY is not set');
+        warnings.push('Exa 已启用但 EXA_API_KEY 未设置');
       }
 
       if (errors.length > 0) {
-        console.log(chalk.red('Errors:'));
+        console.log(chalk.red('错误：'));
         errors.forEach(e => console.log(chalk.red(`  - ${e}`)));
       }
 
       if (warnings.length > 0) {
-        console.log(chalk.yellow('Warnings:'));
+        console.log(chalk.yellow('警告：'));
         warnings.forEach(w => console.log(chalk.yellow(`  - ${w}`)));
       }
 
       if (errors.length === 0 && warnings.length === 0) {
-        console.log(chalk.green('Configuration is valid!'));
+        console.log(chalk.green('配置有效！'));
       }
 
       return;
     }
 
-    console.log(chalk.blue('Current configuration:\n'));
+    console.log(chalk.blue('当前配置：\n'));
     console.log(JSON.stringify(config, null, 2));
   });
 
@@ -248,54 +250,54 @@ Examples:
  */
 const _configStopCallback = program
   .command('config-stop-callback <type>')
-  .description('Configure stop hook callbacks (file/telegram/discord/slack)')
-  .option('--enable', 'Enable callback')
-  .option('--disable', 'Disable callback')
-  .option('--path <path>', 'File path (supports {session_id}, {date}, {time})')
-  .option('--format <format>', 'File format: markdown | json')
-  .option('--token <token>', 'Bot token (telegram or discord-bot)')
-  .option('--chat <id>', 'Telegram chat ID')
+  .description('配置 stop 钩子回调（file/telegram/discord/slack）')
+  .option('--enable', '启用回调')
+  .option('--disable', '禁用回调')
+  .option('--path <path>', '文件路径（支持 {session_id}, {date}, {time}）')
+  .option('--format <format>', '文件格式：markdown | json')
+  .option('--token <token>', 'Bot 令牌（telegram 或 discord-bot）')
+  .option('--chat <id>', 'Telegram 聊天 ID')
   .option('--webhook <url>', 'Discord webhook URL')
-  .option('--channel-id <id>', 'Discord bot channel ID (used with --profile)')
-  .option('--tag-list <csv>', 'Replace tag list (comma-separated, telegram/discord only)')
-  .option('--add-tag <tag>', 'Append one tag (telegram/discord only)')
-  .option('--remove-tag <tag>', 'Remove one tag (telegram/discord only)')
-  .option('--clear-tags', 'Clear all tags (telegram/discord only)')
-  .option('--profile <name>', 'Named notification profile to configure')
-  .option('--show', 'Show current configuration')
+  .option('--channel-id <id>', 'Discord bot 频道 ID（与 --profile 一起使用）')
+  .option('--tag-list <csv>', '替换标签列表（逗号分隔，仅 telegram/discord）')
+  .option('--add-tag <tag>', '添加一个标签（仅 telegram/discord）')
+  .option('--remove-tag <tag>', '移除一个标签（仅 telegram/discord）')
+  .option('--clear-tags', '清空所有标签（仅 telegram/discord）')
+  .option('--profile <name>', '要配置的通知 profile 名称')
+  .option('--show', '显示当前配置')
   .addHelpText('after', `
-Types:
-  file       File system callback (saves session summary to disk)
-  telegram   Telegram bot notification
-  discord    Discord webhook notification
-  slack      Slack incoming webhook notification
+类型：
+  file       文件系统回调（将会话摘要保存到磁盘）
+  telegram   Telegram bot 通知
+  discord    Discord webhook 通知
+  slack      Slack incoming webhook 通知
 
-Profile types (use with --profile):
-  discord-bot  Discord Bot API (token + channel ID)
+Profile 类型（与 --profile 一起使用）：
+  discord-bot  Discord Bot API（token + 频道 ID）
   slack        Slack incoming webhook
-  webhook      Generic webhook (POST with JSON body)
+  webhook      通用 webhook（POST JSON 请求体）
 
-Examples:
+示例：
   $ wise config-stop-callback file --enable --path ${join(getClaudeConfigDir(), 'logs/{date}.md')}
   $ wise config-stop-callback telegram --enable --token <token> --chat <id>
   $ wise config-stop-callback discord --enable --webhook <url>
   $ wise config-stop-callback file --disable
   $ wise config-stop-callback file --show
 
-  # Named profiles (stored in notificationProfiles):
+  # 命名 profile（存储在 notificationProfiles 中）：
   $ wise config-stop-callback discord --profile work --enable --webhook <url>
   $ wise config-stop-callback telegram --profile work --enable --token <tk> --chat <id>
   $ wise config-stop-callback discord-bot --profile ops --enable --token <tk> --channel-id <id>
 
-  # Select profile at launch:
+  # 启动时选择 profile：
   $ WISE_NOTIFY_PROFILE=work claude`)
   .action(async (type: string, options) => {
     // 当使用 --profile 时，路由到基于 profile 的配置
     if (options.profile) {
       const profileValidTypes = ['file', 'telegram', 'discord', 'discord-bot', 'slack', 'webhook'];
       if (!profileValidTypes.includes(type)) {
-        console.error(chalk.red(`Invalid type for profile: ${type}`));
-        console.error(chalk.gray(`Valid types: ${profileValidTypes.join(', ')}`));
+        console.error(chalk.red(`无效的 profile 类型：${type}`));
+        console.error(chalk.gray(`有效类型：${profileValidTypes.join(', ')}`));
         process.exit(1);
       }
 
@@ -307,15 +309,15 @@ Examples:
       // 显示当前 profile 配置
       if (options.show) {
         if (config.notificationProfiles[profileName]) {
-          console.log(chalk.blue(`Profile "${profileName}" — ${type} configuration:`));
+          console.log(chalk.blue(`Profile "${profileName}" — ${type} 配置：`));
           const platformConfig = profile[type];
           if (platformConfig) {
             console.log(JSON.stringify(platformConfig, null, 2));
           } else {
-            console.log(chalk.yellow(`No ${type} platform configured in profile "${profileName}".`));
+            console.log(chalk.yellow(`Profile "${profileName}" 中未配置 ${type} 平台。`));
           }
         } else {
-          console.log(chalk.yellow(`Profile "${profileName}" not found.`));
+          console.log(chalk.yellow(`未找到 Profile "${profileName}"。`));
         }
         return;
       }
@@ -328,7 +330,7 @@ Examples:
         case 'discord': {
           const current = profile.discord;
           if (enabled === true && (!options.webhook && !current?.webhookUrl)) {
-            console.error(chalk.red('Discord requires --webhook <webhook_url>'));
+            console.error(chalk.red('Discord 需要 --webhook <webhook_url>'));
             process.exit(1);
           }
           profile.discord = {
@@ -341,11 +343,11 @@ Examples:
         case 'discord-bot': {
           const current = profile['discord-bot'];
           if (enabled === true && (!options.token && !current?.botToken)) {
-            console.error(chalk.red('Discord bot requires --token <bot_token>'));
+            console.error(chalk.red('Discord bot 需要 --token <bot_token>'));
             process.exit(1);
           }
           if (enabled === true && (!options.channelId && !current?.channelId)) {
-            console.error(chalk.red('Discord bot requires --channel-id <channel_id>'));
+            console.error(chalk.red('Discord bot 需要 --channel-id <channel_id>'));
             process.exit(1);
           }
           profile['discord-bot'] = {
@@ -359,11 +361,11 @@ Examples:
         case 'telegram': {
           const current = profile.telegram;
           if (enabled === true && (!options.token && !current?.botToken)) {
-            console.error(chalk.red('Telegram requires --token <bot_token>'));
+            console.error(chalk.red('Telegram 需要 --token <bot_token>'));
             process.exit(1);
           }
           if (enabled === true && (!options.chat && !current?.chatId)) {
-            console.error(chalk.red('Telegram requires --chat <chat_id>'));
+            console.error(chalk.red('Telegram 需要 --chat <chat_id>'));
             process.exit(1);
           }
           profile.telegram = {
@@ -377,7 +379,7 @@ Examples:
         case 'slack': {
           const current = profile.slack;
           if (enabled === true && (!options.webhook && !current?.webhookUrl)) {
-            console.error(chalk.red('Slack requires --webhook <webhook_url>'));
+            console.error(chalk.red('Slack 需要 --webhook <webhook_url>'));
             process.exit(1);
           }
           profile.slack = {
@@ -390,7 +392,7 @@ Examples:
         case 'webhook': {
           const current = profile.webhook;
           if (enabled === true && (!options.webhook && !current?.url)) {
-            console.error(chalk.red('Webhook requires --webhook <url>'));
+            console.error(chalk.red('Webhook 需要 --webhook <url>'));
             process.exit(1);
           }
           profile.webhook = {
@@ -401,8 +403,8 @@ Examples:
           break;
         }
         case 'file': {
-          console.error(chalk.yellow('File callbacks are not supported in notification profiles.'));
-          console.error(chalk.gray('Use without --profile for file callbacks.'));
+          console.error(chalk.yellow('通知 profile 不支持 file 回调。'));
+          console.error(chalk.gray('请不使用 --profile 来配置 file 回调。'));
           process.exit(1);
           break;
         }
@@ -412,10 +414,10 @@ Examples:
 
       try {
         writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf-8');
-        console.log(chalk.green(`\u2713 Profile "${profileName}" — ${type} configured`));
+        console.log(chalk.green(`\u2713 Profile "${profileName}" — ${type} 已配置`));
         console.log(JSON.stringify(profile[type], null, 2));
       } catch (error) {
-        console.error(chalk.red('Failed to write configuration:'), error);
+        console.error(chalk.red('写入配置失败：'), error);
         process.exit(1);
       }
       return;
@@ -424,8 +426,8 @@ Examples:
     // 旧版（非 profile）路径
     const validTypes = ['file', 'telegram', 'discord', 'slack'];
     if (!validTypes.includes(type)) {
-      console.error(chalk.red(`Invalid callback type: ${type}`));
-      console.error(chalk.gray(`Valid types: ${validTypes.join(', ')}`));
+      console.error(chalk.red(`无效的回调类型：${type}`));
+      console.error(chalk.gray(`有效类型：${validTypes.join(', ')}`));
       process.exit(1);
     }
 
@@ -436,10 +438,10 @@ Examples:
     if (options.show) {
       const current = config.stopHookCallbacks[type as keyof typeof config.stopHookCallbacks];
       if (current) {
-        console.log(chalk.blue(`Current ${type} callback configuration:`));
+        console.log(chalk.blue(`当前 ${type} 回调配置：`));
         console.log(JSON.stringify(current, null, 2));
       } else {
-        console.log(chalk.yellow(`No ${type} callback configured.`));
+        console.log(chalk.yellow(`未配置 ${type} 回调。`));
       }
       return;
     }
@@ -503,11 +505,11 @@ Examples:
       case 'telegram': {
         const current = config.stopHookCallbacks.telegram;
         if (enabled === true && (!options.token && !current?.botToken)) {
-          console.error(chalk.red('Telegram requires --token <bot_token>'));
+          console.error(chalk.red('Telegram 需要 --token <bot_token>'));
           process.exit(1);
         }
         if (enabled === true && (!options.chat && !current?.chatId)) {
-          console.error(chalk.red('Telegram requires --chat <chat_id>'));
+          console.error(chalk.red('Telegram 需要 --chat <chat_id>'));
           process.exit(1);
         }
         config.stopHookCallbacks.telegram = {
@@ -523,7 +525,7 @@ Examples:
       case 'discord': {
         const current = config.stopHookCallbacks.discord;
         if (enabled === true && (!options.webhook && !current?.webhookUrl)) {
-          console.error(chalk.red('Discord requires --webhook <webhook_url>'));
+          console.error(chalk.red('Discord 需要 --webhook <webhook_url>'));
           process.exit(1);
         }
         config.stopHookCallbacks.discord = {
@@ -538,7 +540,7 @@ Examples:
       case 'slack': {
         const current = config.stopHookCallbacks.slack;
         if (enabled === true && (!options.webhook && !current?.webhookUrl)) {
-          console.error(chalk.red('Slack requires --webhook <webhook_url>'));
+          console.error(chalk.red('Slack 需要 --webhook <webhook_url>'));
           process.exit(1);
         }
         config.stopHookCallbacks.slack = {
@@ -554,10 +556,10 @@ Examples:
     // \u5199\u5165\u914d\u7f6e
     try {
       writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf-8');
-      console.log(chalk.green(`\u2713 Stop callback '${type}' configured`));
+      console.log(chalk.green(`\u2713 Stop 回调 '${type}' 已配置`));
       console.log(JSON.stringify(config.stopHookCallbacks[type as keyof typeof config.stopHookCallbacks], null, 2));
     } catch (error) {
-      console.error(chalk.red('Failed to write configuration:'), error);
+      console.error(chalk.red('写入配置失败：'), error);
       process.exit(1);
     }
   });
@@ -567,20 +569,20 @@ Examples:
  */
 program
   .command('config-notify-profile [name]')
-  .description('Manage notification profiles')
-  .option('--list', 'List all profiles')
-  .option('--show', 'Show profile configuration')
-  .option('--delete', 'Delete a profile')
+  .description('管理通知 profile')
+  .option('--list', '列出所有 profile')
+  .option('--show', '显示 profile 配置')
+  .option('--delete', '删除一个 profile')
   .addHelpText('after', `
-Examples:
+示例：
   $ wise config-notify-profile --list
   $ wise config-notify-profile work --show
   $ wise config-notify-profile work --delete
 
-  # Create/update profiles via config-stop-callback --profile:
+  # 通过 config-stop-callback --profile 创建/更新 profile：
   $ wise config-stop-callback discord --profile work --enable --webhook <url>
 
-  # Select profile at launch:
+  # 启动时选择 profile：
   $ WISE_NOTIFY_PROFILE=work claude`)
   .action(async (name: string | undefined, options) => {
     const config = getWiseConfig() as WiseConfig & { notificationProfiles?: Record<string, any> };
@@ -589,22 +591,22 @@ Examples:
     if (options.list || !name) {
       const names = Object.keys(profiles);
       if (names.length === 0) {
-        console.log(chalk.yellow('No notification profiles configured.'));
-        console.log(chalk.gray('Create one with: wise config-stop-callback <type> --profile <name> --enable ...'));
+        console.log(chalk.yellow('未配置通知 profile。'));
+        console.log(chalk.gray('使用以下命令创建：wise config-stop-callback <type> --profile <name> --enable ...'));
       } else {
-        console.log(chalk.blue('Notification profiles:'));
+        console.log(chalk.blue('通知 profile：'));
         for (const pName of names) {
           const p = profiles[pName];
           const platforms = ['discord', 'discord-bot', 'telegram', 'slack', 'webhook']
             .filter((plat) => p[plat]?.enabled)
             .join(', ');
-          const status = p.enabled !== false ? chalk.green('enabled') : chalk.red('disabled');
-          console.log(`  ${chalk.bold(pName)} [${status}] — ${platforms || 'no platforms'}`);
+          const status = p.enabled !== false ? chalk.green('已启用') : chalk.red('已禁用');
+          console.log(`  ${chalk.bold(pName)} [${status}] — ${platforms || '无平台'}`);
         }
       }
       const activeProfile = process.env.WISE_NOTIFY_PROFILE;
       if (activeProfile) {
-        console.log(chalk.gray(`\nActive profile (WISE_NOTIFY_PROFILE): ${activeProfile}`));
+        console.log(chalk.gray(`\n活动 profile (WISE_NOTIFY_PROFILE)： ${activeProfile}`));
       }
       return;
     }
@@ -614,14 +616,14 @@ Examples:
         console.log(chalk.blue(`Profile "${name}":`));
         console.log(JSON.stringify(profiles[name], null, 2));
       } else {
-        console.log(chalk.yellow(`Profile "${name}" not found.`));
+        console.log(chalk.yellow(`未找到 Profile "${name}"。`));
       }
       return;
     }
 
     if (options.delete) {
       if (!profiles[name]) {
-        console.log(chalk.yellow(`Profile "${name}" not found.`));
+        console.log(chalk.yellow(`未找到 Profile "${name}"。`));
         return;
       }
       delete profiles[name];
@@ -631,9 +633,9 @@ Examples:
       }
       try {
         writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf-8');
-        console.log(chalk.green(`\u2713 Profile "${name}" deleted`));
+        console.log(chalk.green(`\u2713 Profile "${name}" 已删除`));
       } catch (error) {
-        console.error(chalk.red('Failed to write configuration:'), error);
+        console.error(chalk.red('写入配置失败：'), error);
         process.exit(1);
       }
       return;
@@ -644,8 +646,8 @@ Examples:
       console.log(chalk.blue(`Profile "${name}":`));
       console.log(JSON.stringify(profiles[name], null, 2));
     } else {
-      console.log(chalk.yellow(`Profile "${name}" not found.`));
-      console.log(chalk.gray('Create it with: wise config-stop-callback <type> --profile ' + name + ' --enable ...'));
+      console.log(chalk.yellow(`未找到 Profile "${name}"。`));
+      console.log(chalk.gray('使用 wise config-stop-callback <type> --profile ' + name + ' --enable ... 创建'));
     }
   });
 
@@ -655,43 +657,43 @@ Examples:
  */
 program
   .command('info')
-  .description('Show system and agent information')
+  .description('显示系统和 agent 信息')
   .addHelpText('after', `
-Examples:
-  $ wise info                     Show agents, features, and MCP servers`)
+示例：
+  $ wise info                     显示 agents、features 和 MCP servers`)
   .action(async () => {
     const session = createWiseSession();
 
-    console.log(chalk.blue.bold('\nWise System Information\n'));
+    console.log(chalk.blue.bold('\nWise 系统信息\n'));
     console.log(chalk.gray('━'.repeat(50)));
 
-    console.log(chalk.blue('\nAvailable Agents:'));
+    console.log(chalk.blue('\n可用 Agent：'));
     const agents = session.queryOptions.options.agents;
     for (const [name, agent] of Object.entries(agents)) {
       console.log(`  ${chalk.green(name)}`);
       console.log(`    ${chalk.gray(agent.description.split('\n')[0])}`);
     }
 
-    console.log(chalk.blue('\nEnabled Features:'));
+    console.log(chalk.blue('\n已启用功能：'));
     const features = session.config.features;
     if (features) {
-      console.log(`  Parallel Execution:      ${features.parallelExecution ? chalk.green('enabled') : chalk.gray('disabled')}`);
-      console.log(`  LSP Tools:               ${features.lspTools ? chalk.green('enabled') : chalk.gray('disabled')}`);
-      console.log(`  AST Tools:               ${features.astTools ? chalk.green('enabled') : chalk.gray('disabled')}`);
-      console.log(`  Continuation Enforcement:${features.continuationEnforcement ? chalk.green('enabled') : chalk.gray('disabled')}`);
-      console.log(`  Auto Context Injection:  ${features.autoContextInjection ? chalk.green('enabled') : chalk.gray('disabled')}`);
+      console.log(`  并行执行：          ${features.parallelExecution ? chalk.green('已启用') : chalk.gray('已禁用')}`);
+      console.log(`  LSP 工具：          ${features.lspTools ? chalk.green('已启用') : chalk.gray('已禁用')}`);
+      console.log(`  AST 工具：          ${features.astTools ? chalk.green('已启用') : chalk.gray('已禁用')}`);
+      console.log(`  续行强制：          ${features.continuationEnforcement ? chalk.green('已启用') : chalk.gray('已禁用')}`);
+      console.log(`  自动上下文注入：    ${features.autoContextInjection ? chalk.green('已启用') : chalk.gray('已禁用')}`);
     }
 
-    console.log(chalk.blue('\nMCP Servers:'));
+    console.log(chalk.blue('\nMCP 服务器：'));
     const mcpServers = session.queryOptions.options.mcpServers;
     for (const name of Object.keys(mcpServers)) {
       console.log(`  ${chalk.green(name)}`);
     }
 
-    console.log(chalk.blue('\nMagic Keywords:'));
-    console.log(`  Ultrawork: ${chalk.cyan(session.config.magicKeywords?.ultrawork?.join(', ') ?? 'ultrawork, ulw, uw')}`);
-    console.log(`  Search:    ${chalk.cyan(session.config.magicKeywords?.search?.join(', ') ?? 'search, find, locate')}`);
-    console.log(`  Analyze:   ${chalk.cyan(session.config.magicKeywords?.analyze?.join(', ') ?? 'analyze, investigate, examine')}`);
+    console.log(chalk.blue('\n魔法关键词：'));
+    console.log(`  Ultrawork：${chalk.cyan(session.config.magicKeywords?.ultrawork?.join(', ') ?? 'ultrawork, ulw, uw')}`);
+    console.log(`  Search：   ${chalk.cyan(session.config.magicKeywords?.search?.join(', ') ?? 'search, find, locate')}`);
+    console.log(`  Analyze：  ${chalk.cyan(session.config.magicKeywords?.analyze?.join(', ') ?? 'analyze, investigate, examine')}`);
 
     console.log(chalk.gray('\n━'.repeat(50)));
     console.log(chalk.gray(`Version: ${version}`));
@@ -702,24 +704,24 @@ Examples:
  */
 program
   .command('test-prompt <prompt>')
-  .description('Test how a prompt would be enhanced')
+  .description('测试 prompt 增强效果')
   .addHelpText('after', `
-Examples:
-  $ wise test-prompt "ultrawork fix bugs"    See how magic keywords are detected
-  $ wise test-prompt "analyze this code"     Test prompt enhancement`)
+示例：
+  $ wise test-prompt "ultrawork fix bugs"    查看魔法关键词检测效果
+  $ wise test-prompt "analyze this code"     测试 prompt 增强效果`)
   .action(async (prompt: string) => {
     const session = createWiseSession();
 
-    console.log(chalk.blue('Original prompt:'));
+    console.log(chalk.blue('原始 prompt：'));
     console.log(chalk.gray(prompt));
 
     const keywords = session.detectKeywords(prompt);
     if (keywords.length > 0) {
-      console.log(chalk.blue('\nDetected magic keywords:'));
+      console.log(chalk.blue('\n检测到魔法关键词：'));
       console.log(chalk.yellow(keywords.join(', ')));
     }
 
-    console.log(chalk.blue('\nEnhanced prompt:'));
+    console.log(chalk.blue('\n增强后的 prompt：'));
     console.log(chalk.green(session.processPrompt(prompt)));
   });
 
@@ -728,42 +730,42 @@ Examples:
  */
 program
   .command('update')
-  .description('Check for and install updates')
-  .option('-c, --check', 'Only check for updates, do not install')
-  .option('-f, --force', 'Force reinstall even if up to date')
-  .option('-q, --quiet', 'Suppress output except for errors')
-  .option('--standalone', 'Force npm update even in plugin context')
-  .option('--clean', 'Purge old plugin cache versions immediately (bypass 24h grace period)')
+  .description('检查并安装更新')
+  .option('-c, --check', '仅检查更新，不安装')
+  .option('-f, --force', '强制重新安装，即使已是最新版')
+  .option('-q, --quiet', '静默输出，仅显示错误')
+  .option('--standalone', '在插件模式下强制使用 npm 更新')
+  .option('--clean', '立即清除旧插件缓存版本（跳过 24 小时宽限期）')
   .addHelpText('after', `
-Examples:
-  $ wise update                   Check and install updates
-  $ wise update --check           Only check, don't install
-  $ wise update --force           Force reinstall
-  $ wise update --standalone      Force npm update in plugin context`)
+示例：
+  $ wise update                   检查并安装更新
+  $ wise update --check           仅检查，不安装
+  $ wise update --force           强制重新安装
+  $ wise update --standalone      在插件模式下强制使用 npm 更新`)
   .action(async (options) => {
     if (!options.quiet) {
-      console.log(chalk.blue('Wise Update\n'));
+      console.log(chalk.blue('Wise 更新\n'));
     }
 
     try {
       // 显示当前版本
       const installed = getInstalledVersion();
       if (!options.quiet) {
-        console.log(chalk.gray(`Current version: ${installed?.version ?? 'unknown'}`));
-        console.log(chalk.gray(`Install method: ${installed?.installMethod ?? 'unknown'}`));
+        console.log(chalk.gray(`当前版本：${installed?.version ?? 'unknown'}`));
+        console.log(chalk.gray(`安装方式：${installed?.installMethod ?? 'unknown'}`));
         console.log('');
       }
 
       // 检查更新
       if (!options.quiet) {
-        console.log('Checking for updates...');
+        console.log('正在检查更新…');
       }
 
       const checkResult = await checkForUpdates();
 
       if (!checkResult.updateAvailable && !options.force) {
         if (!options.quiet) {
-          console.log(chalk.green(`\n✓ You are running the latest version (${checkResult.currentVersion})`));
+          console.log(chalk.green(`\n✓ 你正在运行最新版本 (${checkResult.currentVersion})`));
         }
         return;
       }
@@ -775,14 +777,14 @@ Examples:
       // 若为仅检查模式，到此为止
       if (options.check) {
         if (checkResult.updateAvailable) {
-          console.log(chalk.yellow('\nRun without --check to install the update.'));
+          console.log(chalk.yellow('\n不带 --check 运行以安装更新.'));
         }
         return;
       }
 
       // 执行更新
       if (!options.quiet) {
-        console.log(chalk.blue('\nStarting update...\n'));
+        console.log(chalk.blue('\n正在开始更新...\n'));
       }
 
       const result = await performUpdate({ verbose: !options.quiet, standalone: options.standalone, clean: options.clean });
@@ -790,7 +792,7 @@ Examples:
       if (result.success) {
         if (!options.quiet) {
           console.log(chalk.green(`\n✓ ${result.message}`));
-          console.log(chalk.gray('\nPlease restart your Claude Code session to use the new version.'));
+          console.log(chalk.gray('\n请重启你的 Claude Code 会话以使用新版本.'));
         }
       } else {
         console.error(chalk.red(`\n✗ ${result.message}`));
@@ -801,8 +803,8 @@ Examples:
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      console.error(chalk.red(`Update failed: ${message}`));
-      console.error(chalk.gray('Try again with "wise update --force", or reinstall with "wise install --force".'));
+      console.error(chalk.red(`更新失败： ${message}`));
+      console.error(chalk.gray('使用 "wise update --force" 重试，或使用 "wise install --force" 重新安装。'));
       process.exit(1);
     }
   });
@@ -813,14 +815,14 @@ Examples:
  */
 program
   .command('update-reconcile')
-  .description('Internal: Reconcile runtime state after update (called by update command)')
-  .option('-v, --verbose', 'Show detailed output')
-  .option('--skip-grace-period', 'Bypass 24h grace period for cache purge')
+  .description('内部命令：更新后对账运行时状态（由 update 命令调用）')
+  .option('-v, --verbose', '显示详细输出')
+  .option('--skip-grace-period', '跳过缓存清除的 24 小时宽限期')
   .action(async (options) => {
     try {
       const reconcileResult = reconcileUpdateRuntime({ verbose: options.verbose, skipGracePeriod: options.skipGracePeriod });
       if (!reconcileResult.success) {
-        console.error(chalk.red('Reconciliation failed:'));
+        console.error(chalk.red('对账失败:'));
         if (reconcileResult.errors) {
           reconcileResult.errors.forEach(err => console.error(chalk.red(`  - ${err}`)));
         }
@@ -831,7 +833,7 @@ program
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      console.error(chalk.red(`Reconciliation error: ${message}`));
+      console.error(chalk.red(`对账错误: ${message}`));
       process.exit(1);
     }
   });
@@ -841,35 +843,35 @@ program
  */
 program
   .command('version')
-  .description('Show detailed version information')
+  .description('显示详细版本信息')
   .addHelpText('after', `
-Examples:
-  $ wise version                  Show version, install method, and commit hash`)
+示例：
+  $ wise version                  显示版本、安装方式和提交哈希`)
   .action(async () => {
     const installed = getInstalledVersion();
 
-    console.log(chalk.blue.bold('\nWise Version Information\n'));
+    console.log(chalk.blue.bold('\nWise 版本信息\n'));
     console.log(chalk.gray('━'.repeat(50)));
 
-    console.log(`\n  Package version:   ${chalk.green(version)}`);
+    console.log(`\n  包版本：   ${chalk.green(version)}`);
 
     if (installed) {
-      console.log(`  Installed version: ${chalk.green(installed.version)}`);
-      console.log(`  Install method:    ${chalk.cyan(installed.installMethod)}`);
-      console.log(`  Installed at:      ${chalk.gray(installed.installedAt)}`);
+      console.log(`  已安装版本： ${chalk.green(installed.version)}`);
+      console.log(`  安装方式：    ${chalk.cyan(installed.installMethod)}`);
+      console.log(`  安装位置：      ${chalk.gray(installed.installedAt)}`);
       if (installed.lastCheckAt) {
-        console.log(`  Last update check: ${chalk.gray(installed.lastCheckAt)}`);
+        console.log(`  上次更新检查： ${chalk.gray(installed.lastCheckAt)}`);
       }
       if (installed.commitHash) {
-        console.log(`  Commit hash:       ${chalk.gray(installed.commitHash)}`);
+        console.log(`  提交哈希：       ${chalk.gray(installed.commitHash)}`);
       }
     } else {
-      console.log(chalk.yellow('  No installation metadata found'));
-      console.log(chalk.gray('  (Run the install script to create version metadata)'));
+      console.log(chalk.yellow('  未找到安装元数据'));
+      console.log(chalk.gray('  （运行安装脚本以创建版本元数据）'));
     }
 
     console.log(chalk.gray('\n━'.repeat(50)));
-    console.log(chalk.gray('\nTo check for updates, run: wise update --check'));
+    console.log(chalk.gray('\n运行 wise update --check 检查更新'));
   });
 
 /**
@@ -877,21 +879,21 @@ Examples:
  */
 program
   .command('install')
-  .description('Install WISE agents and commands to Claude Code config directory (default: ~/.claude/)')
-  .option('-f, --force', 'Overwrite existing files')
-  .option('-q, --quiet', 'Suppress output except for errors')
-  .option('--skip-claude-check', 'Skip checking if Claude Code is installed')
+  .description('安装 WISE agents 和 commands 到 Claude Code 配置目录（默认：~/.claude/）')
+  .option('-f, --force', '覆盖已有文件')
+  .option('-q, --quiet', '静默输出，仅显示错误')
+  .option('--skip-claude-check', '跳过 Claude Code 安装检查')
   .addHelpText('after', `
-Examples:
-  $ wise install                  Install to config directory (default: ~/.claude/)
-  $ wise install --force          Reinstall, overwriting existing files
-  $ wise install --quiet          Silent install for scripts
-  $ CLAUDE_CONFIG_DIR=$HOME/.claude-isolated-workspace wise install  Isolated config directory`)
+示例：
+  $ wise install                  安装到配置目录（默认：~/.claude/）
+  $ wise install --force          重新安装，覆盖已有文件
+  $ wise install --quiet          静默安装，适用于脚本
+  $ CLAUDE_CONFIG_DIR=$HOME/.claude-isolated-workspace wise install  隔离配置目录`)
   .action(async (options) => {
     if (!options.quiet) {
       console.log(chalk.blue('╔═══════════════════════════════════════════════════════════╗'));
-      console.log(chalk.blue('║         Wise Installer                        ║'));
-      console.log(chalk.blue('║   Multi-Agent Orchestration for Claude Code               ║'));
+      console.log(chalk.blue('║         Wise 安装程序                        ║'));
+      console.log(chalk.blue('║   Claude Code 的多 Agent 编排系统               ║'));
       console.log(chalk.blue('╚═══════════════════════════════════════════════════════════╝'));
       console.log('');
     }
@@ -900,12 +902,12 @@ Examples:
     if (isInstalled() && !options.force) {
       const info = getInstallInfo();
       if (!options.quiet) {
-        console.log(chalk.yellow('WISE is already installed.'));
+        console.log(chalk.yellow('WISE 已安装。'));
         if (info) {
           console.log(chalk.gray(`  Version: ${info.version}`));
           console.log(chalk.gray(`  Installed: ${info.installedAt}`));
         }
-        console.log(chalk.gray('\nUse --force to reinstall.'));
+        console.log(chalk.gray('\n使用 --force 重新安装。'));
       }
       return;
     }
@@ -921,63 +923,63 @@ Examples:
       if (!options.quiet) {
         console.log('');
         console.log(chalk.green('╔═══════════════════════════════════════════════════════════╗'));
-        console.log(chalk.green('║         Installation Complete!                            ║'));
+        console.log(chalk.green('║         安装完成！                            ║'));
         console.log(chalk.green('╚═══════════════════════════════════════════════════════════╝'));
         console.log('');
-        console.log(chalk.gray(`Installed to: ${getClaudeConfigDir()}`));
+        console.log(chalk.gray(`安装到：${getClaudeConfigDir()}`));
         console.log('');
-        console.log(chalk.yellow('Usage:'));
-        console.log('  claude                        # Start Claude Code normally');
+        console.log(chalk.yellow('用法：'));
+        console.log('  claude                        # 正常启动 Claude Code');
         console.log('');
-        console.log(chalk.yellow('Slash Commands:'));
-        console.log('  /wise <task>              # Activate WISE orchestration mode');
-        console.log('  /wise-default             # Configure for current project');
-        console.log('  /wise-default-global      # Configure globally');
-        console.log('  /ultrawork <task>             # Maximum performance mode');
-        console.log('  /deepsearch <query>           # Thorough codebase search');
-        console.log('  /analyze <target>             # Deep analysis mode');
-        console.log('  /plan <description>           # Start planning with Planner');
-        console.log('  /review [plan-path]           # Review plan with Critic');
+        console.log(chalk.yellow('斜杠命令：'));
+        console.log('  /wise <task>              # 激活 WISE 编排模式');
+        console.log('  /wise-default             # 为当前项目配置');
+        console.log('  /wise-default-global      # 全局配置');
+        console.log('  /ultrawork <task>             # 最高性能模式');
+        console.log('  /deepsearch <query>           # 深度代码库搜索');
+        console.log('  /analyze <target>             # 深度分析模式');
+        console.log('  /plan <description>           # 使用 Planner 开始规划');
+        console.log('  /review [plan-path]           # 使用 Critic 审查计划');
         console.log('');
-        console.log(chalk.yellow('Available Agents (via Task tool):'));
-        console.log(chalk.gray('  Base Agents:'));
-        console.log('    architect              - Architecture & debugging (Opus)');
-        console.log('    document-specialist   - External docs & reference lookup (Sonnet)');
-        console.log('    explore             - Fast pattern matching (Haiku)');
-        console.log('    designer            - UI/UX specialist (Sonnet)');
-        console.log('    writer              - Technical writing (Haiku)');
-        console.log('    vision              - Visual analysis (Sonnet)');
-        console.log('    critic               - Plan review (Opus)');
-        console.log('    analyst               - Pre-planning analysis (Opus)');
-        console.log('    debugger            - Root-cause diagnosis (Sonnet)');
-        console.log('    executor            - Focused execution (Sonnet)');
-        console.log('    planner          - Strategic planning (Opus)');
-        console.log('    qa-tester           - Interactive CLI testing (Sonnet)');
-        console.log(chalk.gray('  Tiered Variants (for smart routing):'));
-        console.log('    architect-medium       - Simpler analysis (Sonnet)');
-        console.log('    architect-low          - Quick questions (Haiku)');
-        console.log('    executor-high       - Complex tasks (Opus)');
-        console.log('    executor-low        - Trivial tasks (Haiku)');
-        console.log('    designer-high       - Design systems (Opus)');
-        console.log('    designer-low        - Simple styling (Haiku)');
+        console.log(chalk.yellow('可用 Agent（通过 Task 工具）：'));
+        console.log(chalk.gray('  基础 Agent：'));
+        console.log('    architect              - 架构与调试（Opus）');
+        console.log('    document-specialist   - 外部文档与参考查找（Sonnet）');
+        console.log('    explore             - 快速模式匹配（Haiku）');
+        console.log('    designer            - UI/UX 专家（Sonnet）');
+        console.log('    writer              - 技术写作（Haiku）');
+        console.log('    vision              - 视觉分析（Sonnet）');
+        console.log('    critic               - 计划审查（Opus）');
+        console.log('    analyst               - 预规划分析（Opus）');
+        console.log('    debugger            - 根因诊断（Sonnet）');
+        console.log('    executor            - 专注执行（Sonnet）');
+        console.log('    planner          - 战略规划（Opus）');
+        console.log('    qa-tester           - 交互式 CLI 测试（Sonnet）');
+        console.log(chalk.gray('  分层变体（智能路由）：'));
+        console.log('    architect-medium       - 简单分析（Sonnet）');
+        console.log('    architect-low          - 快速问题（Haiku）');
+        console.log('    executor-high       - 复杂任务（Opus）');
+        console.log('    executor-low        - 简单任务（Haiku）');
+        console.log('    designer-high       - 设计系统（Opus）');
+        console.log('    designer-low        - 简单样式（Haiku）');
         console.log('');
-        console.log(chalk.yellow('After Updates:'));
-        console.log('  Run \'/wise-default\' (project) or \'/wise-default-global\' (global)');
-        console.log('  to download the latest CLAUDE.md configuration.');
-        console.log('  This ensures you get the newest features and agent behaviors.');
+        console.log(chalk.yellow('更新后：'));
+        console.log('  运行 \'/wise-default\'（项目）或 \'/wise-default-global\'（全局）');
+        console.log('  下载最新的 CLAUDE.md 配置。');
+        console.log('  这确保你获得最新的功能和 agent 行为。');
         console.log('');
-        console.log(chalk.blue('Quick Start:'));
-        console.log('  1. Run \'claude\' to start Claude Code');
-        console.log('  2. Type \'/wise-default\' for project or \'/wise-default-global\' for global');
-        console.log('  3. Or use \'/wise <task>\' for one-time activation');
+        console.log(chalk.blue('快速开始：'));
+        console.log('  1. 运行 \'claude\' 启动 Claude Code');
+        console.log('  2. 输入 \'/wise-default\'（项目）或 \'/wise-default-global\'（全局）');
+        console.log('  3. 或使用 \'/wise <task>\' 进行一次性激活');
       }
     } else {
-      console.error(chalk.red(`Installation failed: ${result.message}`));
+      console.error(chalk.red(`安装失败： ${result.message}`));
       if (result.errors.length > 0) {
         result.errors.forEach(err => console.error(chalk.red(`  - ${err}`)));
       }
-      console.error(chalk.gray('\nTry "wise install --force" to overwrite existing files.'));
-      console.error(chalk.gray('For more diagnostics, run "wise doctor conflicts".'));
+      console.error(chalk.gray('\n使用 "wise install --force" 覆盖已有文件。'));
+      console.error(chalk.gray('运行 "wise doctor conflicts" 获取更多诊断信息。'));
       process.exit(1);
     }
   });
@@ -993,44 +995,44 @@ Examples:
  */
 const waitCmd = program
   .command('wait')
-  .description('Rate limit wait and auto-resume (just run "wise wait" to get started)')
-  .option('--json', 'Output as JSON')
-  .option('--start', 'Start the auto-resume daemon')
-  .option('--stop', 'Stop the auto-resume daemon')
+  .description('速率限制等待与自动恢复（直接运行 wise wait 即可开始）')
+  .option('--json', '输出为 JSON')
+  .option('--start', '启动自动恢复守护进程')
+  .option('--stop', '停止自动恢复守护进程')
   .addHelpText('after', `
-Examples:
-  $ wise wait                     Show status and suggestions
-  $ wise wait --start             Start auto-resume daemon
-  $ wise wait --stop              Stop auto-resume daemon
-  $ wise wait status              Show detailed rate limit status
-  $ wise wait detect              Scan for blocked tmux sessions`)
+示例：
+  $ wise wait                     显示状态和建议
+  $ wise wait --start             启动自动恢复守护进程
+  $ wise wait --stop              停止自动恢复守护进程
+  $ wise wait status              显示详细的速率限制状态
+  $ wise wait detect              扫描被阻塞的 tmux 会话`)
   .action(async (options) => {
     await waitCommand(options);
   });
 
 waitCmd
   .command('status')
-  .description('Show detailed rate limit and daemon status')
-  .option('--json', 'Output as JSON')
+  .description('显示详细的速率限制和守护进程状态')
+  .option('--json', '输出为 JSON')
   .action(async (options) => {
     await waitStatusCommand(options);
   });
 
 waitCmd
   .command('daemon <action>')
-  .description('Start or stop the auto-resume daemon')
-  .option('-v, --verbose', 'Enable verbose logging')
-  .option('-f, --foreground', 'Run in foreground (blocking)')
-  .option('-i, --interval <seconds>', 'Poll interval in seconds', '60')
+  .description('启动或停止自动恢复守护进程')
+  .option('-v, --verbose', '启用详细日志')
+  .option('-f, --foreground', '在前台运行（阻塞）')
+  .option('-i, --interval <seconds>', '轮询间隔（秒）', '60')
   .addHelpText('after', `
-Examples:
-  $ wise wait daemon start            Start background daemon
-  $ wise wait daemon stop             Stop the daemon
-  $ wise wait daemon start -f         Run in foreground`)
+示例：
+  $ wise wait daemon start            启动后台守护进程
+  $ wise wait daemon stop             停止守护进程
+  $ wise wait daemon start -f         在前台运行`)
   .action(async (action: string, options) => {
     if (action !== 'start' && action !== 'stop') {
-      console.error(chalk.red(`Invalid action "${action}". Valid options: start, stop`));
-      console.error(chalk.gray('Example: wise wait daemon start'));
+      console.error(chalk.red(`无效动作 "${action}"。有效选项：start、stop`));
+      console.error(chalk.gray('示例：wise wait daemon start'));
       process.exit(1);
     }
     await waitDaemonCommand(action as 'start' | 'stop', {
@@ -1042,9 +1044,9 @@ Examples:
 
 waitCmd
   .command('detect')
-  .description('Scan for blocked Claude Code sessions in tmux')
-  .option('--json', 'Output as JSON')
-  .option('-l, --lines <number>', 'Number of pane lines to analyze', '15')
+  .description('扫描 tmux 中被阻塞的 Claude Code 会话')
+  .option('--json', '输出为 JSON')
+  .option('-l, --lines <number>', '分析的 pane 行数', '15')
   .action(async (options) => {
     await waitDetectCommand({
       json: options.json,
@@ -1064,40 +1066,40 @@ waitCmd
  */
 const teleportCmd = program
   .command('teleport [ref]')
-  .description("Create git worktree for isolated development (e.g., wise teleport '#123')")
-  .option('--worktree', 'Create worktree (default behavior, flag kept for compatibility)')
-  .option('-p, --path <path>', 'Custom worktree path (default: ~/Workspace/wise-worktrees/)')
-  .option('-b, --base <branch>', 'Base branch to create from (default: main)')
-  .option('--json', 'Output as JSON')
+  .description("创建 git worktree 用于隔离开发（例如 wise teleport '#123'）")
+  .option('--worktree', '创建 worktree（默认行为，保留此标志用于兼容）')
+  .option('-p, --path <path>', '自定义 worktree 路径（默认：~/Workspace/wise-worktrees/）')
+  .option('-b, --base <branch>', '创建用的基准分支（默认：main）')
+  .option('--json', '输出为 JSON')
   .addHelpText('after', `
-Examples:
-  $ wise teleport '#42'           Create worktree for issue/PR #42
-  $ wise teleport add-auth        Create worktree for a feature branch
-  $ wise teleport list            List existing worktrees
-  $ wise teleport remove ./path   Remove a worktree
+示例：
+  $ wise teleport '#42'           为 issue/PR #42 创建 worktree
+  $ wise teleport add-auth        为 feature 分支创建 worktree
+  $ wise teleport list            列出已有 worktree
+  $ wise teleport remove ./path   移除一个 worktree
 
-Note:
-  In many shells, # starts a comment. Quote refs: wise teleport '#42'`)
+注意：
+  在许多 shell 中，# 会启动注释。请给引用加上引号：wise teleport '#42'`)
   .action(async (ref: string | undefined, options) => {
     if (!ref) {
       // 未提供 ref，显示帮助
-      console.log(chalk.blue('Teleport - Quick worktree creation\n'));
-      console.log('Usage:');
-      console.log('  wise teleport <ref>           Create worktree for issue/PR/feature');
-      console.log('  wise teleport list            List existing worktrees');
-      console.log('  wise teleport remove <path>   Remove a worktree');
+      console.log(chalk.blue('Teleport - 快速创建 worktree\n'));
+      console.log('用法：');
+      console.log('  wise teleport <ref>           为 issue/PR/feature 创建 worktree');
+      console.log('  wise teleport list            列出已有 worktree');
+      console.log('  wise teleport remove <path>   移除一个 worktree');
       console.log('');
-      console.log('Reference formats:');
-      console.log("  '#123'                       Issue/PR in current repo (quoted for shell safety)");
-      console.log('  owner/repo#123               Issue/PR in specific repo');
-      console.log('  my-feature                   Feature branch name');
+      console.log('引用格式：');
+      console.log("  '#123'                       当前仓库的 issue/PR（加引号以避免 shell 注释）");
+      console.log('  owner/repo#123               指定仓库的 issue/PR');
+      console.log('  my-feature                   Feature 分支名称');
       console.log('  https://github.com/...       GitHub URL');
       console.log('');
-      console.log(chalk.yellow("Note: In many shells, # starts a comment. Quote refs: wise teleport '#42'"));
+      console.log(chalk.yellow('注意：在许多 shell 中，# 会启动注释。请给引用加上引号：wise teleport \'#42\''));
       console.log('');
-      console.log('Examples:');
-      console.log("  wise teleport '#42'           Create worktree for issue #42");
-      console.log('  wise teleport add-auth        Create worktree for feature "add-auth"');
+      console.log('示例：');
+      console.log("  wise teleport '#42'           为 issue #42 创建 worktree");
+      console.log('  wise teleport add-auth        为 feature "add-auth" 创建 worktree');
       console.log('');
       return;
     }
@@ -1112,8 +1114,8 @@ Note:
 
 teleportCmd
   .command('list')
-  .description('List existing worktrees in ~/Workspace/wise-worktrees/')
-  .option('--json', 'Output as JSON')
+  .description('列出 ~/Workspace/wise-worktrees/ 中已有的 worktree')
+  .option('--json', '输出为 JSON')
   .action(async (options) => {
     await teleportListCommand(options);
   });
@@ -1121,9 +1123,9 @@ teleportCmd
 teleportCmd
   .command('remove <path>')
   .alias('rm')
-  .description('Remove a worktree')
-  .option('-f, --force', 'Force removal even with uncommitted changes')
-  .option('--json', 'Output as JSON')
+  .description('移除一个 worktree')
+  .option('-f, --force', '即使有未提交的更改也强制移除')
+  .option('--json', '输出为 JSON')
   .action(async (path: string, options) => {
     const exitCode = await teleportRemoveCommand(path, options);
     if (exitCode !== 0) process.exit(exitCode);
@@ -1136,23 +1138,23 @@ teleportCmd
 const sessionCmd = program
   .command('session')
   .alias('sessions')
-  .description('Inspect prior local session history')
+  .description('检查本地历史会话')
   .addHelpText('after', `
-Examples:
+示例：
   $ wise session search "team leader stale"
   $ wise session search notify-hook --since 7d
   $ wise session search provider-routing --project all --json`);
 
 sessionCmd
   .command('search <query>')
-  .description('Search prior local session transcripts and WISE session artifacts')
-  .option('-l, --limit <number>', 'Maximum number of matches to return', '10')
-  .option('-s, --session <id>', 'Restrict search to a specific session id')
-  .option('--since <duration|date>', 'Only include matches since a duration (e.g. 7d, 24h) or absolute date')
-  .option('--project <scope>', 'Project scope. Defaults to current project. Use "all" to search all local projects')
-  .option('--json', 'Output results as JSON')
-  .option('--case-sensitive', 'Match query case-sensitively')
-  .option('--context <chars>', 'Approximate snippet context on each side of a match', '120')
+  .description('搜索本地历史会话记录和 WISE 会话制品')
+  .option('-l, --limit <number>', '返回的最大匹配数', '10')
+  .option('-s, --session <id>', '限定在特定会话 ID 内搜索')
+  .option('--since <duration|date>', '仅包含指定时间之后的匹配（如 7d、24h 或绝对日期）')
+  .option('--project <scope>', '项目范围。默认为当前项目。使用 "all" 搜索所有本地项目')
+  .option('--json', '以 JSON 输出结果')
+  .option('--case-sensitive', '区分大小写匹配查询')
+  .option('--context <chars>', '匹配两侧的大致上下文字符数', '120')
   .action(async (query: string, options) => {
     await sessionSearchCommand(query, {
       limit: parseInt(options.limit, 10),
@@ -1171,16 +1173,16 @@ sessionCmd
  */
 const doctorCmd = program
   .command('doctor')
-  .description('Diagnostic tools for troubleshooting WISE installation')
-  .option('--plugin-dir <path>', 'Override WISE plugin root directory (sets WISE_PLUGIN_ROOT)')
-  .option('--team-routing', 'Probe CLI presence for every provider referenced by team.roleRouting')
-  .option('--json', 'Output as JSON (used with --team-routing)')
+  .description('诊断 WISE 安装问题的排障工具')
+  .option('--plugin-dir <path>', '覆盖 WISE 插件根目录（设置 WISE_PLUGIN_ROOT）')
+  .option('--team-routing', '检测 team.roleRouting 中每个 provider 的 CLI 存在情况')
+  .option('--json', '以 JSON 输出（与 --team-routing 一起使用）')
   .addHelpText('after', `
-Examples:
-  $ wise doctor conflicts                        Check for plugin conflicts
-  $ wise doctor team-routing                     Probe /team role-routing provider CLIs
-  $ wise doctor --team-routing                   Same as above (flag form)
-  $ wise doctor --plugin-dir /path/to/plugin     Run diagnostics against a specific plugin dir`)
+示例：
+  $ wise doctor conflicts                        检查插件冲突
+  $ wise doctor team-routing                     检测 /team 角色路由的 provider CLI
+  $ wise doctor --team-routing                   同上（标志形式）
+  $ wise doctor --plugin-dir /path/to/plugin     对指定插件目录运行诊断`)
   .hook('preAction', (thisCommand) => {
     applyPluginDirOption(thisCommand.opts().pluginDir as string | undefined);
   })
@@ -1195,12 +1197,12 @@ Examples:
 
 doctorCmd
   .command('team-routing')
-  .description('Probe CLI presence for every provider referenced by team.roleRouting')
-  .option('--json', 'Output as JSON')
+  .description('检测 team.roleRouting 中配置的每个 provider 的 CLI 存在情况')
+  .option('--json', '以 JSON 输出结果')
   .addHelpText('after', `
-Examples:
-  $ wise doctor team-routing                     Probe configured providers
-  $ wise doctor team-routing --json              Output results as JSON`)
+示例：
+  $ wise doctor team-routing                     检测已配置的 provider
+  $ wise doctor team-routing --json              以 JSON 输出结果`)
   .action(async (options) => {
     const exitCode = await doctorTeamRoutingCommand({ json: options.json ?? false });
     process.exit(exitCode);
@@ -1208,14 +1210,14 @@ Examples:
 
 doctorCmd
   .command('conflicts')
-  .description('Check for plugin coexistence issues and configuration conflicts')
-  .option('--json', 'Output as JSON')
-  .option('--plugin-dir <path>', 'Override WISE plugin root directory (sets WISE_PLUGIN_ROOT)')
+  .description('检查插件共存问题和配置冲突')
+  .option('--json', '以 JSON 输出结果')
+  .option('--plugin-dir <path>', '覆盖 WISE 插件根目录（设置 WISE_PLUGIN_ROOT）')
   .addHelpText('after', `
-Examples:
-  $ wise doctor conflicts                        Check for configuration issues
-  $ wise doctor conflicts --json                 Output results as JSON
-  $ wise doctor conflicts --plugin-dir /tmp/foo  Check against a specific plugin dir`)
+示例：
+  $ wise doctor conflicts                        检查配置问题
+  $ wise doctor conflicts --json                 以 JSON 输出结果
+  $ wise doctor conflicts --plugin-dir /tmp/foo   检查指定插件目录`)
   .action(async (options) => {
     applyPluginDirOption(options.pluginDir);
     const exitCode = await doctorConflictsCommand(options);
@@ -1232,22 +1234,22 @@ Examples:
  */
 program
   .command('setup')
-  .description('Run WISE setup to sync all components (hooks, agents, skills)')
-  .option('-f, --force', 'Force reinstall even if already up to date')
-  .option('-q, --quiet', 'Suppress output except for errors')
-  .option('--no-plugin', 'Install bundled skills from the current package instead of relying on plugin-provided skills')
-  .option('--plugin-dir-mode', 'Treat WISE as launched via --plugin-dir at runtime (skip agent/skill copy; HUD + hooks + CLAUDE.md still installed)')
-  .option('--skip-hooks', 'Skip hook installation')
-  .option('--force-hooks', 'Force reinstall hooks even if unchanged')
+  .description('运行 WISE setup 同步所有组件（hooks、agents、skills）')
+  .option('-f, --force', '强制重新安装，即使已是最新版')
+  .option('-q, --quiet', '静默输出，仅显示错误')
+  .option('--no-plugin', '使用当前包内置的 skills 而非插件提供的 skills')
+  .option('--plugin-dir-mode', '将 WISE 视为通过 --plugin-dir 启动（跳过 agent/skill 拷贝；HUD + hooks + CLAUDE.md 仍会安装）')
+  .option('--skip-hooks', '跳过 hook 安装')
+  .option('--force-hooks', '强制重新安装 hooks 即使未更改')
   .addHelpText('after', `
-Examples:
-  $ wise setup                     Sync all WISE components
-  $ wise setup --force             Force reinstall everything
-  $ wise setup --no-plugin         Force local bundled skill installation
-  $ wise setup --plugin-dir-mode   Skip agent/skill copy (used with claude --plugin-dir)
-  $ wise setup --quiet             Silent setup for scripts
-  $ wise setup --skip-hooks        Install without hooks
-  $ wise setup --force-hooks       Force reinstall hooks`)
+示例：
+  $ wise setup                     同步所有 WISE 组件
+  $ wise setup --force             强制重新安装所有组件
+  $ wise setup --no-plugin         强制使用本地内置 skill 安装
+  $ wise setup --plugin-dir-mode   跳过 agent/skill 拷贝（与 claude --plugin-dir 一起使用）
+  $ wise setup --quiet             静默安装，适用于脚本
+  $ wise setup --skip-hooks        安装但跳过 hooks
+  $ wise setup --force-hooks       强制重新安装 hooks`)
   .action(async (options) => {
     if (!options.quiet) {
       console.log(chalk.blue('Wise Setup\n'));
@@ -1255,7 +1257,7 @@ Examples:
 
     // 第 1 步：执行安装（涵盖 hooks、agents、skills）
     if (!options.quiet) {
-      console.log(chalk.gray('Syncing WISE components...'));
+      console.log(chalk.gray('正在同步 WISE 组件…'));
     }
 
     // Commander 会把 `--no-plugin` 这类否定标志暴露为 `options.plugin === false`，
@@ -1279,7 +1281,7 @@ Examples:
       pluginDirMode = false;
     }
     if (pluginDirMode && !options.quiet) {
-      console.log(chalk.gray('Dev plugin-dir mode: skipping agent/skill sync (plugin provides them via --plugin-dir)'));
+      console.log(chalk.gray('开发 plugin-dir 模式：跳过 agent/skill 同步（plugin 通过 --plugin-dir 提供）'));
     }
 
     const result = installWise({
@@ -1302,24 +1304,24 @@ Examples:
     // 第 2 步：显示摘要
     if (!options.quiet) {
       console.log('');
-      console.log(chalk.green('Setup complete!'));
+      console.log(chalk.green('安装完成！'));
       console.log('');
 
       if (result.installedAgents.length > 0) {
-        console.log(chalk.gray(`  Agents:   ${result.installedAgents.length} synced`));
+        console.log(chalk.gray(`  Agent：   ${result.installedAgents.length} 已同步`));
       }
       if (result.installedCommands.length > 0) {
-        console.log(chalk.gray(`  Commands: ${result.installedCommands.length} synced`));
+        console.log(chalk.gray(`  命令：${result.installedCommands.length} 已同步`));
       }
       if (result.installedSkills.length > 0) {
-        console.log(chalk.gray(`  Skills:   ${result.installedSkills.length} synced`));
+        console.log(chalk.gray(`  Skill：  ${result.installedSkills.length} 已同步`));
       }
       if (result.hooksConfigured) {
-        console.log(chalk.gray('  Hooks:    configured'));
+        console.log(chalk.gray('  Hook：    已配置'));
       }
       if (result.hookConflicts.length > 0) {
         console.log('');
-        console.log(chalk.yellow('  Hook conflicts detected:'));
+        console.log(chalk.yellow('  检测到 Hook 冲突:'));
         result.hookConflicts.forEach(c => {
           console.log(chalk.yellow(`    - ${c.eventType}: ${c.existingCommand}`));
         });
@@ -1331,9 +1333,9 @@ Examples:
       console.log('');
       console.log(chalk.gray(`Version: ${reportedVersion}`));
       if (reportedVersion !== version) {
-        console.log(chalk.gray(`CLI package version: ${version}`));
+        console.log(chalk.gray(`CLI 包版本: ${version}`));
       }
-      console.log(chalk.gray('Start Claude Code and use /wise:wise-setup for interactive setup.'));
+      console.log(chalk.gray('启动 Claude Code 并运行 /wise:wise-setup 进行交互式设置.'));
     }
   });
 
@@ -1342,7 +1344,7 @@ Examples:
  */
 program
   .command('postinstall', { hidden: true })
-  .description('Run post-install setup (called automatically by npm)')
+  .description('运行安装后设置（由 npm 自动调用）')
   .action(async () => {
     // 静默安装 - 仅显示错误
     const result = installWise({
@@ -1352,13 +1354,13 @@ program
     });
 
     if (result.success) {
-      console.log(chalk.green('✓ Wise installed successfully!'));
-      console.log(chalk.gray('  Run "wise info" to see available agents.'));
+      console.log(chalk.green('✓ Wise 安装成功！'));
+      console.log(chalk.gray('  运行 "wise info" 查看可用 agent.'));
       console.log(chalk.yellow('  Run "/wise-default" (project) or "/wise-default-global" (global) in Claude Code.'));
     } else {
       // 不让 npm install 失败，仅告警
-      console.warn(chalk.yellow('⚠ Could not complete WISE setup:'), result.message);
-      console.warn(chalk.gray('  Run "wise install" manually to complete setup.'));
+      console.warn(chalk.yellow('⚠ 无法完成 WISE 设置:'), result.message);
+      console.warn(chalk.gray('  手动运行 "wise install" 完成设置.'));
     }
   });
 
@@ -1368,9 +1370,9 @@ program
  */
 program
   .command('hud')
-  .description('Run the WISE HUD statusline renderer')
-  .option('--watch', 'Run in watch mode (continuous polling for tmux pane)')
-  .option('--interval <ms>', 'Poll interval in milliseconds', '1000')
+  .description('运行 WISE HUD 状态栏渲染器')
+  .option('--watch', '以监控模式运行（持续轮询 tmux 面板）')
+  .option('--interval <ms>', '轮询间隔（毫秒）', '1000')
   .action(async (options) => {
     const { main: hudMain } = await import('../hud/index.js');
     if (options.watch) {
@@ -1383,8 +1385,8 @@ program
 
 program
   .command('mission-board')
-  .description('Render the opt-in mission board snapshot for the current workspace')
-  .option('--json', 'Print raw mission-board JSON')
+  .description('渲染当前工作区的可选任务面板快照')
+  .option('--json', '输出原始任务面板 JSON')
   .action(async (options) => {
     const { refreshMissionBoardState, renderMissionBoard } = await import('../hud/mission-board.js');
     const state = refreshMissionBoardState(process.cwd());
@@ -1401,7 +1403,7 @@ program
       persistCompletedForMinutes: 20,
     });
 
-    console.log(lines.length > 0 ? lines.join('\n') : '(no active missions)');
+    console.log(lines.length > 0 ? lines.join('\n') : '(没有活动任务)');
   });
 
 /**
@@ -1413,7 +1415,7 @@ program
  */
 program
   .command('team')
-  .description('Team CLI API for worker lifecycle operations')
+  .description('Team CLI API，用于 worker 生命周期操作')
   .helpOption(false)
   .allowUnknownOption(true)
   .allowExcessArguments(true)
@@ -1427,7 +1429,7 @@ program
  */
 program
   .command('autoresearch')
-  .description('Hard-deprecated shim that redirects users to deep-interview + autoresearch skill')
+  .description('硬弃用垫片，引导用户迁移到 deep-interview + autoresearch skill')
   .helpOption(false)
   .allowUnknownOption(true)
   .allowExcessArguments(true)
@@ -1444,7 +1446,7 @@ program
  */
 program
   .command('ralphthon')
-  .description('Autonomous hackathon lifecycle: interview -> execute -> harden -> done')
+  .description('自治式 hackathon 生命周期：访谈 → 执行 → 加固 → 完成')
   .helpOption(false)
   .allowUnknownOption(true)
   .allowExcessArguments(true)
@@ -1463,7 +1465,7 @@ program
  */
 program
   .command('ultragoal')
-  .description('Durable repo-native multi-goal workflow with Claude Code /goal handoff (see wise ultragoal help)')
+  .description('持久化仓库原生多目标工作流，与 Claude Code /goal 交接（详见 wise ultragoal help）')
   .helpOption(false)
   .allowUnknownOption(true)
   .allowExcessArguments(true)
