@@ -206,11 +206,11 @@
       "fileCount": 23,
       "lastAccessed": 1781861714848,
       "keyFiles": [
-        "AGENTS.md",
+        "智能体与文档总览.md",
         "架构.md",
-        "CJK-IME-KNOWN-ISSUES.md",
+        "CJK输入法已知问题.md",
         "CLAUDE.md",
-        "COMPATIBILITY.md"
+        "兼容层.md"
       ]
     },
     "examples": {
