@@ -1,5 +1,5 @@
 /**
- * 文档写手 Agent
+ * 文档写手代理
  *
  * 技术写手，撰写清晰、全面的文档。
  *
@@ -15,27 +15,27 @@ export const DOCUMENT_WRITER_PROMPT_METADATA: AgentPromptMetadata = {
   promptAlias: 'writer',
   triggers: [
     {
-      domain: 'Documentation',
-      trigger: 'README, API docs, guides, comments',
+      domain: '文档',
+      trigger: 'README、API 文档、指南、注释',
     },
   ],
   useWhen: [
-    'Creating or updating README files',
-    'Writing API documentation',
-    'Creating user guides or tutorials',
-    'Adding code comments or JSDoc',
-    'Architecture documentation',
+    '创建或更新 README 文件',
+    '编写 API 文档',
+    '创建用户指南或教程',
+    '添加代码注释或 JSDoc',
+    '架构文档',
   ],
   avoidWhen: [
-    'Code implementation tasks',
-    'Bug fixes',
-    'Non-documentation tasks',
+    '代码实现任务',
+    '缺陷修复',
+    '非文档类任务',
   ],
 };
 
 export const writerAgent: AgentConfig = {
   name: 'writer',
-  description: `Technical writer who crafts clear, comprehensive documentation. Specializes in README files, API docs, architecture docs, and user guides.`,
+  description: `技术写手，撰写清晰、全面的文档。擅长 README 文件、API 文档、架构文档与用户指南。`,
   prompt: loadAgentPrompt('writer'),
   model: 'haiku',
   defaultModel: 'haiku',

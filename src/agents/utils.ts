@@ -121,7 +121,7 @@ export function loadAgentPrompt(agentName: string): string {
     // 不要在错误信息中泄露内部路径
     const message = error instanceof Error && error.message.includes('Invalid agent name')
       ? error.message
-      : 'Agent prompt file not found';
+      : '未找到 Agent prompt 文件';
     console.warn(`[loadAgentPrompt] ${message}`);
     return `Agent: ${agentName}\n\nPrompt unavailable.`;
   }
@@ -184,10 +184,10 @@ export function buildDelegationTable(availableAgents: AvailableAgent[]): string 
     return '';
   }
 
-  return `### Agent Delegation Table
+  return `### Agent 委派表
 
-| Agent | Cost | When to Use |
-|-------|------|-------------|
+| Agent | 成本 | 何时使用 |
+|-------|------|----------|
 ${rows.join('\n')}`;
 }
 
@@ -198,12 +198,12 @@ export function buildUseAvoidSection(metadata: AgentPromptMetadata): string {
   const sections: string[] = [];
 
   if (metadata.useWhen && metadata.useWhen.length > 0) {
-    sections.push(`**USE when:**
+    sections.push(`**使用时机：**
 ${metadata.useWhen.map(u => `- ${u}`).join('\n')}`);
   }
 
   if (metadata.avoidWhen && metadata.avoidWhen.length > 0) {
-    sections.push(`**AVOID when:**
+    sections.push(`**避免时机：**
 ${metadata.avoidWhen.map(a => `- ${a}`).join('\n')}`);
   }
 
@@ -227,9 +227,9 @@ export function createEnvContext(): string {
 
   return `
 <env-context>
-  Current time: ${timeStr}
-  Timezone: ${timezone}
-  Locale: ${locale}
+  当前时间: ${timeStr}
+  时区: ${timezone}
+  语言区域: ${locale}
 </env-context>`;
 }
 
@@ -266,7 +266,7 @@ export function buildKeyTriggersSection(
     return '';
   }
 
-  return `### Key Triggers (CHECK BEFORE ACTING)
+  return `### 关键触发器（行动前检查）
 
 ${triggers.join('\n')}`;
 }
@@ -278,15 +278,15 @@ export function validateAgentConfig(config: AgentConfig): string[] {
   const errors: string[] = [];
 
   if (!config.name) {
-    errors.push('Agent name is required');
+    errors.push('Agent 名称为必填项');
   }
 
   if (!config.description) {
-    errors.push('Agent description is required');
+    errors.push('Agent 描述为必填项');
   }
 
   if (!config.prompt) {
-    errors.push('Agent prompt is required');
+    errors.push('Agent prompt 为必填项');
   }
 
   // 注意：tools 现为可选 — 若省略，agent 默认获得全部工具

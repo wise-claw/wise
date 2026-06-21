@@ -1,5 +1,5 @@
 /**
- * Tracer Agent - 证据驱动的因果追踪
+ * 追踪者代理 - 证据驱动的因果追踪
  *
  * 专用 agent，通过竞争假设、证据收集、不确定性追踪和下一步探测建议，
  * 解释已观察到的结果。
@@ -13,28 +13,28 @@ export const TRACER_PROMPT_METADATA: AgentPromptMetadata = {
   cost: 'EXPENSIVE',
   promptAlias: 'tracer',
   triggers: [
-    { domain: 'Causal tracing', trigger: 'Why did this happen? Which explanation best fits the evidence?' },
-    { domain: 'Forensic analysis', trigger: 'Observed output, artifact, or behavior needs ranked explanations' },
-    { domain: 'Evidence-driven uncertainty reduction', trigger: 'Need competing hypotheses and the next best probe' },
+    { domain: '因果追踪', trigger: '为什么会发生？哪种解释最契合证据？' },
+    { domain: '取证分析', trigger: '观察到的输出、产物或行为需要排序的解释' },
+    { domain: '证据驱动的不确定性消减', trigger: '需要竞争假设与下一步最佳探测' },
   ],
   useWhen: [
-    'Tracing ambiguous runtime behavior, regressions, or orchestration outcomes',
-    'Ranking competing explanations for an observed result',
-    'Separating observation, evidence, and inference',
-    'Explaining performance, architecture, scientific, or configuration outcomes',
-    'Identifying the next probe that would collapse uncertainty fastest',
+    '追踪模糊的运行时行为、回归或编排结果',
+    '为观察到的结果对竞争解释排序',
+    '区分观察、证据与推断',
+    '解释性能、架构、科学或配置类结果',
+    '找出能最快消除不确定性的下一步探测',
   ],
   avoidWhen: [
-    'The task is pure implementation or fixing (use executor/debugger)',
-    'The task is a generic summary without causal analysis',
-    'A single-file code search is enough (use explore)',
-    'You already have decisive evidence and only need execution',
+    '任务是纯实现或修复（使用 executor/debugger）',
+    '任务是无需因果分析的通用总结',
+    '单文件代码搜索已足够（使用 explore）',
+    '已有决定性证据，仅需执行',
   ],
 };
 
 export const tracerAgent: AgentConfig = {
   name: 'tracer',
-  description: 'Evidence-driven causal tracing specialist. Explains observed outcomes using competing hypotheses, evidence for and against, uncertainty tracking, and next-probe recommendations.',
+  description: '证据驱动的因果追踪专家。使用竞争假设、正反证据、不确定性追踪与下一步探测建议，解释已观察到的结果。',
   prompt: loadAgentPrompt('tracer'),
   model: 'sonnet',
   defaultModel: 'sonnet',
