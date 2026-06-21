@@ -11,21 +11,21 @@ import type { AgentConfig, AgentCategory } from '../types.js';
  * 构建包含编排器核心身份的头部小节
  */
 export function buildHeader(): string {
-  return `You are the relentless orchestrator of a multi-agent development system.
+  return `你是一个多智能体开发系统中锲而不舍的编排器。
 
-## RELENTLESS EXECUTION
+## 永不停止的执行
 
-You are BOUND to your task list. You do not stop. You do not quit. You do not take breaks. Work continues until EVERY task is COMPLETE.
+你受任务列表约束。你不能停止。你不能放弃。你不能休息。工作持续进行，直到每一个任务都完成。
 
-## Your Core Duty
-You coordinate specialized subagents to accomplish complex software engineering tasks. Abandoning work mid-task is not an option. If you stop without completing ALL tasks, you have failed.`;
+## 你的核心职责
+你协调专门的子智能体来完成复杂的软件工程任务。中途放弃工作绝不可取。如果你在没有完成所有任务的情况下停止，你就失败了。`;
 }
 
 /**
  * 构建带描述的 agent 注册表小节
  */
 export function buildAgentRegistry(agents: AgentConfig[]): string {
-  const lines: string[] = ['## Available Subagents', ''];
+  const lines: string[] = ['## 可用子智能体', ''];
 
   // 按 tier 分组 agent（基础与变体）
   const baseAgents = agents.filter(a => !a.name.includes('-'));
@@ -33,7 +33,7 @@ export function buildAgentRegistry(agents: AgentConfig[]): string {
 
   // 基础 agents
   if (baseAgents.length > 0) {
-    lines.push('### Primary Agents');
+    lines.push('### 主要智能体');
     for (const agent of baseAgents) {
       const modelInfo = agent.model ? ` (${agent.model})` : '';
       lines.push(`- **${agent.name}**${modelInfo}: ${agent.description}`);
@@ -43,11 +43,11 @@ export function buildAgentRegistry(agents: AgentConfig[]): string {
 
   // 分层变体
   if (tieredAgents.length > 0) {
-    lines.push('### Tiered Variants');
-    lines.push('Use tiered variants for smart model routing based on task complexity:');
-    lines.push('- **HIGH tier (opus)**: Complex analysis, architecture, debugging');
-    lines.push('- **MEDIUM tier (sonnet)**: Standard tasks, moderate complexity');
-    lines.push('- **LOW tier (haiku)**: Simple lookups, trivial operations');
+    lines.push('### 分层变体');
+    lines.push('使用分层变体可根据任务复杂度进行智能模型路由：');
+    lines.push('- **高 tier (opus)**：复杂分析、架构设计、调试');
+    lines.push('- **中 tier (sonnet)**：标准任务、中等复杂度');
+    lines.push('- **低 tier (haiku)**：简单查找、琐碎操作');
     lines.push('');
 
     for (const agent of tieredAgents) {
@@ -64,7 +64,7 @@ export function buildAgentRegistry(agents: AgentConfig[]): string {
  * 构建触发条件表，展示每个 agent 的使用时机
  */
 export function buildTriggerTable(agents: AgentConfig[]): string {
-  const lines: string[] = ['## Key Triggers', ''];
+  const lines: string[] = ['## 关键触发条件', ''];
 
   // 过滤带 metadata triggers 的 agents
   const agentsWithTriggers = agents.filter(a => a.metadata?.triggers && a.metadata.triggers.length > 0);
@@ -73,7 +73,7 @@ export function buildTriggerTable(agents: AgentConfig[]): string {
     return '';
   }
 
-  lines.push('| Agent | Domain | Trigger Condition |');
+  lines.push('| 智能体 | 领域 | 触发条件 |');
   lines.push('|-------|--------|------------------|');
 
   for (const agent of agentsWithTriggers) {
@@ -93,7 +93,7 @@ export function buildTriggerTable(agents: AgentConfig[]): string {
  * 构建工具选择指引小节
  */
 export function buildToolSelectionSection(agents: AgentConfig[]): string {
-  const lines: string[] = ['## Tool Selection Guidance', ''];
+  const lines: string[] = ['## 工具选择指引', ''];
 
   // 按类别分组
   const categorizedAgents = new Map<AgentCategory, AgentConfig[]>();
@@ -107,19 +107,19 @@ export function buildToolSelectionSection(agents: AgentConfig[]): string {
   }
 
   for (const [category, categoryAgents] of categorizedAgents) {
-    lines.push(`### ${capitalizeFirst(category)} Agents`);
+    lines.push(`### ${capitalizeFirst(category)} 智能体`);
     for (const agent of categoryAgents) {
       lines.push(`**${agent.name}** (${agent.model || 'sonnet'}):`);
       if (agent.tools?.length) {
-        lines.push(`- Tools: ${agent.tools.join(', ')}`);
+        lines.push(`- 工具：${agent.tools.join(', ')}`);
       }
 
       if (agent.metadata?.useWhen && agent.metadata.useWhen.length > 0) {
-        lines.push(`- Use when: ${agent.metadata.useWhen.join('; ')}`);
+        lines.push(`- 使用时机：${agent.metadata.useWhen.join('; ')}`);
       }
 
       if (agent.metadata?.avoidWhen && agent.metadata.avoidWhen.length > 0) {
-        lines.push(`- Avoid when: ${agent.metadata.avoidWhen.join('; ')}`);
+        lines.push(`- 避免时机：${agent.metadata.avoidWhen.join('; ')}`);
       }
 
       lines.push('');
@@ -133,7 +133,7 @@ export function buildToolSelectionSection(agents: AgentConfig[]): string {
  * 构建委派矩阵/指引表
  */
 export function buildDelegationMatrix(agents: AgentConfig[]): string {
-  const lines: string[] = ['## Delegation Guide', ''];
+  const lines: string[] = ['## 委派指引', ''];
 
   // 按类别分组
   const categorizedAgents = new Map<AgentCategory, AgentConfig[]>();
@@ -146,7 +146,7 @@ export function buildDelegationMatrix(agents: AgentConfig[]): string {
     if (arr) arr.push(agent);
   }
 
-  lines.push('| Category | Agent | Model | Use Case |');
+  lines.push('| 类别 | 智能体 | 模型 | 用例 |');
   lines.push('|----------|-------|-------|----------|');
 
   for (const [category, categoryAgents] of categorizedAgents) {
@@ -168,57 +168,57 @@ export function buildDelegationMatrix(agents: AgentConfig[]): string {
  * 构建编排原则小节
  */
 export function buildOrchestrationPrinciples(): string {
-  return `## Orchestration Principles
-1. **Delegate Aggressively**: Fire off subagents for specialized tasks - don't do everything yourself
-2. **Parallelize Ruthlessly**: Launch multiple subagents concurrently whenever tasks are independent
-3. **PERSIST RELENTLESSLY**: Continue until ALL tasks are VERIFIED complete - check your todo list BEFORE stopping
-4. **Communicate Progress**: Keep the user informed but DON'T STOP to explain when you should be working
-5. **Verify Thoroughly**: Test, check, verify - then verify again`;
+  return `## 编排原则
+1. **积极委派**：为专门任务派出子智能体 —— 不要事事亲为
+2. **无情并行**：任务相互独立时，尽可能并发启动多个子智能体
+3. **坚持到底**：持续工作直到所有任务都经核实完成 —— 停止前务必检查待办列表
+4. **同步进度**：让用户知情，但在本该工作时不要停下解释
+5. **充分验证**：测试、检查、核对 —— 然后再核对一遍`;
 }
 
 /**
  * 构建工作流小节
  */
 export function buildWorkflow(): string {
-  return `## Workflow
-1. Analyze the user's request and break it into tasks using TodoWrite
-2. Mark the first task in_progress and BEGIN WORKING
-3. Delegate to appropriate subagents based on task type
-4. Coordinate results and handle any issues WITHOUT STOPPING
-5. Mark tasks complete ONLY when verified
-6. LOOP back to step 2 until ALL tasks show 'completed'
-7. Final verification: Re-read todo list, confirm 100% completion
-8. Only THEN may you rest`;
+  return `## 工作流
+1. 分析用户请求，并使用 TodoWrite 将其拆分为任务
+2. 将第一个任务标记为 in_progress 并开始工作
+3. 根据任务类型委派给合适的子智能体
+4. 协调结果并处理任何问题，中途不停顿
+5. 只有在核实后才将任务标记为完成
+6. 回到第 2 步循环，直到所有任务都显示为 'completed'
+7. 最终验证：重读待办列表，确认 100% 完成
+8. 只有那时你才可以休息`;
 }
 
 /**
  * 构建关键规则小节
  */
 export function buildCriticalRules(): string {
-  return `## CRITICAL RULES - VIOLATION IS FAILURE
+  return `## 关键规则 —— 违反即失败
 
-1. **NEVER STOP WITH INCOMPLETE WORK** - If your todo list has pending/in_progress items, YOU ARE NOT DONE
-2. **ALWAYS VERIFY** - Check your todo list before ANY attempt to conclude
-3. **NO PREMATURE CONCLUSIONS** - Saying "I've completed the task" without verification is a LIE
-4. **PARALLEL EXECUTION** - Use it whenever possible for speed
-5. **CONTINUOUS PROGRESS** - Report progress but keep working
-6. **WHEN BLOCKED, UNBLOCK** - Don't stop because something is hard; find another way
-7. **ASK ONLY WHEN NECESSARY** - Clarifying questions are for ambiguity, not for avoiding work`;
+1. **绝不带着未完成的工作停下** —— 如果待办列表中有 pending/in_progress 项，你就还没完成
+2. **始终验证** —— 在任何收尾尝试之前都要检查待办列表
+3. **不要草率下结论** —— 未经核实就说“我已完成任务”是谎言
+4. **并行执行** —— 尽可能使用以提升速度
+5. **持续推进** —— 汇报进度但持续工作
+6. **遇阻即解阻** —— 不要因为困难就停下，另寻他路
+7. **仅在必要时询问** —— 澄清问题用于消除歧义，而非逃避工作`;
 }
 
 /**
  * 构建完成检查清单小节
  */
 export function buildCompletionChecklist(): string {
-  return `## Completion Checklist
-Before concluding, you MUST verify:
-- [ ] Every todo item is marked 'completed'
-- [ ] All requested functionality is implemented
-- [ ] Tests pass (if applicable)
-- [ ] No errors remain unaddressed
-- [ ] The user's original request is FULLY satisfied
+  return `## 完成检查清单
+在收尾前，你必须核实：
+- [ ] 每一个待办项都标记为 'completed'
+- [ ] 所有要求的功能都已实现
+- [ ] 测试通过（如适用）
+- [ ] 没有遗留未处理的错误
+- [ ] 用户的原始请求得到完全满足
 
-If ANY checkbox is unchecked, YOU ARE NOT DONE. Continue working.`;
+如果任何一个复选框未勾选，你就还没完成。继续工作。`;
 }
 
 /**

@@ -7,12 +7,12 @@ import { fileURLToPath } from 'url';
 import { isExternalLLMDisabled } from '../lib/security-config.js';
 
 export const ASK_USAGE = [
-  'Usage: wise ask <claude|codex|gemini|grok|cursor> <question or task>',
-  '   or: wise ask <claude|codex|gemini|grok|cursor> -p "<prompt>"',
-  '   or: wise ask <claude|codex|gemini|grok|cursor> --print "<prompt>"',
-  '   or: wise ask <claude|codex|gemini|grok|cursor> --prompt "<prompt>"',
-  '   or: wise ask <claude|codex|gemini|grok|cursor> --agent-prompt <role> "<prompt>"',
-  '   or: wise ask <claude|codex|gemini|grok|cursor> --agent-prompt=<role> --prompt "<prompt>"',
+  '用法：wise ask <claude|codex|gemini|grok|cursor> <问题或任务>',
+  '   或：wise ask <claude|codex|gemini|grok|cursor> -p "<prompt>"',
+  '   或：wise ask <claude|codex|gemini|grok|cursor> --print "<prompt>"',
+  '   或：wise ask <claude|codex|gemini|grok|cursor> --prompt "<prompt>"',
+  '   或：wise ask <claude|codex|gemini|grok|cursor> --agent-prompt <role> "<prompt>"',
+  '   或：wise ask <claude|codex|gemini|grok|cursor> --agent-prompt=<role> --prompt "<prompt>"',
 ].join('\n');
 
 const ASK_PROVIDERS = ['claude', 'codex', 'gemini', 'grok', 'cursor'] as const;
@@ -36,7 +36,7 @@ function askUsageError(reason: string): Error {
 }
 
 function warnDeprecatedAlias(alias: string, canonical: string): void {
-  process.stderr.write(`[ask] DEPRECATED: ${alias} is deprecated; use ${canonical} instead.\n`);
+  process.stderr.write(`[ask] 已弃用：${alias} 已弃用，请改用 ${canonical}。\n`);
 }
 
 function getPackageRoot(): string {
@@ -90,11 +90,11 @@ function resolveAskPromptsDir(
 async function resolveAgentPromptContent(role: string, promptsDir: string): Promise<string> {
   const normalizedRole = role.trim().toLowerCase();
   if (!SAFE_ROLE_PATTERN.test(normalizedRole)) {
-    throw new Error(`[ask] invalid --agent-prompt role "${role}". Expected lowercase role names like "executor" or "test-engineer".`);
+    throw new Error(`[ask] 无效的 --agent-prompt 角色 "${role}"。请使用小写角色名，如 "executor" 或 "test-engineer"。`);
   }
 
   if (!existsSync(promptsDir)) {
-    throw new Error(`[ask] prompts directory not found: ${promptsDir}.`);
+    throw new Error(`[ask] 未找到 prompts 目录：${promptsDir}`);
   }
 
   const promptPath = join(promptsDir, `${normalizedRole}.md`);
@@ -105,14 +105,14 @@ async function resolveAgentPromptContent(role: string, promptsDir: string): Prom
       .map((file) => file.slice(0, -3))
       .sort();
     const availableSuffix = availableRoles.length > 0
-      ? ` Available roles: ${availableRoles.join(', ')}.`
+      ? ` 可用角色：${availableRoles.join(', ')}。`
       : '';
-    throw new Error(`[ask] --agent-prompt role "${normalizedRole}" not found in ${promptsDir}.${availableSuffix}`);
+    throw new Error(`[ask] --agent-prompt 角色 "${normalizedRole}" 在 ${promptsDir} 中未找到。${availableSuffix}`);
   }
 
   const content = (await readFile(promptPath, 'utf-8')).trim();
   if (!content) {
-    throw new Error(`[ask] --agent-prompt role "${normalizedRole}" is empty: ${promptPath}`);
+    throw new Error(`[ask] --agent-prompt 角色 "${normalizedRole}" 内容为空：${promptPath}`);
   }
 
   return content;
@@ -123,11 +123,11 @@ export function parseAskArgs(args: readonly string[]): ParsedAskArgs {
   const provider = (providerRaw || '').toLowerCase();
 
   if (!provider || !ASK_PROVIDER_SET.has(provider)) {
-    throw askUsageError(`Invalid provider "${providerRaw || ''}". Expected one of: ${ASK_PROVIDERS.join(', ')}.`);
+    throw askUsageError(`无效的 provider "${providerRaw || ''}"。应为以下之一：${ASK_PROVIDERS.join(', ')}。`);
   }
 
   if (rest.length === 0) {
-    throw askUsageError('Missing prompt text.');
+    throw askUsageError('缺少 prompt 文本。');
   }
 
   let agentPromptRole: string | undefined;
@@ -138,7 +138,7 @@ export function parseAskArgs(args: readonly string[]): ParsedAskArgs {
     if (token === ASK_AGENT_PROMPT_FLAG) {
       const role = rest[i + 1]?.trim();
       if (!role || role.startsWith('-')) {
-        throw askUsageError('Missing role after --agent-prompt.');
+        throw askUsageError('--agent-prompt 后缺少角色名。');
       }
       agentPromptRole = role;
       i += 1;
@@ -148,7 +148,7 @@ export function parseAskArgs(args: readonly string[]): ParsedAskArgs {
     if (token.startsWith(`${ASK_AGENT_PROMPT_FLAG}=`)) {
       const role = token.slice(`${ASK_AGENT_PROMPT_FLAG}=`.length).trim();
       if (!role) {
-        throw askUsageError('Missing role after --agent-prompt=');
+        throw askUsageError('--agent-prompt= 后缺少角色名');
       }
       agentPromptRole = role;
       continue;
@@ -170,7 +170,7 @@ export function parseAskArgs(args: readonly string[]): ParsedAskArgs {
   }
 
   if (!prompt) {
-    throw askUsageError('Missing prompt text.');
+    throw askUsageError('缺少 prompt 文本。');
   }
 
   return {
@@ -214,8 +214,8 @@ export async function askCommand(args: string[]): Promise<void> {
 
   if (parsed.provider !== 'claude' && isExternalLLMDisabled()) {
     throw new Error(
-      `[ask] External LLM provider "${parsed.provider}" is blocked by security policy ` +
-      `(disableExternalLLM). Only "claude" is allowed in the current security configuration.`,
+      `[ask] 外部 LLM provider "${parsed.provider}" 被安全策略阻止 ` +
+      `(disableExternalLLM)。当前安全配置只允许 "claude"。`,
     );
   }
 
@@ -224,7 +224,7 @@ export async function askCommand(args: string[]): Promise<void> {
   const promptsDir = resolveAskPromptsDir(process.cwd(), packageRoot, process.env);
 
   if (!existsSync(advisorScriptPath)) {
-    throw new Error(`[ask] advisor script not found: ${advisorScriptPath}`);
+    throw new Error(`[ask] 未找到 advisor 脚本：${advisorScriptPath}`);
   }
 
   let finalPrompt = parsed.prompt;
@@ -254,7 +254,7 @@ export async function askCommand(args: string[]): Promise<void> {
   }
 
   if (child.error) {
-    throw new Error(`[ask] failed to launch advisor script: ${child.error.message}`);
+    throw new Error(`[ask] 启动 advisor 脚本失败：${child.error.message}`);
   }
 
   const status = typeof child.status === 'number'

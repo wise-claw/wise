@@ -1,29 +1,29 @@
-export const AUTORESEARCH_HELP = `wise autoresearch - HARD DEPRECATED
+export const AUTORESEARCH_HELP = `wise autoresearch - 已硬弃用
 
-This command is no longer the authoritative autoresearch workflow.
+此命令不再是 autoresearch 的权威工作流。
 
-Use this flow instead:
-  1. /deep-interview --autoresearch "<mission idea>"
-     - use deep-interview to generate/setup the mission and evaluator
+请改用以下流程：
+  1. /deep-interview --autoresearch "<mission 想法>"
+     - 使用 deep-interview 生成/设置 mission 和评估器
   2. /wise:autoresearch
-     - run the stateful single-mission autoresearch skill
+     - 运行有状态的单任务 autoresearch skill
 
-Key behavior:
-  - v1 is single-mission only
-  - runtime requires an explicit evaluator script/command
-  - non-passing iterations do not stop the run
-  - the run stops at an explicit max-runtime ceiling
+关键行为：
+  - v1 仅支持单任务
+  - 运行时需要明确的评估器脚本/命令
+  - 未通过的迭代不会停止运行
+  - 运行在明确的 max-runtime 上限处停止
 
-Legacy CLI examples such as:
+旧版 CLI 示例如：
   wise autoresearch --mission "..." --eval "..."
   wise autoresearch init ...
   wise autoresearch --resume ...
-are hard-deprecated shims and no longer launch the old runtime.
+均为硬弃用垫片，不再启动旧版运行时。
 `;
 
 function renderDeprecationMessage(args: readonly string[]): string {
   const suffix = args.length > 0
-    ? `\nReceived legacy arguments: ${args.join(' ')}\n`
+    ? `\n收到旧版参数：${args.join(' ')}\n`
     : '\n';
 
   return `${AUTORESEARCH_HELP}${suffix}`;
