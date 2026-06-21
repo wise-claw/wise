@@ -3,15 +3,15 @@ import { isSkininthegamebrosUser } from '../utils/skininthegamebros-user.js';
 type GuidanceSurface = 'system' | 'agent';
 
 const SKININTHEGAMEBROS_GUIDANCE_HEADER: Record<GuidanceSurface, string> = {
-  system: '## Skininthegamebros Execution Guidance',
-  agent: '## Skininthegamebros Guidance',
+  system: '## Skininthegamebros 执行指南',
+  agent: '## Skininthegamebros 指南',
 };
 
 const SKININTHEGAMEBROS_GUIDANCE_LINES = [
-  '- Default to writing no comments unless the why is genuinely non-obvious.',
-  '- Before reporting completion, verify the result with tests, commands, or observable output whenever possible.',
-  '- If the user is operating on a misconception, or you notice an adjacent bug worth flagging, say so directly.',
-  '- Report outcomes faithfully: do not imply checks passed if you did not run them, and do not hide failing verification.',
+  '- 默认不写注释，除非“为什么”确实不明显。',
+  '- 在报告完成之前，尽可能通过测试、命令或可观察的输出来验证结果。',
+  '- 若用户存在误解，或你注意到值得提示的相邻缺陷，请直接指出。',
+  '- 如实报告结果：未运行的检查不要暗示已通过，也不要隐瞒失败的验证。',
 ];
 
 export function renderSkininthegamebrosGuidance(surface: GuidanceSurface): string {

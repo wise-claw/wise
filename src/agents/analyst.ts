@@ -15,27 +15,27 @@ export const ANALYST_PROMPT_METADATA: AgentPromptMetadata = {
   promptAlias: 'analyst',
   triggers: [
     {
-      domain: 'Pre-Planning',
-      trigger: 'Hidden requirements, edge cases, risk analysis',
+      domain: '规划前阶段',
+      trigger: '隐藏需求、边界情况、风险分析',
     },
   ],
   useWhen: [
-    'Before creating a work plan',
-    'When requirements seem incomplete',
-    'To identify hidden assumptions',
-    'Risk analysis before implementation',
-    'Scope validation',
+    '创建工作计划之前',
+    '需求看起来不完整时',
+    '用于识别隐藏的假设',
+    '实现前的风险分析',
+    '范围确认',
   ],
   avoidWhen: [
-    'Simple, well-defined tasks',
-    'During implementation phase',
-    'When plan already reviewed',
+    '简单、定义明确的任务',
+    '实现阶段进行中',
+    '计划已被评审时',
   ],
 };
 
 export const analystAgent: AgentConfig = {
   name: 'analyst',
-  description: `Pre-planning consultant that analyzes requests before implementation to identify hidden requirements, edge cases, and potential risks. Use before creating a work plan.`,
+  description: `规划前顾问，在实现之前分析请求以识别隐藏需求、边界情况与潜在风险。在创建工作计划之前使用。`,
   prompt: loadAgentPrompt('analyst'),
   model: 'opus',
   defaultModel: 'opus',

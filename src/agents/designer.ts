@@ -16,30 +16,30 @@ export const FRONTEND_ENGINEER_PROMPT_METADATA: AgentPromptMetadata = {
   triggers: [
     {
       domain: 'UI/UX',
-      trigger: 'Visual changes, styling, components, accessibility',
+      trigger: '视觉变更、样式、组件、无障碍',
     },
     {
-      domain: 'Design',
-      trigger: 'Layout, animations, responsive design',
+      domain: '设计',
+      trigger: '布局、动画、响应式设计',
     },
   ],
   useWhen: [
-    'Visual styling or layout changes',
-    'Component design or refactoring',
-    'Animation implementation',
-    'Accessibility improvements',
-    'Responsive design work',
+    '视觉样式或布局变更',
+    '组件设计或重构',
+    '动画实现',
+    '无障碍改进',
+    '响应式设计工作',
   ],
   avoidWhen: [
-    'Pure logic changes in frontend files',
-    'Backend/API work',
-    'Non-visual refactoring',
+    '前端文件中的纯逻辑变更',
+    '后端/API 工作',
+    '非视觉重构',
   ],
 };
 
 export const designerAgent: AgentConfig = {
   name: 'designer',
-  description: `Designer-turned-developer who crafts stunning UI/UX even without design mockups. Use for VISUAL changes only (styling, layout, animation). Pure logic changes in frontend files should be handled directly.`,
+  description: `由设计师转身的开发者，即使没有设计稿也能打造出色的 UI/UX。仅用于视觉变更（样式、布局、动画）。前端文件中的纯逻辑变更应直接处理。`,
   prompt: loadAgentPrompt('designer'),
   model: 'sonnet',
   defaultModel: 'sonnet',

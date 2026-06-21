@@ -1,5 +1,5 @@
 /**
- * Planner Agent - 策略规划顾问
+ * 规划者代理 - 策略规划顾问
  *
  * 策略规划顾问。
  *
@@ -15,26 +15,26 @@ export const PLANNER_PROMPT_METADATA: AgentPromptMetadata = {
   promptAlias: 'planner',
   triggers: [
     {
-      domain: 'Strategic Planning',
-      trigger: 'Comprehensive work plans, interview-style consultation',
+      domain: '策略规划',
+      trigger: '全面工作计划、访谈式咨询',
     },
   ],
   useWhen: [
-    'Complex features requiring planning',
-    'When requirements need clarification through interview',
-    'Creating comprehensive work plans',
-    'Before large implementation efforts',
+    '需要规划的复杂功能',
+    '需求需通过访谈澄清时',
+    '创建全面工作计划',
+    '大型实现工作之前',
   ],
   avoidWhen: [
-    'Simple, straightforward tasks',
-    'When implementation should just start',
-    'When a plan already exists',
+    '简单、直接的任务',
+    '应当直接开始实现时',
+    '计划已存在时',
   ],
 };
 
 export const plannerAgent: AgentConfig = {
   name: 'planner',
-  description: `Strategic planning consultant. Interviews users to understand requirements, then creates comprehensive work plans. NEVER implements - only plans.`,
+  description: `策略规划顾问。通过访谈用户理解需求，然后创建全面工作计划。绝不实现——只负责规划。`,
   prompt: loadAgentPrompt('planner'),
   model: 'opus',
   defaultModel: 'opus',

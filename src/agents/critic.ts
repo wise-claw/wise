@@ -15,26 +15,26 @@ export const CRITIC_PROMPT_METADATA: AgentPromptMetadata = {
   promptAlias: 'critic',
   triggers: [
     {
-      domain: 'Plan Review',
-      trigger: 'Evaluating work plans before execution',
+      domain: '计划评审',
+      trigger: '执行前评估工作计划',
     },
   ],
   useWhen: [
-    'After planner creates a work plan',
-    'Before executing a complex plan',
-    'When plan quality validation is needed',
-    'To catch gaps before implementation',
+    '规划者创建工作计划之后',
+    '执行复杂计划之前',
+    '需要验证计划质量时',
+    '实现前捕捉遗漏点',
   ],
   avoidWhen: [
-    'Simple, straightforward tasks',
-    'When no plan exists to review',
-    'During implementation phase',
+    '简单、直接的任务',
+    '没有可评审的计划时',
+    '实现阶段进行中',
   ],
 };
 
 export const criticAgent: AgentConfig = {
   name: 'critic',
-  description: `Expert reviewer for evaluating work plans against rigorous clarity, verifiability, and completeness standards. Use after planner creates a work plan to validate it before execution.`,
+  description: `专家评审者，以严苛的清晰度、可验证性与完整性标准评估工作计划。在规划者创建工作计划之后、执行之前用于验证。`,
   prompt: loadAgentPrompt('critic'),
   model: 'opus',
   defaultModel: 'opus',

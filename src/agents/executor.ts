@@ -1,5 +1,5 @@
 /**
- * Executor Agent - 专注任务执行器
+ * 执行器代理 - 专注任务执行器
  *
  * 直接执行任务，不具备委派能力。
  * 与 WISE 同样的纪律，但独立工作。
@@ -16,26 +16,26 @@ export const EXECUTOR_PROMPT_METADATA: AgentPromptMetadata = {
   cost: 'CHEAP',
   promptAlias: 'Junior',
   triggers: [
-    { domain: 'Direct implementation', trigger: 'Single-file changes, focused tasks' },
-    { domain: 'Bug fixes', trigger: 'Clear, scoped fixes' },
-    { domain: 'Small features', trigger: 'Well-defined, isolated work' },
+    { domain: '直接实现', trigger: '单文件变更、聚焦任务' },
+    { domain: '缺陷修复', trigger: '清晰、范围明确的修复' },
+    { domain: '小型功能', trigger: '定义明确、独立的工作' },
   ],
   useWhen: [
-    'Direct, focused implementation tasks',
-    'Single-file or few-file changes',
-    'When delegation overhead isn\'t worth it',
-    'Clear, well-scoped work items',
+    '直接、聚焦的实现任务',
+    '单文件或少量文件变更',
+    '委派开销不值得时',
+    '清晰、范围明确的工作项',
   ],
   avoidWhen: [
-    'Multi-file refactoring (use orchestrator)',
-    'Tasks requiring research (use explore/document-specialist first)',
-    'Complex decisions (consult architect)',
+    '多文件重构（使用编排者）',
+    '需要研究任务（先使用 explore/document-specialist）',
+    '复杂决策（咨询 architect）',
   ],
 };
 
 export const executorAgent: AgentConfig = {
   name: 'executor',
-  description: 'Focused task executor. Execute tasks directly. NEVER delegate or spawn other agents. Same discipline as WISE, no delegation.',
+  description: '专注任务执行器。直接执行任务。绝不委派或派生其他代理。与 WISE 同样的纪律，无委派能力。',
   prompt: loadAgentPrompt('executor'),
   model: 'sonnet',
   defaultModel: 'sonnet',

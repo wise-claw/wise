@@ -14,24 +14,24 @@ export const ARCHITECT_PROMPT_METADATA: AgentPromptMetadata = {
   cost: 'EXPENSIVE',
   promptAlias: 'architect',
   triggers: [
-    { domain: 'Architecture decisions', trigger: 'Multi-system tradeoffs, unfamiliar patterns' },
-    { domain: 'Self-review', trigger: 'After completing significant implementation' },
-    { domain: 'Hard debugging', trigger: 'After 2+ failed fix attempts' },
+    { domain: '架构决策', trigger: '多系统权衡、不熟悉的模式' },
+    { domain: '自我评审', trigger: '完成重要实现之后' },
+    { domain: '疑难调试', trigger: '修复尝试失败 2 次以上' },
   ],
   useWhen: [
-    'Complex architecture design',
-    'After completing significant work',
-    '2+ failed fix attempts',
-    'Unfamiliar code patterns',
-    'Security/performance concerns',
-    'Multi-system tradeoffs',
+    '复杂架构设计',
+    '完成重要工作之后',
+    '修复尝试失败 2 次以上',
+    '不熟悉的代码模式',
+    '安全/性能问题',
+    '多系统权衡',
   ],
   avoidWhen: [
-    'Simple file operations (use direct tools)',
-    'First attempt at any fix (try yourself first)',
-    'Questions answerable from code you\'ve read',
-    'Trivial decisions (variable names, formatting)',
-    'Things you can infer from existing code patterns',
+    '简单文件操作（使用直接工具）',
+    '任何修复的首次尝试（先自己尝试）',
+    '可从已读代码中回答的问题',
+    '琐碎决策（变量名、格式）',
+    '可从现有代码模式推断的内容',
   ],
 };
 
@@ -39,7 +39,7 @@ export const ARCHITECT_PROMPT_METADATA: AgentPromptMetadata = {
 
 export const architectAgent: AgentConfig = {
   name: 'architect',
-  description: 'Read-only consultation agent. High-IQ reasoning specialist for debugging hard problems and high-difficulty architecture design.',
+  description: '只读咨询 agent。高推理能力专家，用于疑难问题调试与高难度架构设计。',
   prompt: loadAgentPrompt('architect'),
   model: 'opus',
   defaultModel: 'opus',
