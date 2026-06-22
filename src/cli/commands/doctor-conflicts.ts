@@ -586,102 +586,102 @@ export function formatReport(report: ConflictReport, json: boolean): string {
   const lines: string[] = [];
 
   lines.push('');
-  lines.push(colors.bold('🔍 Wise Conflict Diagnostic'));
+  lines.push(colors.bold('🔍 WISE 冲突诊断'));
   lines.push(colors.gray('━'.repeat(60)));
   lines.push('');
 
   // 钩子冲突
   if (report.hookConflicts.length > 0) {
-    lines.push(colors.bold('📌 Hook Configuration'));
+    lines.push(colors.bold('📌 钩子配置'));
     lines.push('');
     for (const hook of report.hookConflicts) {
-      const status = hook.isWise ? colors.green('✓ WISE') : colors.yellow('⚠ Other');
+      const status = hook.isWise ? colors.green('✓ WISE') : colors.yellow('⚠ 其他');
       lines.push(`  ${hook.event.padEnd(20)} ${status}`);
       lines.push(`    ${colors.gray(hook.command)}`);
     }
     lines.push('');
   } else {
-    lines.push(colors.bold('📌 Hook Configuration'));
-    lines.push(`  ${colors.gray('No hooks configured')}`);
+    lines.push(colors.bold('📌 钩子配置'));
+    lines.push(`  ${colors.gray('未配置钩子')}`);
     lines.push('');
   }
 
   // CLAUDE.md 状态
   if (report.claudeMdStatus) {
-    lines.push(colors.bold('📄 CLAUDE.md Status'));
+    lines.push(colors.bold('📄 CLAUDE.md 状态'));
     lines.push('');
 
     if (report.claudeMdStatus.hasMarkers) {
       if (report.claudeMdStatus.companionFile) {
-        lines.push(`  ${colors.green('✓')} WISE markers found in companion file`);
-        lines.push(`    ${colors.gray(`Companion: ${report.claudeMdStatus.companionFile}`)}`);
+        lines.push(`  ${colors.green('✓')} 在伴随文件中找到 WISE 标记`);
+        lines.push(`    ${colors.gray(`伴随文件：${report.claudeMdStatus.companionFile}`)}`);
       } else {
-        lines.push(`  ${colors.green('✓')} WISE markers present`);
+        lines.push(`  ${colors.green('✓')} 已存在 WISE 标记`);
       }
       if (report.claudeMdStatus.hasUserContent) {
-        lines.push(`  ${colors.green('✓')} User content preserved outside markers`);
+        lines.push(`  ${colors.green('✓')} 标记外的用户内容已保留`);
       }
     } else {
-      lines.push(`  ${colors.yellow('⚠')} No WISE markers found`);
-      lines.push(`    ${colors.gray('Run /wise:wise-setup to add markers')}`);
+      lines.push(`  ${colors.yellow('⚠')} 未找到 WISE 标记`);
+      lines.push(`    ${colors.gray('运行 /wise:wise-setup 添加标记')}`);
       if (report.claudeMdStatus.hasUserContent) {
-        lines.push(`  ${colors.blue('ℹ')} User content present - will be preserved`);
+        lines.push(`  ${colors.blue('ℹ')} 存在用户内容 - 将被保留`);
       }
     }
-    lines.push(`  ${colors.gray(`Path: ${report.claudeMdStatus.path}`)}`);
+    lines.push(`  ${colors.gray(`路径：${report.claudeMdStatus.path}`)}`);
     lines.push('');
   } else {
-    lines.push(colors.bold('📄 CLAUDE.md Status'));
-    lines.push(`  ${colors.gray('No CLAUDE.md found')}`);
+    lines.push(colors.bold('📄 CLAUDE.md 状态'));
+    lines.push(`  ${colors.gray('未找到 CLAUDE.md')}`);
     lines.push('');
   }
 
   // 环境标志
-  lines.push(colors.bold('🔧 Environment Flags'));
+  lines.push(colors.bold('🔧 环境标志'));
   lines.push('');
   if (report.envFlags.disableWise) {
-    lines.push(`  ${colors.red('✗')} DISABLE_WISE is set - WISE is disabled`);
+    lines.push(`  ${colors.red('✗')} DISABLE_WISE 已设置 - WISE 已被禁用`);
   } else {
-    lines.push(`  ${colors.green('✓')} DISABLE_WISE not set`);
+    lines.push(`  ${colors.green('✓')} DISABLE_WISE 未设置`);
   }
 
   if (report.envFlags.skipHooks.length > 0) {
-    lines.push(`  ${colors.yellow('⚠')} WISE_SKIP_HOOKS: ${report.envFlags.skipHooks.join(', ')}`);
+    lines.push(`  ${colors.yellow('⚠')} WISE_SKIP_HOOKS：${report.envFlags.skipHooks.join(', ')}`);
   } else {
-    lines.push(`  ${colors.green('✓')} No hooks are being skipped`);
+    lines.push(`  ${colors.green('✓')} 没有钩子被跳过`);
   }
   lines.push('');
 
   // 旧版技能
   if (report.legacySkills.length > 0) {
-    lines.push(colors.bold('📦 Legacy Skills'));
+    lines.push(colors.bold('📦 旧版技能'));
     lines.push('');
-    lines.push(`  ${colors.yellow('⚠')} Skills colliding with plugin skill names:`);
+    lines.push(`  ${colors.yellow('⚠')} 与插件技能名冲突的技能：`);
     for (const skill of report.legacySkills) {
       lines.push(`    - ${skill.name} ${colors.gray(`(${skill.path})`)}`);
     }
-    lines.push(`    ${colors.gray('These legacy files shadow plugin skills. Remove them or rename to avoid conflicts.')}`);
+    lines.push(`    ${colors.gray('这些旧版文件会遮蔽插件技能。请删除或重命名以避免冲突。')}`);
     lines.push('');
   }
 
   // Windows 插件钩子可移植性
   if (report.windowsUnsafePluginHooks.length > 0) {
-    lines.push(colors.bold('🪟 Windows Plugin Hooks'));
+    lines.push(colors.bold('🪟 Windows 插件钩子'));
     lines.push('');
-    lines.push(`  ${colors.yellow('⚠')} Plugin hooks still route through sh/find-node on native Windows:`);
+    lines.push(`  ${colors.yellow('⚠')} 插件钩子在原生 Windows 上仍经由 sh/find-node 路由：`);
     for (const hook of report.windowsUnsafePluginHooks) {
       lines.push(`    - ${hook.event} ${colors.gray(`(${hook.pluginRoot})`)}`);
       lines.push(`      ${colors.gray(hook.command)}`);
     }
-    lines.push(`    ${colors.gray('Run /wise:wise-setup or update/reinstall the plugin to rewrite hooks to direct node run.cjs commands.')}`);
+    lines.push(`    ${colors.gray('运行 /wise:wise-setup，或更新/重装插件，将钩子重写为直接的 node run.cjs 命令。')}`);
     lines.push('');
   }
 
   // 配置问题
   if (report.configIssues.unknownFields.length > 0) {
-    lines.push(colors.bold('⚙️  Configuration Issues'));
+    lines.push(colors.bold('⚙️  配置问题'));
     lines.push('');
-    lines.push(`  ${colors.yellow('⚠')} Unknown fields in .wise-config.json:`);
+    lines.push(`  ${colors.yellow('⚠')} .wise-config.json 中的未知字段：`);
     for (const field of report.configIssues.unknownFields) {
       lines.push(`    - ${field}`);
     }
@@ -689,68 +689,68 @@ export function formatReport(report: ConflictReport, json: boolean): string {
   }
 
   // 统一 MCP 注册表同步
-  lines.push(colors.bold('🧩 Unified MCP Registry'));
+  lines.push(colors.bold('🧩 统一 MCP 注册表'));
   lines.push('');
   if (!report.mcpRegistrySync.registryExists) {
-    lines.push(`  ${colors.gray('No unified MCP registry found')}`);
-    lines.push(`    ${colors.gray(`Expected path: ${report.mcpRegistrySync.registryPath}`)}`);
+    lines.push(`  ${colors.gray('未找到统一 MCP 注册表')}`);
+    lines.push(`    ${colors.gray(`预期路径：${report.mcpRegistrySync.registryPath}`)}`);
   } else if (report.mcpRegistrySync.serverNames.length === 0) {
-    lines.push(`  ${colors.gray('Registry exists but has no MCP servers')}`);
-    lines.push(`    ${colors.gray(`Path: ${report.mcpRegistrySync.registryPath}`)}`);
+    lines.push(`  ${colors.gray('注册表存在，但不含 MCP 服务器')}`);
+    lines.push(`    ${colors.gray(`路径：${report.mcpRegistrySync.registryPath}`)}`);
   } else {
-    lines.push(`  ${colors.green('✓')} Registry servers: ${report.mcpRegistrySync.serverNames.join(', ')}`);
-    lines.push(`    ${colors.gray(`Registry: ${report.mcpRegistrySync.registryPath}`)}`);
-    lines.push(`    ${colors.gray(`Claude MCP: ${report.mcpRegistrySync.claudeConfigPath}`)}`);
-    lines.push(`    ${colors.gray(`Codex: ${report.mcpRegistrySync.codexConfigPath}`)}`);
+    lines.push(`  ${colors.green('✓')} 注册表服务器：${report.mcpRegistrySync.serverNames.join(', ')}`);
+    lines.push(`    ${colors.gray(`注册表：${report.mcpRegistrySync.registryPath}`)}`);
+    lines.push(`    ${colors.gray(`Claude MCP：${report.mcpRegistrySync.claudeConfigPath}`)}`);
+    lines.push(`    ${colors.gray(`Codex：${report.mcpRegistrySync.codexConfigPath}`)}`);
 
     if (report.mcpRegistrySync.claudeMissing.length > 0) {
-      lines.push(`  ${colors.yellow('⚠')} Missing from Claude MCP config: ${report.mcpRegistrySync.claudeMissing.join(', ')}`);
+      lines.push(`  ${colors.yellow('⚠')} Claude MCP 配置中缺失：${report.mcpRegistrySync.claudeMissing.join(', ')}`);
     } else if (report.mcpRegistrySync.claudeMismatched.length > 0) {
-      lines.push(`  ${colors.yellow('⚠')} Mismatched in Claude MCP config: ${report.mcpRegistrySync.claudeMismatched.join(', ')}`);
+      lines.push(`  ${colors.yellow('⚠')} Claude MCP 配置中不匹配：${report.mcpRegistrySync.claudeMismatched.join(', ')}`);
     } else {
-      lines.push(`  ${colors.green('✓')} Claude MCP config is in sync`);
+      lines.push(`  ${colors.green('✓')} Claude MCP 配置已同步`);
     }
 
     if (report.mcpRegistrySync.codexMissing.length > 0) {
-      lines.push(`  ${colors.yellow('⚠')} Missing from Codex config.toml: ${report.mcpRegistrySync.codexMissing.join(', ')}`);
+      lines.push(`  ${colors.yellow('⚠')} Codex config.toml 中缺失：${report.mcpRegistrySync.codexMissing.join(', ')}`);
     } else if (report.mcpRegistrySync.codexMismatched.length > 0) {
-      lines.push(`  ${colors.yellow('⚠')} Mismatched in Codex config.toml: ${report.mcpRegistrySync.codexMismatched.join(', ')}`);
+      lines.push(`  ${colors.yellow('⚠')} Codex config.toml 中不匹配：${report.mcpRegistrySync.codexMismatched.join(', ')}`);
     } else {
-      lines.push(`  ${colors.green('✓')} Codex config.toml is in sync`);
+      lines.push(`  ${colors.green('✓')} Codex config.toml 已同步`);
     }
   }
   lines.push('');
 
   // 工作区标记
-  lines.push(colors.bold('🗂  Workspace Marker (.wise-workspace)'));
+  lines.push(colors.bold('🗂  工作区标记（.wise-workspace）'));
   lines.push('');
   const wm = report.workspaceMarker;
   if (wm.markerRoot) {
-    lines.push(`  ${colors.green('✓')} ${WORKSPACE_MARKER} found`);
-    lines.push(`    ${colors.gray(`Marker root: ${wm.markerRoot}`)}`);
+    lines.push(`  ${colors.green('✓')} 找到 ${WORKSPACE_MARKER}`);
+    lines.push(`    ${colors.gray(`标记根：${wm.markerRoot}`)}`);
   } else {
-    lines.push(`  ${colors.gray('ℹ')} No ${WORKSPACE_MARKER} marker found (single-repo mode)`);
+    lines.push(`  ${colors.gray('ℹ')} 未找到 ${WORKSPACE_MARKER} 标记（单仓库模式）`);
   }
   if (wm.stateDirEnvSet) {
-    lines.push(`  ${colors.green('✓')} WISE_STATE_DIR is set: ${wm.stateDirEnvValue}`);
+    lines.push(`  ${colors.green('✓')} WISE_STATE_DIR 已设置：${wm.stateDirEnvValue}`);
   } else {
-    lines.push(`  ${colors.gray('ℹ')} WISE_STATE_DIR not set`);
+    lines.push(`  ${colors.gray('ℹ')} WISE_STATE_DIR 未设置`);
   }
   if (wm.precedenceConflict) {
-    lines.push(`  ${colors.yellow('⚠')} Both WISE_STATE_DIR and ${WORKSPACE_MARKER} are active.`);
-    lines.push(`    ${colors.gray('WISE_STATE_DIR takes precedence (resolution order: WISE_STATE_DIR > .wise-workspace > git > cwd).')}`);
-    lines.push(`    ${colors.gray('If you intended .wise-workspace to anchor state, unset WISE_STATE_DIR.')}`);
+    lines.push(`  ${colors.yellow('⚠')} WISE_STATE_DIR 与 ${WORKSPACE_MARKER} 同时生效。`);
+    lines.push(`    ${colors.gray('WISE_STATE_DIR 优先（解析顺序：WISE_STATE_DIR > .wise-workspace > git > cwd）。')}`);
+    lines.push(`    ${colors.gray('若你打算用 .wise-workspace 锚定状态，请取消设置 WISE_STATE_DIR。')}`);
   }
   lines.push('');
 
   // 汇总
   lines.push(colors.gray('━'.repeat(60)));
   if (report.hasConflicts) {
-    lines.push(`${colors.yellow('⚠')} Potential conflicts detected`);
-    lines.push(`${colors.gray('Review the issues above and run /wise:wise-setup if needed')}`);
+    lines.push(`${colors.yellow('⚠')} 检测到潜在冲突`);
+    lines.push(`${colors.gray('请检查上述问题，如需修复运行 /wise:wise-setup')}`);
   } else {
-    lines.push(`${colors.green('✓')} No conflicts detected`);
-    lines.push(`${colors.gray('WISE is properly configured')}`);
+    lines.push(`${colors.green('✓')} 未检测到冲突`);
+    lines.push(`${colors.gray('WISE 配置正常')}`);
   }
   lines.push('');
 

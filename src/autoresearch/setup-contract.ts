@@ -22,10 +22,10 @@ function contractError(message: string): Error {
 
 function normalizeConfidence(raw: unknown): number {
   if (typeof raw !== 'number' || Number.isNaN(raw) || !Number.isFinite(raw)) {
-    throw contractError('setup handoff confidence must be a finite number between 0 and 1.');
+    throw contractError('setup 交接对象的 confidence 必须是 0 到 1 之间的有限数值。');
   }
   if (raw < 0 || raw > 1) {
-    throw contractError('setup handoff confidence must be between 0 and 1.');
+    throw contractError('setup 交接对象的 confidence 必须在 0 到 1 之间。');
   }
   return raw;
 }
@@ -35,13 +35,13 @@ function parseKeepPolicy(raw: unknown): AutoresearchKeepPolicy | undefined {
     return undefined;
   }
   if (typeof raw !== 'string') {
-    throw contractError('setup handoff keepPolicy must be a string when provided.');
+    throw contractError('setup 交接对象的 keepPolicy 在提供时必须是字符串。');
   }
   const normalized = raw.trim().toLowerCase();
   if (normalized === 'score_improvement' || normalized === 'pass_only') {
     return normalized;
   }
-  throw contractError('setup handoff keepPolicy must be one of: score_improvement, pass_only.');
+  throw contractError('setup 交接对象的 keepPolicy 必须是以下之一：score_improvement、pass_only。');
 }
 
 export function buildSetupSandboxContent(
@@ -55,7 +55,7 @@ export function buildSetupSandboxContent(
 
 export function validateAutoresearchSetupHandoff(raw: unknown): AutoresearchSetupHandoff {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-    throw contractError('setup handoff must be a JSON object.');
+    throw contractError('setup 交接对象必须是 JSON 对象。');
   }
 
   const candidate = raw as Record<string, unknown>;
@@ -75,26 +75,26 @@ export function validateAutoresearchSetupHandoff(raw: unknown): AutoresearchSetu
     : undefined;
 
   if (!missionText) {
-    throw contractError('setup handoff missionText is required.');
+    throw contractError('setup 交接对象的 missionText 为必填项。');
   }
   if (!evaluatorCommand) {
-    throw contractError('setup handoff evaluatorCommand is required.');
+    throw contractError('setup 交接对象的 evaluatorCommand 为必填项。');
   }
   if (evaluatorSource !== 'user' && evaluatorSource !== 'inferred') {
-    throw contractError('setup handoff evaluatorSource must be "user" or "inferred".');
+    throw contractError('setup 交接对象的 evaluatorSource 必须是 "user" 或 "inferred"。');
   }
   if (typeof readyToLaunch !== 'boolean') {
-    throw contractError('setup handoff readyToLaunch must be boolean.');
+    throw contractError('setup 交接对象的 readyToLaunch 必须是布尔值。');
   }
 
   parseSandboxContract(buildSetupSandboxContent(evaluatorCommand, keepPolicy));
 
   if (evaluatorSource === 'inferred' && confidence < AUTORESEARCH_SETUP_CONFIDENCE_THRESHOLD && readyToLaunch) {
-    throw contractError('low-confidence inferred evaluators cannot be marked readyToLaunch.');
+    throw contractError('低置信度的推断式评估器不能被标记为 readyToLaunch。');
   }
 
   if (!readyToLaunch && !clarificationQuestion) {
-    throw contractError('setup handoff must include clarificationQuestion when launch is blocked.');
+    throw contractError('setup 交接对象在启动被阻塞时必须提供 clarificationQuestion。');
   }
 
   return {
@@ -118,7 +118,7 @@ export function parseAutoresearchSetupHandoffJson(raw: string): AutoresearchSetu
   try {
     parsed = JSON.parse(jsonPayload);
   } catch {
-    throw contractError('setup handoff must be valid JSON.');
+    throw contractError('setup 交接对象必须是合法的 JSON。');
   }
   return validateAutoresearchSetupHandoff(parsed);
 }

@@ -30,7 +30,7 @@ describe('validateAutoresearchSetupHandoff', () => {
       confidence: AUTORESEARCH_SETUP_CONFIDENCE_THRESHOLD - 0.01,
       slug: 'flaky',
       readyToLaunch: true,
-    })).toThrow(/low-confidence inferred evaluators cannot be marked readyToLaunch/i);
+    })).toThrow(/低置信度的推断式评估器不能被标记为 readyToLaunch/);
   });
 
   it('requires a clarification question when launch is blocked', () => {

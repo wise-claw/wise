@@ -35,19 +35,19 @@ describe('autoresearch contracts', () => {
   });
 
   it('rejects sandbox contract without frontmatter', () => {
-    expect(() => parseSandboxContract('No frontmatter here')).toThrow(/sandbox\.md must start with YAML frontmatter/i);
+    expect(() => parseSandboxContract('No frontmatter here')).toThrow(/sandbox\.md 必须以.*YAML frontmatter 开头/i);
   });
 
   it('rejects sandbox contract without evaluator command', () => {
-    expect(() => parseSandboxContract(`---\nevaluator:\n  format: json\n---\nPolicy\n`)).toThrow(/evaluator\.command is required/i);
+    expect(() => parseSandboxContract(`---\nevaluator:\n  format: json\n---\nPolicy\n`)).toThrow(/evaluator\.command 为必填项/i);
   });
 
   it('rejects sandbox contract without evaluator format', () => {
-    expect(() => parseSandboxContract(`---\nevaluator:\n  command: node eval.js\n---\nPolicy\n`)).toThrow(/evaluator\.format is required/i);
+    expect(() => parseSandboxContract(`---\nevaluator:\n  command: node eval.js\n---\nPolicy\n`)).toThrow(/evaluator\.format 为必填项/i);
   });
 
   it('rejects sandbox contract with non-json evaluator format', () => {
-    expect(() => parseSandboxContract(`---\nevaluator:\n  command: node eval.js\n  format: text\n---\nPolicy\n`)).toThrow(/evaluator\.format must be json/i);
+    expect(() => parseSandboxContract(`---\nevaluator:\n  command: node eval.js\n  format: text\n---\nPolicy\n`)).toThrow(/evaluator\.format 在 autoresearch v1 中必须为 json/i);
   });
 
   it('parses optional evaluator keep_policy', () => {
@@ -70,7 +70,7 @@ evaluator:
   keep_policy: maybe
 ---
 Stay in bounds.
-`)).toThrow(/keep_policy must be one of/i);
+`)).toThrow(/keep_policy 必须是以下之一/i);
   });
 
   it('accepts evaluator result with pass only', () => {
@@ -82,11 +82,11 @@ Stay in bounds.
   });
 
   it('rejects evaluator result without pass', () => {
-    expect(() => parseEvaluatorResult('{"score":61}')).toThrow(/must include boolean pass/i);
+    expect(() => parseEvaluatorResult('{"score":61}')).toThrow(/必须包含布尔型 pass/i);
   });
 
   it('rejects evaluator result with non-numeric score', () => {
-    expect(() => parseEvaluatorResult('{"pass":true,"score":"high"}')).toThrow(/score must be numeric/i);
+    expect(() => parseEvaluatorResult('{"pass":true,"score":"high"}')).toThrow(/score 在提供时必须是数值/i);
   });
 
   it('loads mission contract from in-repo mission directory', async () => {

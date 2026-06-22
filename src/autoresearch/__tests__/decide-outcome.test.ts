@@ -52,7 +52,7 @@ describe('decideAutoresearchOutcome (score_improvement bootstrap)', () => {
     const decision = decideAutoresearchOutcome(manifest, makeCandidate(), evaluation);
     expect(decision.decision).toBe('ambiguous');
     expect(decision.keep).toBe(false);
-    expect(decision.decisionReason).toMatch(/numeric score/i);
+    expect(decision.decisionReason).toMatch(/无数值分数/i);
   });
 
   it('keeps a higher-scoring pass once a comparable baseline is set', () => {
@@ -60,7 +60,7 @@ describe('decideAutoresearchOutcome (score_improvement bootstrap)', () => {
     const decision = decideAutoresearchOutcome(manifest, makeCandidate(), makeEvaluation({ score: 0.40 }));
     expect(decision.decision).toBe('keep');
     expect(decision.keep).toBe(true);
-    expect(decision.decisionReason).toMatch(/score improved/i);
+    expect(decision.decisionReason).toMatch(/分数.*提升/i);
   });
 
   it('discards a pass that does not improve the kept score', () => {

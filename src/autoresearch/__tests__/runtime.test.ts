@@ -65,12 +65,12 @@ describe('autoresearch runtime', () => {
     try {
       const contract = await makeContract(repo);
       const instructions = buildAutoresearchInstructions(contract, { runId: 'missions-demo-20260314t000000z', iteration: 1, baselineCommit: 'abc1234', lastKeptCommit: 'abc1234', resultsFile: 'results.tsv', candidateFile: '.wise/logs/autoresearch/missions-demo-20260314t000000z/candidate.json', keepPolicy: 'score_improvement' });
-      expect(instructions).toMatch(/exactly one experiment cycle/i);
-      expect(instructions).toMatch(/required output field: pass/i);
-      expect(instructions).toMatch(/optional output field: score/i);
-      expect(instructions).toMatch(/Iteration state snapshot:/i);
-      expect(instructions).toMatch(/Mission file:/i);
-      expect(instructions).toMatch(/Sandbox policy:/i);
+      expect(instructions).toMatch(/精确运行一个实验周期/i);
+      expect(instructions).toMatch(/必填输出字段：pass/i);
+      expect(instructions).toMatch(/可选输出字段：score/i);
+      expect(instructions).toMatch(/迭代状态快照：/i);
+      expect(instructions).toMatch(/Mission 文件：/i);
+      expect(instructions).toMatch(/沙箱策略：/i);
     } finally {
       await rm(repo, { recursive: true, force: true });
     }
@@ -134,7 +134,7 @@ describe('autoresearch runtime', () => {
 
       const results = await readFile(runtime.resultsFile, 'utf-8');
       expect(results).toMatch(/^iteration	commit	pass	score	status	description$/m);
-      expect(results).toMatch(/^0	.+	true	1	baseline	initial baseline evaluation$/m);
+      expect(results).toMatch(/^0	.+	true	1	baseline	初始基线评估$/m);
 
       const state = readModeState<Record<string, unknown>>('autoresearch', repo);
       expect(state).toBeTruthy();
@@ -154,9 +154,9 @@ describe('autoresearch runtime', () => {
       expect(state?.evaluator_reference_file).toBe(join(repo, '.wise', 'autoresearch', 'missions-demo', 'evaluator.json'));
 
       const instructions = await readFile(runtime.instructionsFile, 'utf-8');
-      expect(instructions).toMatch(/Last kept score:\s+1/i);
+      expect(instructions).toMatch(/上一次保留分数：\s*1/i);
       expect(instructions).toMatch(/previous_iteration_outcome/i);
-      expect(instructions).toMatch(/baseline established/i);
+      expect(instructions).toMatch(/基线已建立/i);
     } finally {
       await rm(repo, { recursive: true, force: true });
     }
@@ -183,8 +183,8 @@ describe('autoresearch runtime', () => {
       expect(existsSync(layout.decisionLogFile)).toBe(true);
 
       const decisionLog = await readFile(layout.decisionLogFile, 'utf-8');
-      expect(decisionLog).toContain('# Autoresearch Decision Log');
-      expect(decisionLog).toContain('## Iteration 0 — baseline');
+      expect(decisionLog).toContain('# Autoresearch 决策日志');
+      expect(decisionLog).toContain('## 迭代 0 — baseline');
 
       const missionSpec = await readFile(layout.missionSpecFile, 'utf-8');
       expect(missionSpec).toContain('# Mission');
@@ -259,13 +259,13 @@ describe('autoresearch parity decisions', () => {
       };
       expect(ledger.entries.length).toBe(3);
       expect(ledger.entries.map((entry) => [entry.decision, entry.description])).toEqual([
-        ['baseline', 'initial baseline evaluation'],
+        ['baseline', '初始基线评估'],
         ['keep', 'improved score'],
         ['discard', 'worse score'],
       ]);
 
       const instructions = await readFile(runtime.instructionsFile, 'utf-8');
-      expect(instructions).toMatch(/"previous_iteration_outcome": "discard:score did not improve"/);
+      expect(instructions).toMatch(/"previous_iteration_outcome": "discard:分数未提升"/);
       expect(instructions).toMatch(/"decision": "keep"/);
       expect(instructions).toMatch(/"decision": "discard"/);
       expect(finalManifest.last_kept_commit).toBe(improvedCommit);
@@ -274,8 +274,8 @@ describe('autoresearch parity decisions', () => {
         join(repo, '.wise', 'autoresearch', 'missions-demo', 'runs', runtime.runId, 'decision-log.md'),
         'utf-8',
       );
-      expect(decisionLog).toContain('## Iteration 1 — keep');
-      expect(decisionLog).toContain('## Iteration 2 — discard');
+      expect(decisionLog).toContain('## 迭代 1 — keep');
+      expect(decisionLog).toContain('## 迭代 2 — discard');
 
       const evaluationOne = JSON.parse(await readFile(
         join(repo, '.wise', 'autoresearch', 'missions-demo', 'runs', runtime.runId, 'evaluations', 'iteration-0001.json'),
@@ -297,7 +297,7 @@ describe('autoresearch startup exclusivity', () => {
       expect(writeModeState('ralph', { active: true }, repo, 'session-a')).toBe(true);
 
       await expect(assertModeStartAllowed('autoresearch', repo)).rejects.toThrow(
-        'Cannot start autoresearch: ralph is already active',
+        '无法启动 autoresearch：ralph 已处于活跃状态',
       );
     } finally {
       await rm(repo, { recursive: true, force: true });
@@ -310,7 +310,7 @@ describe('autoresearch startup exclusivity', () => {
       expect(writeModeState('autopilot', { active: true }, repo)).toBe(true);
 
       await expect(assertModeStartAllowed('autoresearch', repo)).rejects.toThrow(
-        'Cannot start autoresearch: autopilot is already active',
+        '无法启动 autoresearch：autopilot 已处于活跃状态',
       );
     } finally {
       await rm(repo, { recursive: true, force: true });

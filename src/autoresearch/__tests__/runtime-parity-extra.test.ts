@@ -305,7 +305,7 @@ describe('autoresearch runtime parity extras', () => {
 
       const finalManifest = await loadAutoresearchRunManifest(repo, runtime.runId);
       expect(finalManifest.status).toBe('stopped');
-      expect(finalManifest.stop_reason).toBe('candidate abort');
+      expect(finalManifest.stop_reason).toBe('候选中止');
     } finally {
       await rm(repo, { recursive: true, force: true });
     }
@@ -396,7 +396,7 @@ describe('autoresearch runtime parity extras', () => {
       await expect(processAutoresearchCandidate(worktreeContract, manifest, repo)).resolves.toBe('error');
       const failedManifest = await loadAutoresearchRunManifest(repo, runtime.runId);
       expect(failedManifest.status).toBe('failed');
-      expect(failedManifest.stop_reason).toMatch(/interrupted dirty worktree requires operator intervention/i);
+      expect(failedManifest.stop_reason).toMatch(/脏工作树需要操作者介入/i);
     } finally {
       await rm(repo, { recursive: true, force: true });
     }

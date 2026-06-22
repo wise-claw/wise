@@ -52,7 +52,7 @@ function readGit(repoPath: string, args: string[]): string {
       : err.stderr instanceof Buffer
         ? err.stderr.toString('utf-8').trim()
         : '';
-    throw contractError(stderr || 'mission-dir must be inside a git repository.');
+    throw contractError(stderr || 'mission-dir 必须位于 git 仓库内。');
   }
 }
 
@@ -68,13 +68,13 @@ export function slugifyMissionName(value: string): string {
 function ensurePathInside(parentPath: string, childPath: string): void {
   const rel = relative(parentPath, childPath);
   if (rel === '' || (!rel.startsWith('..') && rel !== '..')) return;
-  throw contractError('mission-dir must be inside a git repository.');
+  throw contractError('mission-dir 必须位于 git 仓库内。');
 }
 
 function extractFrontmatter(content: string): { frontmatter: string; body: string } {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
   if (!match) {
-    throw contractError('sandbox.md must start with YAML frontmatter containing evaluator.command and evaluator.format=json.');
+    throw contractError('sandbox.md 必须以包含 evaluator.command 与 evaluator.format=json 的 YAML frontmatter 开头。');
   }
   return {
     frontmatter: match[1] || '',
@@ -100,18 +100,18 @@ function parseSimpleYamlFrontmatter(frontmatter: string): Record<string, unknown
 
     const nestedMatch = /^([A-Za-z0-9_-]+):\s*(.+)\s*$/.exec(trimmed);
     if (!nestedMatch) {
-      throw contractError(`Unsupported sandbox.md frontmatter line: ${trimmed}`);
+      throw contractError(`不支持的 sandbox.md frontmatter 行：${trimmed}`);
     }
 
     const [, key, rawValue] = nestedMatch;
     const value = rawValue.replace(/^['"]|['"]$/g, '');
     if (line.startsWith(' ') || line.startsWith('\t')) {
       if (!currentSection) {
-        throw contractError(`Nested sandbox.md frontmatter key requires a parent section: ${trimmed}`);
+        throw contractError(`嵌套的 sandbox.md frontmatter 键需要父小节：${trimmed}`);
       }
       const section = result[currentSection];
       if (!section || typeof section !== 'object' || Array.isArray(section)) {
-        throw contractError(`Invalid sandbox.md frontmatter section: ${currentSection}`);
+        throw contractError(`无效的 sandbox.md frontmatter 小节：${currentSection}`);
       }
       (section as Record<string, unknown>)[key] = value;
       continue;
@@ -127,13 +127,13 @@ function parseSimpleYamlFrontmatter(frontmatter: string): Record<string, unknown
 function parseKeepPolicy(raw: unknown): AutoresearchKeepPolicy | undefined {
   if (raw === undefined) return undefined;
   if (typeof raw !== 'string') {
-    throw contractError('sandbox.md frontmatter evaluator.keep_policy must be a string when provided.');
+    throw contractError('sandbox.md frontmatter 的 evaluator.keep_policy 在提供时必须是字符串。');
   }
   const normalized = raw.trim().toLowerCase();
   if (!normalized) return undefined;
   if (normalized === 'pass_only') return 'pass_only';
   if (normalized === 'score_improvement') return 'score_improvement';
-  throw contractError('sandbox.md frontmatter evaluator.keep_policy must be one of: score_improvement, pass_only.');
+  throw contractError('sandbox.md frontmatter 的 evaluator.keep_policy 必须是以下之一：score_improvement、pass_only。');
 }
 
 export function parseSandboxContract(content: string): ParsedSandboxContract {
@@ -142,7 +142,7 @@ export function parseSandboxContract(content: string): ParsedSandboxContract {
   const evaluatorRaw = parsedFrontmatter.evaluator;
 
   if (!evaluatorRaw || typeof evaluatorRaw !== 'object' || Array.isArray(evaluatorRaw)) {
-    throw contractError('sandbox.md frontmatter must define an evaluator block.');
+    throw contractError('sandbox.md frontmatter 必须定义 evaluator 块。');
   }
 
   const evaluator = evaluatorRaw as { command?: unknown; format?: unknown; keep_policy?: unknown };
@@ -155,13 +155,13 @@ export function parseSandboxContract(content: string): ParsedSandboxContract {
   const keepPolicy = parseKeepPolicy(evaluator.keep_policy);
 
   if (!command) {
-    throw contractError('sandbox.md frontmatter evaluator.command is required.');
+    throw contractError('sandbox.md frontmatter 的 evaluator.command 为必填项。');
   }
   if (!format) {
-    throw contractError('sandbox.md frontmatter evaluator.format is required and must be json in autoresearch v1.');
+    throw contractError('sandbox.md frontmatter 的 evaluator.format 为必填项，且在 autoresearch v1 中必须为 json。');
   }
   if (format !== 'json') {
-    throw contractError('sandbox.md frontmatter evaluator.format must be json in autoresearch v1.');
+    throw contractError('sandbox.md frontmatter 的 evaluator.format 在 autoresearch v1 中必须为 json。');
   }
 
   return {
@@ -180,19 +180,19 @@ export function parseEvaluatorResult(raw: string): AutoresearchEvaluatorResult {
   try {
     parsed = JSON.parse(raw);
   } catch {
-    throw contractError('Evaluator output must be valid JSON with required boolean pass and optional numeric score.');
+    throw contractError('评估器输出必须是合法的 JSON，包含必填的布尔型 pass 与可选的数值型 score。');
   }
 
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw contractError('Evaluator output must be a JSON object.');
+    throw contractError('评估器输出必须是 JSON 对象。');
   }
 
   const result = parsed as Record<string, unknown>;
   if (typeof result.pass !== 'boolean') {
-    throw contractError('Evaluator output must include boolean pass.');
+    throw contractError('评估器输出必须包含布尔型 pass。');
   }
   if (result.score !== undefined && typeof result.score !== 'number') {
-    throw contractError('Evaluator output score must be numeric when provided.');
+    throw contractError('评估器输出的 score 在提供时必须是数值。');
   }
 
   return result.score === undefined
@@ -203,7 +203,7 @@ export function parseEvaluatorResult(raw: string): AutoresearchEvaluatorResult {
 export async function loadAutoresearchMissionContract(missionDirArg: string): Promise<AutoresearchMissionContract> {
   let missionDir = resolve(missionDirArg);
   if (!existsSync(missionDir)) {
-    throw contractError(`mission-dir does not exist: ${missionDir}`);
+    throw contractError(`mission-dir 不存在：${missionDir}`);
   }
   // 解析符号链接，使路径与 git 的规范输出一致（例如 macOS 上的 /private/var）
   try { missionDir = realpathSync(missionDir); } catch { /* 保留已解析的路径 */ }
@@ -214,10 +214,10 @@ export async function loadAutoresearchMissionContract(missionDirArg: string): Pr
   const missionFile = join(missionDir, 'mission.md');
   const sandboxFile = join(missionDir, 'sandbox.md');
   if (!existsSync(missionFile)) {
-    throw contractError(`mission.md is required inside mission-dir: ${missionFile}`);
+    throw contractError(`mission-dir 内必须有 mission.md：${missionFile}`);
   }
   if (!existsSync(sandboxFile)) {
-    throw contractError(`sandbox.md is required inside mission-dir: ${sandboxFile}`);
+    throw contractError(`mission-dir 内必须有 sandbox.md：${sandboxFile}`);
   }
 
   const missionContent = await readFile(missionFile, 'utf-8');

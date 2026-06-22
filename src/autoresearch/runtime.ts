@@ -207,7 +207,7 @@ function readGit(repoPath: string, args: string[]): string {
       : err.stderr instanceof Buffer
         ? err.stderr.toString('utf-8').trim()
         : '';
-    throw new Error(stderr || `git ${args.join(' ')} failed`);
+    throw new Error(stderr || `git ${args.join(' ')} 失败`);
   }
 }
 
@@ -251,22 +251,22 @@ async function appendDecisionLog(
   },
 ): Promise<void> {
   const lines = [
-    `## Iteration ${entry.iteration} — ${entry.decision}`,
+    `## 迭代 ${entry.iteration} — ${entry.decision}`,
     '',
-    `- Description: ${entry.description}`,
-    `- Reason: ${entry.reason}`,
+    `- 描述：${entry.description}`,
+    `- 原因：${entry.reason}`,
   ];
 
   if (entry.evaluator) {
     lines.push(
-      `- Evaluator status: ${entry.evaluator.status}`,
-      `- Pass: ${String(entry.evaluator.pass ?? '')}`,
-      `- Score: ${typeof entry.evaluator.score === 'number' ? String(entry.evaluator.score) : ''}`,
+      `- 评估器状态：${entry.evaluator.status}`,
+      `- 通过：${String(entry.evaluator.pass ?? '')}`,
+      `- 分数：${typeof entry.evaluator.score === 'number' ? String(entry.evaluator.score) : ''}`,
     );
   }
 
   if (entry.notes && entry.notes.length > 0) {
-    lines.push('- Notes:');
+    lines.push('- 备注：');
     for (const note of entry.notes) {
       lines.push(`  - ${note}`);
     }
@@ -275,7 +275,7 @@ async function appendDecisionLog(
   lines.push('', '');
   const existing = existsSync(decisionLogFile)
     ? await readFile(decisionLogFile, 'utf-8')
-    : '# Autoresearch Decision Log\n\n';
+    : '# Autoresearch 决策日志\n\n';
   await ensureParentDir(decisionLogFile);
   await writeFile(decisionLogFile, `${existing}${lines.join('\n')}`, 'utf-8');
 }
@@ -303,7 +303,7 @@ function requireGitSuccess(worktreePath: string, args: string[]): void {
     encoding: 'utf-8',
   });
   if (result.status === 0) return;
-  throw new Error((result.stderr || '').trim() || `git ${args.join(' ')} failed`);
+  throw new Error((result.stderr || '').trim() || `git ${args.join(' ')} 失败`);
 }
 
 function gitStatusLines(worktreePath: string): string[] {
@@ -312,7 +312,7 @@ function gitStatusLines(worktreePath: string): string[] {
     encoding: 'utf-8',
   });
   if (result.status !== 0) {
-    throw new Error((result.stderr || '').trim() || `git status failed for ${worktreePath}`);
+    throw new Error((result.stderr || '').trim() || `git status 对 ${worktreePath} 失败`);
   }
   return (result.stdout || '')
     .split(/\r?\n/)
@@ -406,7 +406,7 @@ export async function assertModeStartAllowed(mode: ExecutionMode, projectRoot: s
   for (const other of EXCLUSIVE_MODES) {
     if (other === mode) continue;
     if (isModeActiveInAnySession(other, projectRoot)) {
-      throw new Error(`Cannot start ${mode}: ${other} is already active`);
+      throw new Error(`无法启动 ${mode}：${other} 已处于活跃状态`);
     }
   }
 }
@@ -644,7 +644,7 @@ export async function runAutoresearchEvaluator(
       iteration: -1,
       kind: 'iteration',
       decision: record.status === 'error' ? 'error' : record.status === 'pass' ? 'keep' : 'discard',
-      decision_reason: 'raw evaluator record',
+      decision_reason: '原始评估器记录',
       candidate_status: 'candidate',
       base_commit: readGitShortHead(worktreePath),
       candidate_commit: null,
@@ -652,8 +652,8 @@ export async function runAutoresearchEvaluator(
       keep_policy: contract.sandbox.evaluator.keep_policy ?? 'score_improvement',
       evaluator: record,
       created_at: nowIso(),
-      notes: ['raw evaluator invocation'],
-      description: 'raw evaluator record',
+      notes: ['原始评估器调用'],
+      description: '原始评估器记录',
     });
   }
   return record;
@@ -671,55 +671,55 @@ export function decideAutoresearchOutcome(
   if (candidate.status === 'abort') {
     return {
       decision: 'abort',
-      decisionReason: 'candidate requested abort',
+      decisionReason: '候选请求中止',
       keep: false,
       evaluator: null,
-      notes: ['run stopped by candidate artifact'],
+      notes: ['运行因候选产物而停止'],
     };
   }
   if (candidate.status === 'noop') {
     return {
       decision: 'noop',
-      decisionReason: 'candidate reported noop',
+      decisionReason: '候选报告 noop',
       keep: false,
       evaluator: null,
-      notes: ['no code change was proposed'],
+      notes: ['未提出任何代码变更'],
     };
   }
   if (candidate.status === 'interrupted') {
     return {
       decision: 'interrupted',
-      decisionReason: 'candidate session was interrupted',
+      decisionReason: '候选会话被中断',
       keep: false,
       evaluator: null,
-      notes: ['supervisor should inspect worktree cleanliness before continuing'],
+      notes: ['监督者应在继续前检查工作树是否干净'],
     };
   }
   if (!evaluation || evaluation.status === 'error') {
     return {
       decision: 'discard',
-      decisionReason: 'evaluator error',
+      decisionReason: '评估器错误',
       keep: false,
       evaluator: evaluation,
-      notes: ['candidate discarded because evaluator errored or crashed'],
+      notes: ['因评估器出错或崩溃而丢弃候选'],
     };
   }
   if (!evaluation.pass) {
     return {
       decision: 'discard',
-      decisionReason: 'evaluator reported failure',
+      decisionReason: '评估器报告失败',
       keep: false,
       evaluator: evaluation,
-      notes: ['candidate discarded because evaluator pass=false'],
+      notes: ['因评估器 pass=false 而丢弃候选'],
     };
   }
   if (manifest.keep_policy === 'pass_only') {
     return {
       decision: 'keep',
-      decisionReason: 'pass_only keep policy accepted evaluator pass=true',
+      decisionReason: 'pass_only 保留策略接受评估器 pass=true',
       keep: true,
       evaluator: evaluation,
-      notes: ['candidate kept because sandbox opted into pass_only policy'],
+      notes: ['因沙箱选择 pass_only 策略而保留候选'],
     };
   }
   if (!comparableScore(manifest.last_kept_score, evaluation.score)) {
@@ -730,35 +730,35 @@ export function decideAutoresearchOutcome(
     if (typeof evaluation.score === 'number') {
       return {
         decision: 'keep',
-        decisionReason: '[bootstrap] first comparable score in score_improvement run',
+        decisionReason: '[bootstrap] score_improvement 运行中首个可比较分数',
         keep: true,
         evaluator: evaluation,
-        notes: ['candidate kept because no prior comparable score existed; this becomes the new baseline'],
+        notes: ['因无前序可比较分数而保留候选；此分数成为新基线'],
       };
     }
     return {
       decision: 'ambiguous',
-      decisionReason: 'evaluator pass without numeric score',
+      decisionReason: '评估器通过但无数值分数',
       keep: false,
       evaluator: evaluation,
-      notes: ['candidate discarded because score_improvement policy requires a numeric score'],
+      notes: ['因 score_improvement 策略要求数值分数而丢弃候选'],
     };
   }
   if ((evaluation.score as number) > (manifest.last_kept_score as number)) {
     return {
       decision: 'keep',
-      decisionReason: 'score improved over last kept score',
+      decisionReason: '分数相较上一次保留分数有所提升',
       keep: true,
       evaluator: evaluation,
-      notes: ['candidate kept because evaluator score increased'],
+      notes: ['因评估器分数提升而保留候选'],
     };
   }
   return {
     decision: 'discard',
-    decisionReason: 'score did not improve',
+    decisionReason: '分数未提升',
     keep: false,
     evaluator: evaluation,
-    notes: ['candidate discarded because evaluator score was not better than the kept baseline'],
+    notes: ['因评估器分数未优于已保留基线而丢弃候选'],
   };
 }
 
@@ -778,66 +778,66 @@ export function buildAutoresearchInstructions(
   },
 ): string {
   return [
-    '# WISE Autoresearch Supervisor Instructions',
+    '# WISE Autoresearch 监督者指令',
     '',
-    `Run ID: ${context.runId}`,
-    `Mission directory: ${contract.missionDir}`,
-    `Mission file: ${contract.missionFile}`,
-    `Sandbox file: ${contract.sandboxFile}`,
-    `Mission slug: ${contract.missionSlug}`,
-    `Iteration: ${context.iteration}`,
-    `Baseline commit: ${context.baselineCommit}`,
-    `Last kept commit: ${context.lastKeptCommit}`,
-    `Last kept score: ${typeof context.lastKeptScore === 'number' ? context.lastKeptScore : 'n/a'}`,
-    `Results file: ${context.resultsFile}`,
-    `Candidate artifact: ${context.candidateFile}`,
-    `Keep policy: ${context.keepPolicy}`,
+    `运行 ID：${context.runId}`,
+    `Mission 目录：${contract.missionDir}`,
+    `Mission 文件：${contract.missionFile}`,
+    `沙箱文件：${contract.sandboxFile}`,
+    `Mission slug：${contract.missionSlug}`,
+    `迭代：${context.iteration}`,
+    `基线提交：${context.baselineCommit}`,
+    `上一次保留提交：${context.lastKeptCommit}`,
+    `上一次保留分数：${typeof context.lastKeptScore === 'number' ? context.lastKeptScore : 'n/a'}`,
+    `结果文件：${context.resultsFile}`,
+    `候选产物：${context.candidateFile}`,
+    `保留策略：${context.keepPolicy}`,
     '',
-    'Iteration state snapshot:',
+    '迭代状态快照：',
     '```json',
     JSON.stringify({
       iteration: context.iteration,
       baseline_commit: context.baselineCommit,
       last_kept_commit: context.lastKeptCommit,
       last_kept_score: context.lastKeptScore ?? null,
-      previous_iteration_outcome: context.previousIterationOutcome ?? 'none yet',
+      previous_iteration_outcome: context.previousIterationOutcome ?? '暂无',
       recent_ledger_summary: context.recentLedgerSummary ?? [],
       keep_policy: context.keepPolicy,
     }, null, 2),
     '```',
     '',
-    'Operate as a thin autoresearch experiment worker for exactly one experiment cycle.',
-    'Do not loop forever inside this session. Make at most one candidate commit, then write the candidate artifact JSON and exit.',
+    '作为一个轻量的 autoresearch 实验工作线程，精确运行一个实验周期。',
+    '不要在此会话内无限循环。最多创建一个候选提交，然后写入候选产物 JSON 并退出。',
     '',
-    'Candidate artifact contract:',
-    '- Write JSON to the exact candidate artifact path above.',
-    '- status: candidate | noop | abort | interrupted',
-    '- candidate_commit: string | null',
-    '- base_commit: current base commit before your edits',
-    '- for status=candidate, candidate_commit must resolve in git and match the worktree HEAD commit when you exit',
-    '- base_commit must still match the last kept commit provided above',
-    '- description: short one-line summary',
-    '- notes: array of short strings',
-    '- created_at: ISO timestamp',
+    '候选产物契约：',
+    '- 将 JSON 写入上方确切的候选产物路径。',
+    '- status：candidate | noop | abort | interrupted',
+    '- candidate_commit：string | null',
+    '- base_commit：你编辑前的当前基线提交',
+    '- 当 status=candidate 时，candidate_commit 必须能在 git 中解析，且在你退出时与工作树 HEAD 提交一致',
+    '- base_commit 必须仍与上方提供的上一次保留提交一致',
+    '- description：简短的一行摘要',
+    '- notes：短字符串数组',
+    '- created_at：ISO 时间戳',
     '',
-    'Supervisor semantics after you exit:',
-    '- status=candidate => evaluator runs, then supervisor keeps or discards and may reset the worktree',
-    '- status=noop => supervisor logs a noop iteration and relaunches',
-    '- status=abort => supervisor stops the run',
-    '- status=interrupted => supervisor inspects worktree safety before deciding how to proceed',
+    '你退出后的监督者语义：',
+    '- status=candidate => 运行评估器，随后监督者保留或丢弃候选，并可能重置工作树',
+    '- status=noop => 监督者记录一次 noop 迭代并重新启动',
+    '- status=abort => 监督者停止运行',
+    '- status=interrupted => 监督者在决定如何继续前检查工作树安全性',
     '',
-    'Evaluator contract:',
-    `- command: ${contract.sandbox.evaluator.command}`,
-    '- format: json',
-    '- required output field: pass (boolean)',
-    '- optional output field: score (number)',
+    '评估器契约：',
+    `- command：${contract.sandbox.evaluator.command}`,
+    '- format：json',
+    '- 必填输出字段：pass（布尔值）',
+    '- 可选输出字段：score（数值）',
     '',
-    'Mission content:',
+    'Mission 内容：',
     '```md',
     trimContent(contract.missionContent),
     '```',
     '',
-    'Sandbox policy:',
+    '沙箱策略：',
     '```md',
     trimContent(contract.sandbox.body || contract.sandboxContent),
     '```',
@@ -911,13 +911,13 @@ async function seedBaseline(
     pass: evaluation.pass,
     score: evaluation.score,
     status: evaluation.status === 'error' ? 'error' : 'baseline',
-    description: 'initial baseline evaluation',
+    description: '初始基线评估',
   });
   await appendAutoresearchLedgerEntry(manifest.ledger_file, {
     iteration: 0,
     kind: 'baseline',
     decision: evaluation.status === 'error' ? 'error' : 'baseline',
-    decision_reason: evaluation.status === 'error' ? 'baseline evaluator error' : 'baseline established',
+    decision_reason: evaluation.status === 'error' ? '基线评估器错误' : '基线已建立',
     candidate_status: 'baseline',
     base_commit: manifest.baseline_commit,
     candidate_commit: null,
@@ -925,16 +925,16 @@ async function seedBaseline(
     keep_policy: manifest.keep_policy,
     evaluator: evaluation,
     created_at: nowIso(),
-    notes: ['baseline row is always recorded'],
-    description: 'initial baseline evaluation',
+    notes: ['基线行始终被记录'],
+    description: '初始基线评估',
   });
   await appendDecisionLog(artifactLayout.decisionLogFile, {
     iteration: 0,
     decision: 'baseline',
-    description: 'initial baseline evaluation',
-    reason: 'baseline established',
+    description: '初始基线评估',
+    reason: '基线已建立',
     evaluator: evaluation,
-    notes: ['baseline established'],
+    notes: ['基线已建立'],
   });
   manifest.last_kept_score = evaluation.pass && typeof evaluation.score === 'number' ? evaluation.score : null;
   await writeRunManifest(manifest);
@@ -965,7 +965,7 @@ export async function prepareAutoresearchRuntime(
   const latestEvaluatorFile = join(runDir, 'latest-evaluator-result.json');
   const candidateFile = join(runDir, 'candidate.json');
   const resultsFile = join(worktreePath, 'results.tsv');
-  const taskDescription = `autoresearch ${contract.missionRelativeDir} (${runId})`;
+  const taskDescription = `autoresearch ${contract.missionRelativeDir}（${runId}）`;
   const keepPolicy = contract.sandbox.evaluator.keep_policy ?? 'score_improvement';
   const artifactLayout = getAutoresearchMissionArtifactLayout(projectRoot, contract.missionSlug, runId);
   const deadlineAt = typeof options.maxRuntimeMs === 'number'
@@ -987,8 +987,8 @@ export async function prepareAutoresearchRuntime(
     status: 'noop',
     candidate_commit: null,
     base_commit: baselineCommit,
-    description: 'not-yet-written',
-    notes: ['candidate artifact will be overwritten by the launched session'],
+    description: '尚未写入',
+    notes: ['候选产物将被启动的会话覆盖'],
     created_at: nowIso(),
   } satisfies AutoresearchCandidateArtifact);
 
@@ -1034,7 +1034,7 @@ export async function prepareAutoresearchRuntime(
   });
   await writeJsonFile(latestEvaluatorFile, {
     run_id: runId,
-    status: 'not-yet-run',
+    status: '尚未运行',
     updated_at: nowIso(),
   });
 
@@ -1112,7 +1112,7 @@ export async function resumeAutoresearchRuntime(projectRoot: string, runId: stri
   await ensureRuntimeExcludes(manifest.worktree_path);
   await ensureAutoresearchWorktreeDependencies(projectRoot, manifest.worktree_path);
   assertResetSafeWorktree(manifest.worktree_path, [manifest.mission_file, manifest.sandbox_file]);
-  startAutoresearchMode(`autoresearch resume ${runId}`, projectRoot);
+  startAutoresearchMode(`autoresearch 恢复 ${runId}`, projectRoot);
   await activateAutoresearchRun(manifest);
   updateAutoresearchMode({
     current_phase: 'running',
@@ -1149,7 +1149,7 @@ export async function resumeAutoresearchRuntime(projectRoot: string, runId: stri
     candidateFile: manifest.candidate_file,
     repoRoot: manifest.repo_root,
     worktreePath: manifest.worktree_path,
-    taskDescription: `autoresearch resume ${runId}`,
+    taskDescription: `autoresearch 恢复 ${runId}`,
   };
 }
 
@@ -1158,30 +1158,30 @@ export function parseAutoresearchCandidateArtifact(raw: string): AutoresearchCan
   try {
     parsed = JSON.parse(raw);
   } catch {
-    throw new Error('autoresearch candidate artifact must be valid JSON');
+    throw new Error('autoresearch 候选产物必须是合法的 JSON');
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new Error('autoresearch candidate artifact must be a JSON object');
+    throw new Error('autoresearch 候选产物必须是 JSON 对象');
   }
   const record = parsed as Record<string, unknown>;
   const status = record.status;
   if (status !== 'candidate' && status !== 'noop' && status !== 'abort' && status !== 'interrupted') {
-    throw new Error('autoresearch candidate artifact status must be candidate|noop|abort|interrupted');
+    throw new Error('autoresearch 候选产物的 status 必须是 candidate|noop|abort|interrupted');
   }
   if (record.candidate_commit !== null && typeof record.candidate_commit !== 'string') {
-    throw new Error('autoresearch candidate artifact candidate_commit must be string|null');
+    throw new Error('autoresearch 候选产物的 candidate_commit 必须是 string|null');
   }
   if (typeof record.base_commit !== 'string' || !record.base_commit.trim()) {
-    throw new Error('autoresearch candidate artifact base_commit is required');
+    throw new Error('autoresearch 候选产物的 base_commit 为必填项');
   }
   if (typeof record.description !== 'string') {
-    throw new Error('autoresearch candidate artifact description is required');
+    throw new Error('autoresearch 候选产物的 description 为必填项');
   }
   if (!Array.isArray(record.notes) || record.notes.some((note) => typeof note !== 'string')) {
-    throw new Error('autoresearch candidate artifact notes must be a string array');
+    throw new Error('autoresearch 候选产物的 notes 必须是字符串数组');
   }
   if (typeof record.created_at !== 'string' || !record.created_at.trim()) {
-    throw new Error('autoresearch candidate artifact created_at is required');
+    throw new Error('autoresearch 候选产物的 created_at 为必填项');
   }
   return {
     status,
@@ -1230,12 +1230,12 @@ function validateAutoresearchCandidate(
   const resolvedBaseCommit = tryResolveGitCommit(manifest.worktree_path, candidate.base_commit);
   if (!resolvedBaseCommit) {
     return {
-      reason: `candidate base_commit does not resolve in git: ${candidate.base_commit}`,
+      reason: `候选 base_commit 无法在 git 中解析：${candidate.base_commit}`,
     };
   }
   if (resolvedBaseCommit !== manifest.last_kept_commit) {
     return {
-      reason: `candidate base_commit ${resolvedBaseCommit} does not match last kept commit ${manifest.last_kept_commit}`,
+      reason: `候选 base_commit ${resolvedBaseCommit} 与上一次保留提交 ${manifest.last_kept_commit} 不一致`,
     };
   }
 
@@ -1250,19 +1250,19 @@ function validateAutoresearchCandidate(
 
   if (!candidate.candidate_commit) {
     return {
-      reason: 'candidate status requires a non-null candidate_commit',
+      reason: 'candidate 状态要求非空的 candidate_commit',
     };
   }
   const resolvedCandidateCommit = tryResolveGitCommit(manifest.worktree_path, candidate.candidate_commit);
   if (!resolvedCandidateCommit) {
     return {
-      reason: `candidate_commit does not resolve in git: ${candidate.candidate_commit}`,
+      reason: `candidate_commit 无法在 git 中解析：${candidate.candidate_commit}`,
     };
   }
   const headCommit = readGitFullHead(manifest.worktree_path);
   if (resolvedCandidateCommit !== headCommit) {
     return {
-      reason: `candidate_commit ${resolvedCandidateCommit} does not match worktree HEAD ${headCommit}`,
+      reason: `candidate_commit ${resolvedCandidateCommit} 与工作树 HEAD ${headCommit} 不一致`,
     };
   }
 
@@ -1294,7 +1294,7 @@ async function failAutoresearchIteration(
     iteration: manifest.iteration,
     commit: headCommit,
     status: 'error',
-    description: candidate?.description || 'candidate validation failed',
+    description: candidate?.description || '候选校验失败',
   });
   await appendAutoresearchLedgerEntry(manifest.ledger_file, {
     iteration: manifest.iteration,
@@ -1309,12 +1309,12 @@ async function failAutoresearchIteration(
     evaluator: null,
     created_at: nowIso(),
     notes: [...(candidate?.notes ?? []), `validation_error:${reason}`],
-    description: candidate?.description || 'candidate validation failed',
+    description: candidate?.description || '候选校验失败',
   });
   await appendDecisionLog(artifactLayout.decisionLogFile, {
     iteration: manifest.iteration,
     decision: 'error',
-    description: candidate?.description || 'candidate validation failed',
+    description: candidate?.description || '候选校验失败',
     reason,
     notes: [...(candidate?.notes ?? []), `validation_error:${reason}`],
   });
@@ -1358,7 +1358,7 @@ export async function processAutoresearchCandidate(
       iteration: manifest.iteration,
       kind: 'iteration',
       decision: 'abort',
-      decision_reason: 'candidate requested abort',
+      decision_reason: '候选请求中止',
       candidate_status: candidate.status,
       base_commit: candidate.base_commit,
       candidate_commit: candidate.candidate_commit,
@@ -1373,10 +1373,10 @@ export async function processAutoresearchCandidate(
       iteration: manifest.iteration,
       decision: 'abort',
       description: candidate.description,
-      reason: 'candidate requested abort',
+      reason: '候选请求中止',
       notes: candidate.notes,
     });
-    await finalizeRun(manifest, projectRoot, { status: 'stopped', stopReason: 'candidate abort' });
+    await finalizeRun(manifest, projectRoot, { status: 'stopped', stopReason: '候选中止' });
     return 'abort';
   }
 
@@ -1384,7 +1384,7 @@ export async function processAutoresearchCandidate(
     try {
       assertResetSafeWorktree(manifest.worktree_path, [manifest.mission_file, manifest.sandbox_file]);
     } catch {
-      await finalizeRun(manifest, projectRoot, { status: 'failed', stopReason: 'interrupted dirty worktree requires operator intervention' });
+      await finalizeRun(manifest, projectRoot, { status: 'failed', stopReason: '中断：脏工作树需要操作者介入' });
       return 'error';
     }
     await appendAutoresearchResultsRow(manifest.results_file, {
@@ -1397,7 +1397,7 @@ export async function processAutoresearchCandidate(
       iteration: manifest.iteration,
       kind: 'iteration',
       decision: 'interrupted',
-      decision_reason: 'candidate session interrupted cleanly',
+      decision_reason: '候选会话干净地中断',
       candidate_status: candidate.status,
       base_commit: candidate.base_commit,
       candidate_commit: candidate.candidate_commit,
@@ -1412,7 +1412,7 @@ export async function processAutoresearchCandidate(
       iteration: manifest.iteration,
       decision: 'interrupted',
       description: candidate.description,
-      reason: 'candidate session interrupted cleanly',
+      reason: '候选会话干净地中断',
       notes: candidate.notes,
     });
     await writeRunManifest(manifest);
@@ -1431,7 +1431,7 @@ export async function processAutoresearchCandidate(
       iteration: manifest.iteration,
       kind: 'iteration',
       decision: 'noop',
-      decision_reason: 'candidate reported noop',
+      decision_reason: '候选报告 noop',
       candidate_status: candidate.status,
       base_commit: candidate.base_commit,
       candidate_commit: candidate.candidate_commit,
@@ -1446,7 +1446,7 @@ export async function processAutoresearchCandidate(
       iteration: manifest.iteration,
       decision: 'noop',
       description: candidate.description,
-      reason: 'candidate reported noop',
+      reason: '候选报告 noop',
       notes: candidate.notes,
     });
     await writeRunManifest(manifest);
@@ -1537,7 +1537,7 @@ export async function stopAutoresearchRuntime(projectRoot: string): Promise<void
   if (runId) {
     await finalizeAutoresearchRunState(projectRoot, runId, {
       status: 'stopped',
-      stopReason: 'operator stop',
+      stopReason: '操作者停止',
     });
     return;
   }
